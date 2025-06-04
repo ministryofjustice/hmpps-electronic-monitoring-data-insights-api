@@ -1,11 +1,11 @@
 version: "3"
 services:
-  hmpps-template-kotlin:
+  hmpps-electronic-monitoring-data-insights-api:
     build:
       context: .
     networks:
       - hmpps
-    container_name: hmpps-template-kotlin
+    container_name: hmpps-electronic-monitoring-data-insights-api
     ports:
       - "8080:8080"
     healthcheck:

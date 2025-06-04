@@ -1,6 +1,6 @@
 {
   "role": {
-    "name": "hmpps-template-kotlin"
+    "name": "hmpps-electronic-monitoring-data-insights-api"
   },
   "customDimensions": {
     "service.version": "${BUILD_NUMBER}"
