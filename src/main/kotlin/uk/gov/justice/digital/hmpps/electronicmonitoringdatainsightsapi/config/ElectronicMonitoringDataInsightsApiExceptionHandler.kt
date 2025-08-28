@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.config
 
+import com.fasterxml.jackson.module.kotlin.MissingKotlinParameterException
 import jakarta.validation.ValidationException
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus.BAD_REQUEST
@@ -7,6 +8,7 @@ import org.springframework.http.HttpStatus.FORBIDDEN
 import org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR
 import org.springframework.http.HttpStatus.NOT_FOUND
 import org.springframework.http.ResponseEntity
+import org.springframework.http.converter.HttpMessageNotReadableException
 import org.springframework.security.access.AccessDeniedException
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.RestControllerAdvice
@@ -59,6 +61,24 @@ class ElectronicMonitoringDataInsightsApiExceptionHandler {
       ),
     ).also { log.error("Unexpected exception", e) }
 
+
+  /** JSON binding / malformed request payload */
+  @ExceptionHandler(HttpMessageNotReadableException::class)
+  fun handleHttpMessageNotReadable(e: HttpMessageNotReadableException): ResponseEntity<ErrorResponse> {
+    val causeMessage = when (val cause = e.cause) {
+      is MissingKotlinParameterException -> "Missing required field: '${cause.parameter.name}'"
+      else -> cause?.message ?: e.message
+    }
+    return ResponseEntity
+      .status(BAD_REQUEST)
+      .body(
+        ErrorResponse(
+          status = BAD_REQUEST,
+          userMessage = "Invalid request payload",
+          developerMessage = causeMessage
+        )
+      ).also { log.info("Malformed request body: {}", causeMessage) }
+  }
   private companion object {
     private val log = LoggerFactory.getLogger(this::class.java)
   }

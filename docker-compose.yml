@@ -14,6 +14,10 @@ services:
       - SERVER_PORT=8080
       - HMPPS_AUTH_URL=http://hmpps-auth:8080/auth
       - SPRING_PROFILES_ACTIVE=dev
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/em_data_insights
+      - SPRING_DATASOURCE_USERNAME=hmpps
+      - SPRING_DATASOURCE_PASSWORD=hmpps
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
 
   hmpps-auth:
     image: quay.io/hmpps/hmpps-auth:latest
@@ -29,5 +33,22 @@ services:
       - SPRING_PROFILES_ACTIVE=dev
       - APPLICATION_AUTHENTICATION_UI_ALLOWLIST=0.0.0.0/0
 
+  postgres:
+    image: postgres:16
+    container_name: hmpps-postgres
+    networks:
+      - hmpps
+    environment:
+      POSTGRES_USER: hmpps
+      POSTGRES_PASSWORD: hmpps
+      POSTGRES_DB: em_data_insights
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
 networks:
   hmpps:
+
+volumes:
+  postgres_data:
