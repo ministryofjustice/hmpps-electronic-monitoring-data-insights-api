@@ -2,8 +2,12 @@ package uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.greetin
 
 import java.time.LocalDateTime
 import java.util.UUID
-import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.SortOrder
+import org.jetbrains.exposed.sql.insert
+import org.jetbrains.exposed.sql.select
+import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.transaction
+import org.jetbrains.exposed.sql.update
 import org.springframework.stereotype.Service
 
 @Service
@@ -31,47 +35,13 @@ class GreetingService {
     )
   }
 
-  fun updateGreeting(id: UUID, newMessage: String): Greeting? {
-    return transaction {
-      val updated = Greetings.update({ Greetings.id eq id }) {
-        it[message] = newMessage
-        it[updatedAt] = LocalDateTime.now()
-      }
-
-      if (updated > 0) {
-        Greetings.select { Greetings.id eq id }
-          .map {
-            Greeting(
-              id = it[Greetings.id],
-              message = it[Greetings.message],
-              createdAt = it[Greetings.createdAt],
-              updatedAt = it[Greetings.updatedAt],
-            )
-          }.firstOrNull()
-      } else {
-        null
-      }
+  fun updateGreeting(id: UUID, newMessage: String): Greeting? = transaction {
+    val updated = Greetings.update({ Greetings.id eq id }) {
+      it[message] = newMessage
+      it[updatedAt] = LocalDateTime.now()
     }
-  }
 
-  fun getGreeting(): Greeting? {
-    return transaction {
-      Greetings.selectAll()
-        .orderBy(Greetings.id, SortOrder.DESC)
-        .limit(1)
-        .map {
-          Greeting(
-            id = it[Greetings.id],
-            message = it[Greetings.message],
-            createdAt = it[Greetings.createdAt],
-            updatedAt = it[Greetings.updatedAt],
-          )
-        }.firstOrNull()
-    }
-  }
-
-  fun getGreetingById(id: UUID): Greeting? {
-    return transaction {
+    if (updated > 0) {
       Greetings.select { Greetings.id eq id }
         .map {
           Greeting(
@@ -80,8 +50,36 @@ class GreetingService {
             createdAt = it[Greetings.createdAt],
             updatedAt = it[Greetings.updatedAt],
           )
-        }
-        .firstOrNull()
+        }.firstOrNull()
+    } else {
+      null
     }
+  }
+
+  fun getGreeting(): Greeting? = transaction {
+    Greetings.selectAll()
+      .orderBy(Greetings.id, SortOrder.DESC)
+      .limit(1)
+      .map {
+        Greeting(
+          id = it[Greetings.id],
+          message = it[Greetings.message],
+          createdAt = it[Greetings.createdAt],
+          updatedAt = it[Greetings.updatedAt],
+        )
+      }.firstOrNull()
+  }
+
+  fun getGreetingById(id: UUID): Greeting? = transaction {
+    Greetings.select { Greetings.id eq id }
+      .map {
+        Greeting(
+          id = it[Greetings.id],
+          message = it[Greetings.message],
+          createdAt = it[Greetings.createdAt],
+          updatedAt = it[Greetings.updatedAt],
+        )
+      }
+      .firstOrNull()
   }
 }
