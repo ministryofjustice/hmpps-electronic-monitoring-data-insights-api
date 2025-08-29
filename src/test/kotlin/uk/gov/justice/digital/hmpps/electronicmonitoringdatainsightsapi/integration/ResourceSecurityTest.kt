@@ -1,16 +1,8 @@
 package uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.integration
 
-import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.Test
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.context.ApplicationContext
-import org.springframework.security.access.prepost.PreAuthorize
-import org.springframework.web.servlet.mvc.method.RequestMappingInfo
-import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping
-import java.io.File
+class ResourceSecurityTest : IntegrationTestBase()
 
-/*class ResourceSecurityTest : IntegrationTestBase() {
-  @Autowired
+/*@Autowired
   private lateinit var context: ApplicationContext
 
   private val unprotectedDefaultMethods = setOf(
