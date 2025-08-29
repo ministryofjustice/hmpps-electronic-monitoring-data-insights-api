@@ -1,7 +1,5 @@
 package uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.greeting
 
-import java.time.LocalDateTime
-import java.util.UUID
 import org.jetbrains.exposed.sql.SortOrder
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.select
@@ -9,6 +7,8 @@ import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.jetbrains.exposed.sql.update
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
+import java.util.UUID
 
 @Service
 class GreetingService {
