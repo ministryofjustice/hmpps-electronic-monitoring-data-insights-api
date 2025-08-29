@@ -33,14 +33,20 @@ class GreetingController(private val greetingService: GreetingService) {
   @GetMapping
   fun getGreeting(): ResponseEntity<Greeting> {
     val greeting = greetingService.getGreeting()
-    return if (greeting != null) ResponseEntity.ok(greeting)
-    else ResponseEntity.notFound().build()
+    return if (greeting != null) {
+      ResponseEntity.ok(greeting)
+    } else {
+      ResponseEntity.notFound().build()
+    }
   }
 
   @GetMapping("/{id}")
   fun getGreetingById(@PathVariable id: UUID): ResponseEntity<Greeting> {
     val greeting = greetingService.getGreetingById(id)
-    return if (greeting != null) ResponseEntity.ok(greeting)
-    else ResponseEntity.notFound().build()
+    return if (greeting != null) {
+      ResponseEntity.ok(greeting)
+    } else {
+      ResponseEntity.notFound().build()
+    }
   }
 }

@@ -7,5 +7,5 @@ data class Greeting(
   val id: UUID,
   val message: String,
   val createdAt: LocalDateTime,
-  val updatedAt: LocalDateTime
+  val updatedAt: LocalDateTime,
 )

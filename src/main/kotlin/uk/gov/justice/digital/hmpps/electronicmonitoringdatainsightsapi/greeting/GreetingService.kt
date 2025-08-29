@@ -1,10 +1,10 @@
 package uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.greeting
 
-import org.springframework.stereotype.Service
 import java.time.LocalDateTime
+import java.util.UUID
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.transaction
-import java.util.UUID
+import org.springframework.stereotype.Service
 
 @Service
 class GreetingService {
@@ -27,7 +27,7 @@ class GreetingService {
       id = generatedId,
       message = message,
       createdAt = now,
-      updatedAt = now
+      updatedAt = now,
     )
   }
 
@@ -45,7 +45,7 @@ class GreetingService {
               id = it[Greetings.id],
               message = it[Greetings.message],
               createdAt = it[Greetings.createdAt],
-              updatedAt = it[Greetings.updatedAt]
+              updatedAt = it[Greetings.updatedAt],
             )
           }.firstOrNull()
       } else {
@@ -64,7 +64,7 @@ class GreetingService {
             id = it[Greetings.id],
             message = it[Greetings.message],
             createdAt = it[Greetings.createdAt],
-            updatedAt = it[Greetings.updatedAt]
+            updatedAt = it[Greetings.updatedAt],
           )
         }.firstOrNull()
     }
@@ -78,7 +78,7 @@ class GreetingService {
             id = it[Greetings.id],
             message = it[Greetings.message],
             createdAt = it[Greetings.createdAt],
-            updatedAt = it[Greetings.updatedAt]
+            updatedAt = it[Greetings.updatedAt],
           )
         }
         .firstOrNull()

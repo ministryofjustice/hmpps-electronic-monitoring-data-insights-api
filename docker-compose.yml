@@ -18,6 +18,11 @@ services:
       - SPRING_DATASOURCE_USERNAME=hmpps
       - SPRING_DATASOURCE_PASSWORD=hmpps
       - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=em_data_insights
+      - DB_USER=hmpps
+      - DB_PASSWORD=hmpps
 
   hmpps-auth:
     image: quay.io/hmpps/hmpps-auth:latest
@@ -43,7 +48,8 @@ services:
       POSTGRES_PASSWORD: hmpps
       POSTGRES_DB: em_data_insights
     ports:
-      - "5432:5432"
+      - "5433:5432"
+
     volumes:
       - postgres_data:/var/lib/postgresql/data
 

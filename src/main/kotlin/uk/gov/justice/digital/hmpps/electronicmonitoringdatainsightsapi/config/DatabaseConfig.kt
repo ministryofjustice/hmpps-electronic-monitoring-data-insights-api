@@ -21,7 +21,7 @@ class DatabaseConfig {
       url = jdbcUrl,
       driver = "org.postgresql.Driver",
       user = user,
-      password = password
+      password = password,
     )
   }
 }

@@ -61,7 +61,6 @@ class ElectronicMonitoringDataInsightsApiExceptionHandler {
       ),
     ).also { log.error("Unexpected exception", e) }
 
-
   /** JSON binding / malformed request payload */
   @ExceptionHandler(HttpMessageNotReadableException::class)
   fun handleHttpMessageNotReadable(e: HttpMessageNotReadableException): ResponseEntity<ErrorResponse> {
@@ -75,10 +74,11 @@ class ElectronicMonitoringDataInsightsApiExceptionHandler {
         ErrorResponse(
           status = BAD_REQUEST,
           userMessage = "Invalid request payload",
-          developerMessage = causeMessage
-        )
+          developerMessage = causeMessage,
+        ),
       ).also { log.info("Malformed request body: {}", causeMessage) }
   }
+
   private companion object {
     private val log = LoggerFactory.getLogger(this::class.java)
   }
