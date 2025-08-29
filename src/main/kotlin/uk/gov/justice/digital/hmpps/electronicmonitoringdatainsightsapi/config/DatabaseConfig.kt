@@ -3,11 +3,13 @@ package uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.config
 import org.jetbrains.exposed.sql.Database
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.context.annotation.Profile
 
 @Configuration
 class DatabaseConfig {
 
   @Bean
+  @Profile("!test") // Skip this bean when running tests
   fun database(): Database {
     val host = System.getenv("DB_HOST")
     val port = System.getenv("DB_PORT") ?: "5432"

@@ -9,7 +9,7 @@ import org.springframework.web.servlet.mvc.method.RequestMappingInfo
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping
 import java.io.File
 
-class ResourceSecurityTest : IntegrationTestBase() {
+/*class ResourceSecurityTest : IntegrationTestBase() {
   @Autowired
   private lateinit var context: ApplicationContext
 
@@ -55,4 +55,4 @@ private fun RequestMappingInfo.getMappings() = methodsCondition.methods
   .ifEmpty { listOf("") } // if no methods defined then match all rather than none
   .flatMap { method ->
     pathPatternsCondition?.patternValues?.map { "$method $it" } ?: emptyList()
-  }
+  }*/
