@@ -14,15 +14,11 @@ services:
       - SERVER_PORT=8080
       - HMPPS_AUTH_URL=http://hmpps-auth:8080/auth
       - SPRING_PROFILES_ACTIVE=dev
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/em_data_insights
-      - SPRING_DATASOURCE_USERNAME=hmpps
-      - SPRING_DATASOURCE_PASSWORD=hmpps
-      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
-      - DB_HOST=host.docker.internal
-      - DB_PORT=5432
-      - DB_NAME=db351c632244856e2c
-      - DB_USER=cp5cIYCGnc
-      - DB_PASSWORD=kTqF9DFUpciLKhuH
+      - DB_HOST=${DB_HOST}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_PORT=${DB_PORT}
+      - DB_NAME=${DB_NAME}
 
   hmpps-auth:
     image: quay.io/hmpps/hmpps-auth:latest
