@@ -18,11 +18,11 @@ services:
       - SPRING_DATASOURCE_USERNAME=hmpps
       - SPRING_DATASOURCE_PASSWORD=hmpps
       - SPRING_JPA_HIBERNATE_DDL_AUTO=update
-      - DB_HOST=postgres
+      - DB_HOST=host.docker.internal
       - DB_PORT=5432
-      - DB_NAME=em_data_insights
-      - DB_USER=hmpps
-      - DB_PASSWORD=hmpps
+      - DB_NAME=db351c632244856e2c
+      - DB_USER=cp5cIYCGnc
+      - DB_PASSWORD=kTqF9DFUpciLKhuH
 
   hmpps-auth:
     image: quay.io/hmpps/hmpps-auth:latest
@@ -38,20 +38,20 @@ services:
       - SPRING_PROFILES_ACTIVE=dev
       - APPLICATION_AUTHENTICATION_UI_ALLOWLIST=0.0.0.0/0
 
-  postgres:
-    image: postgres:16
-    container_name: hmpps-postgres
-    networks:
-      - hmpps
-    environment:
-      POSTGRES_USER: hmpps
-      POSTGRES_PASSWORD: hmpps
-      POSTGRES_DB: em_data_insights
-    ports:
-      - "5433:5432"
+    #postgres:
+    #image: postgres:16
+    #container_name: hmpps-postgres
+      #networks:
+      #- hmpps
+      #environment:
+      #POSTGRES_USER: hmpps
+      #POSTGRES_PASSWORD: hmpps
+      #POSTGRES_DB: em_data_insights
+      #ports:
+      #- "5433:5432"
 
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
+      #volumes:
+      #- postgres_data:/var/lib/postgresql/data
 
 networks:
   hmpps:

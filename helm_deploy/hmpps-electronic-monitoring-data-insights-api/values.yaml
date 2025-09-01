@@ -19,9 +19,7 @@ generic-service:
     JAVA_OPTS: "-Xmx512m"
     SERVER_PORT: "8080"
     APPLICATIONINSIGHTS_CONFIGURATION_FILE: applicationinsights.json
-    DB_HOST: "cloud-platform-351c632244856e2c.cdwm328dlye6.eu-west-2.rds.amazonaws.com"
-    DB_PORT: "5432"
-    DB_NAME: "db351c632244856e2c"
+    DB_PORT: "5432"   # port is not secret, you can keep this here
 
   # Pre-existing kubernetes secrets to load as environment variables in the deployment.
   # namespace_secrets:
@@ -31,9 +29,11 @@ generic-service:
   namespace_secrets:
     hmpps-electronic-monitoring-data-insights-api-application-insights:
       APPLICATIONINSIGHTS_CONNECTION_STRING: "APPLICATIONINSIGHTS_CONNECTION_STRING"
-    db-credentials:
-      DB_USER: "cp5cIYCGnc"
-      DB_PASSWORD: "kTqF9DFUpciLKhuH"
+    rds-postgresql-instance-output:
+      DB_NAME: "database_name"
+      DB_USER: "database_username"
+      DB_PASSWORD: "database_password"
+      DB_HOST: "rds_instance_address"
 
   allowlist:
     groups:
