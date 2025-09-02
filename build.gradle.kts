@@ -11,6 +11,11 @@ dependencies {
   implementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter:1.4.5")
   implementation("org.springframework.boot:spring-boot-starter-webflux")
   implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.8")
+  implementation("org.jetbrains.exposed:exposed-core:0.43.0")
+  implementation("org.jetbrains.exposed:exposed-dao:0.43.0")
+  implementation("org.jetbrains.exposed:exposed-jdbc:0.43.0")
+  implementation("org.jetbrains.exposed:exposed-java-time:0.43.0")
+  implementation("org.postgresql:postgresql:42.6.0")
 
   testImplementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter-test:1.4.5")
   testImplementation("org.wiremock:wiremock-standalone:3.13.0")
