@@ -1,5 +1,4 @@
 package uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.hello
-
 import org.springframework.stereotype.Service
 
 @Service
