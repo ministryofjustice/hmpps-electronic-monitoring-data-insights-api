@@ -9,15 +9,15 @@ import org.springframework.web.bind.annotation.RestController
 @RestController
 @RequestMapping("/hello")
 class HelloController(private val helloService: HelloService) {
-    @PostMapping
-    fun setHello(@RequestBody body: HelloRequest): ResponseEntity<Void> {
-        helloService.setValue(body.value)
-        return ResponseEntity.ok().build()
-    }
+  @PostMapping
+  fun setHello(@RequestBody body: HelloRequest): ResponseEntity<Void> {
+    helloService.setValue(body.value)
+    return ResponseEntity.ok().build()
+  }
 
-    @GetMapping
-    fun getHello(): ResponseEntity<HelloResponse> {
-        val value = helloService.getValue()
-        return ResponseEntity.ok(HelloResponse(value))
-    }
+  @GetMapping
+  fun getHello(): ResponseEntity<HelloResponse> {
+    val value = helloService.getValue()
+    return ResponseEntity.ok(HelloResponse(value))
+  }
 }

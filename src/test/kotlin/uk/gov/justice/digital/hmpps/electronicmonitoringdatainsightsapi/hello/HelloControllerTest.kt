@@ -1,40 +1,41 @@
+
 package uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.hello
-
+import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.DisplayName
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
-import org.springframework.boot.test.mock.mockito.MockBean
-import org.springframework.http.MediaType
-import org.springframework.test.web.servlet.MockMvc
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
-import org.springframework.test.web.servlet.result.MockMvcResultMatchers.content
-import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
-import com.fasterxml.jackson.databind.ObjectMapper
+import org.springframework.test.context.ActiveProfiles
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.integration.IntegrationTestBase
 
-@WebMvcTest(HelloController::class)
-class HelloControllerTest @Autowired constructor(
-  val mockMvc: MockMvc,
-  val objectMapper: ObjectMapper,
-) {
-  @MockBean
-  lateinit var helloService: HelloService
+@ActiveProfiles("test")
+class HelloControllerTest : IntegrationTestBase() {
+  @Nested
+  @DisplayName("POST /hello")
+  inner class PostHello {
+    @Test
+    fun `it should store hello value`() {
+      val testValue = "test message"
+      val request = HelloRequest(testValue)
 
-  @Test
-  fun `should store and retrieve hello value`() {
-    val value = "test message"
-    val request = HelloRequest(value)
-    org.mockito.Mockito.doNothing().`when`(helloService).setValue(value)
-    org.mockito.Mockito.`when`(helloService.getValue()).thenReturn(value)
+      webTestClient.post()
+        .uri("/hello")
+        .headers(setAuthorisation())
+        .bodyValue(request)
+        .exchange()
+        .expectStatus()
+        .isOk
 
-    mockMvc.perform(
-      post("/hello")
-        .contentType(MediaType.APPLICATION_JSON)
-        .content(objectMapper.writeValueAsString(request))
-    ).andExpect(status().isOk)
+      val result = webTestClient.get()
+        .uri("/hello")
+        .headers(setAuthorisation())
+        .exchange()
+        .expectStatus()
+        .isOk
+        .returnResult(HelloResponse::class.java)
+        .responseBody
+        .blockFirst()!!
 
-    mockMvc.perform(get("/hello"))
-      .andExpect(status().isOk)
-      .andExpect(content().json(objectMapper.writeValueAsString(HelloResponse(value))))
+      assertThat(result.value).isEqualTo(testValue)
+    }
   }
 }
