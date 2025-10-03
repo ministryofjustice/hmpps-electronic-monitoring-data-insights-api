@@ -13,7 +13,11 @@ class DevSecurityConfig {
   @Bean
   fun filterChain(http: HttpSecurity): SecurityFilterChain {
     http
-      .authorizeHttpRequests { it.anyRequest().permitAll() } // allow all requests
+      .authorizeHttpRequests {
+        it.requestMatchers("/greeting/**").permitAll()
+        it.requestMatchers("/hello/**").permitAll()
+        it.anyRequest().authenticated()
+      }
       .csrf { it.disable() } // disable CSRF for local dev
     return http.build()
   }

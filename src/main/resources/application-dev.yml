@@ -1,2 +1,7 @@
 hmpps-auth:
   url: "http://localhost:8090/auth"
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/em_data_insights
+    username: hmpps
+    password: hmpps
