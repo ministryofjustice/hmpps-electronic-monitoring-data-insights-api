@@ -7,7 +7,6 @@ import org.springframework.web.bind.annotation.RestControllerAdvice
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException
 import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
 
-
 @RestControllerAdvice
 class ExceptionHandler {
   @ExceptionHandler(MethodArgumentTypeMismatchException::class)
@@ -19,5 +18,4 @@ class ExceptionHandler {
         userMessage = "Bad request: ${e.message}",
       ),
     )
-
 }
