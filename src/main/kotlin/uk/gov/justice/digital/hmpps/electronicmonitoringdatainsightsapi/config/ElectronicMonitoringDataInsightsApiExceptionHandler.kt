@@ -81,18 +81,16 @@ class ElectronicMonitoringDataInsightsApiExceptionHandler {
   }
 
   @ExceptionHandler(MethodArgumentNotValidException::class)
-  fun handleBadRequest(e: MethodArgumentNotValidException): ResponseEntity<ErrorResponse?>? {
-    return ResponseEntity
-      .status(BAD_REQUEST)
-      .body(
-        ErrorResponse(
-          status = BAD_REQUEST,
-          userMessage = "Bad request: ${e.message}",
-          developerMessage = e.message,
-        ),
-      )
-      .also { log.info("Handling validation error: {}", e.message) }
-  }
+  fun handleBadRequest(e: MethodArgumentNotValidException): ResponseEntity<ErrorResponse?>? = ResponseEntity
+    .status(BAD_REQUEST)
+    .body(
+      ErrorResponse(
+        status = BAD_REQUEST,
+        userMessage = "Bad request: ${e.message}",
+        developerMessage = e.message,
+      ),
+    )
+    .also { log.info("Handling validation error: {}", e.message) }
 
   private companion object {
     private val log = LoggerFactory.getLogger(this::class.java)
