@@ -10,6 +10,7 @@ import org.springframework.http.HttpStatus.NOT_FOUND
 import org.springframework.http.ResponseEntity
 import org.springframework.http.converter.HttpMessageNotReadableException
 import org.springframework.security.access.AccessDeniedException
+import org.springframework.web.bind.MethodArgumentNotValidException
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.RestControllerAdvice
 import org.springframework.web.servlet.resource.NoResourceFoundException
@@ -78,6 +79,18 @@ class ElectronicMonitoringDataInsightsApiExceptionHandler {
         ),
       ).also { log.info("Malformed request body: {}", causeMessage) }
   }
+
+  @ExceptionHandler(MethodArgumentNotValidException::class)
+  fun handleBadRequest(e: MethodArgumentNotValidException): ResponseEntity<ErrorResponse?>? = ResponseEntity
+    .status(BAD_REQUEST)
+    .body(
+      ErrorResponse(
+        status = BAD_REQUEST,
+        userMessage = "Bad request: ${e.message}",
+        developerMessage = e.message,
+      ),
+    )
+    .also { log.info("Handling validation error: {}", e.message) }
 
   private companion object {
     private val log = LoggerFactory.getLogger(this::class.java)

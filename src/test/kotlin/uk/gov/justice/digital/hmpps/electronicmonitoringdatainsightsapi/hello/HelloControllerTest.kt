@@ -37,5 +37,45 @@ class HelloControllerTest : IntegrationTestBase() {
 
       assertThat(result.value).isEqualTo(testValue)
     }
+
+    @Test
+    fun `should return 400 when value is missing`() {
+      val invalidBody = mapOf<String, Any>() // missing "value"
+
+      webTestClient.post()
+        .uri("/hello")
+        .headers(setAuthorisation())
+        .bodyValue(invalidBody)
+        .exchange()
+        .expectStatus()
+        .isBadRequest
+    }
+
+    @Test
+    fun `should return 400 when value is empty`() {
+      val testValue = ""
+      val emptyRequest = HelloRequest(testValue)
+
+      webTestClient.post()
+        .uri("/hello")
+        .headers(setAuthorisation())
+        .bodyValue(emptyRequest)
+        .exchange()
+        .expectStatus()
+        .isBadRequest
+    }
+
+    @Test
+    fun `should return 400 when value is not a string`() {
+      val invalidBody = mapOf("value" to mapOf("foo" to "bar"))
+
+      webTestClient.post()
+        .uri("/hello")
+        .headers(setAuthorisation())
+        .bodyValue(invalidBody)
+        .exchange()
+        .expectStatus()
+        .isBadRequest
+    }
   }
 }

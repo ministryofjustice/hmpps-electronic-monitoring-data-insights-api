@@ -1,3 +1,8 @@
 package uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.hello
 
-data class HelloRequest(val value: String)
+import jakarta.validation.constraints.NotBlank
+
+data class HelloRequest(
+  @field:NotBlank(message = "Value must not be blank")
+  val value: String,
+)
