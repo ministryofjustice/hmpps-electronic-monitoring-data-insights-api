@@ -1,6 +1,6 @@
 package uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.config
 
-import com.fasterxml.jackson.module.kotlin.MissingKotlinParameterException
+import com.fasterxml.jackson.databind.exc.MismatchedInputException
 import jakarta.validation.ValidationException
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus.BAD_REQUEST
@@ -65,7 +65,7 @@ class ElectronicMonitoringDataInsightsApiExceptionHandler {
   @ExceptionHandler(HttpMessageNotReadableException::class)
   fun handleHttpMessageNotReadable(e: HttpMessageNotReadableException): ResponseEntity<ErrorResponse> {
     val causeMessage = when (val cause = e.cause) {
-      is MissingKotlinParameterException -> "Missing required field: '${cause.parameter.name}'"
+      is MismatchedInputException -> "Missing or mismatched input: ${cause.pathReference}"
       else -> cause?.message ?: e.message
     }
     return ResponseEntity
