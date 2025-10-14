@@ -13,6 +13,7 @@ import org.junit.jupiter.api.Test
 import org.springframework.test.context.ActiveProfiles
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.greeting.GreetingService
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.greeting.Greetings
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.testutil.norm
 import java.util.UUID
 
 @ActiveProfiles("test")
@@ -102,8 +103,8 @@ class GreetingServiceTest {
 
       assertThat(result?.id).isEqualTo(latest.id)
       assertThat(result?.message).isEqualTo(latest.message)
-      assertThat(result?.createdAt).isEqualTo(latest.createdAt)
-      assertThat(result?.updatedAt).isEqualTo(latest.updatedAt)
+      assertThat(result?.createdAt?.norm()).isEqualTo(latest.createdAt.norm())
+      assertThat(result?.updatedAt?.norm()).isEqualTo(latest.updatedAt.norm())
     }
   }
 
@@ -118,8 +119,8 @@ class GreetingServiceTest {
 
       assertThat(result?.id).isEqualTo(created.id)
       assertThat(result?.message).isEqualTo(created.message)
-      assertThat(result?.createdAt).isEqualTo(created.createdAt)
-      assertThat(result?.updatedAt).isEqualTo(created.updatedAt)
+      assertThat(result?.createdAt?.norm()).isEqualTo(created.createdAt.norm())
+      assertThat(result?.updatedAt?.norm()).isEqualTo(created.updatedAt.norm())
     }
   }
 }
