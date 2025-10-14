@@ -75,8 +75,8 @@ class GreetingServiceTest {
 
       assertThat(result2?.id).isEqualTo(result.id)
       assertThat(result2?.message).isNotEqualTo(result.message)
-      assertThat(result2?.createdAt).isEqualTo(result.createdAt)
-      assertThat(result2?.updatedAt).isNotEqualTo(result.updatedAt)
+      assertThat(result2?.createdAt?.norm()).isEqualTo(result.createdAt.norm())
+      assertThat(result2?.updatedAt?.norm()).isNotEqualTo(result.updatedAt.norm())
     }
 
     @Test
