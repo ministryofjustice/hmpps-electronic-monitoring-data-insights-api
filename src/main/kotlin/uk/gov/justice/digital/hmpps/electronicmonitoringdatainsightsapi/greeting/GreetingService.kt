@@ -58,7 +58,11 @@ class GreetingService {
 
   fun getGreeting(): Greeting? = transaction {
     Greetings.selectAll()
-      .orderBy(Greetings.id, SortOrder.DESC)
+      .orderBy(
+        Greetings.createdAt to SortOrder.DESC,
+        Greetings.updatedAt to SortOrder.DESC,
+        Greetings.id to SortOrder.DESC,
+      )
       .limit(1)
       .map {
         Greeting(

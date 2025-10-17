@@ -17,7 +17,7 @@ class GreetingController(private val greetingService: GreetingService) {
   @PostMapping
   fun createGreeting(@RequestBody request: GreetingRequest): ResponseEntity<Greeting> {
     val greeting = greetingService.createGreeting(request.message)
-    return ResponseEntity.ok(greeting)
+    return ResponseEntity.status(201).body(greeting)
   }
 
   @PutMapping("/{id}")
