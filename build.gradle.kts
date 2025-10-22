@@ -19,7 +19,6 @@ dependencies {
   implementation("org.jetbrains.exposed:exposed-java-time:0.43.0")
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core")
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor")
-  implementation("org.jetbrains.kotlinx:kotlinx-serialization-json")
   implementation("org.postgresql:postgresql:42.6.0")
 
   testImplementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter-test:1.4.5")

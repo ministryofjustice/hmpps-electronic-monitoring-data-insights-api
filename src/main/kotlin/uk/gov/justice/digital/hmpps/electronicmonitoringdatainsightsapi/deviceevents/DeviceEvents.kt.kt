@@ -2,7 +2,7 @@ package uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.devicee
 
 import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.javatime.datetime
-import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.config.events.Events
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.model.entity.Events
 import java.util.UUID
 
 
