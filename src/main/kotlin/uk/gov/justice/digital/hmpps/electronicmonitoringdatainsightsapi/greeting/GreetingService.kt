@@ -1,11 +1,8 @@
 package uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.greeting
 
-import org.jetbrains.exposed.sql.SortOrder
-import org.jetbrains.exposed.sql.insert
-import org.jetbrains.exposed.sql.select
-import org.jetbrains.exposed.sql.selectAll
+import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.transaction
-import org.jetbrains.exposed.sql.update
+
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 import java.util.UUID
@@ -42,7 +39,7 @@ class GreetingService {
     }
 
     if (updated > 0) {
-      Greetings.select { Greetings.id eq id }
+      Greetings.selectAll().where{ Greetings.id eq id }
         .map {
           Greeting(
             id = it[Greetings.id],
@@ -75,7 +72,9 @@ class GreetingService {
   }
 
   fun getGreetingById(id: UUID): Greeting? = transaction {
-    Greetings.select { Greetings.id eq id }
+    Greetings
+      .selectAll()
+      .where{ Greetings.id eq id }
       .map {
         Greeting(
           id = it[Greetings.id],

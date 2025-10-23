@@ -1,26 +1,20 @@
 package uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.model.entity
 
-import com.fasterxml.jackson.annotation.JsonFormat
-import java.time.LocalDateTime
+import kotlinx.datetime.LocalDateTime
+import kotlinx.serialization.Serializable
 
+@Serializable
 data class Events(
   val eventId: Long,
   val personId: Long,
   val deviceId: Long,
   val muEventId: Long,
-  @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss.SSS")
   val eventStartDateUtc: LocalDateTime,
-  @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss.SSS")
   val eventStartDateLocal: LocalDateTime,
-  @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss.SSS")
   val eventEndDateUtc: LocalDateTime,
-  @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss.SSS")
   val eventEndDateLocal: LocalDateTime,
-  @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss.SSS")
   val eventRecordedDateUtc: LocalDateTime,
-  @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss.SSS")
   val eventUploadedDateUtc: LocalDateTime,
-  @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss.SSS")
   val eventUploadedDateLocal: LocalDateTime,
   val eventStatus: String,
   val eventStatusFlags: Long = 0,
@@ -32,7 +26,6 @@ data class Events(
   val eventTypeCriticalityName: String,
   val fileName: String,
   val feedType: String,
-  @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss.SSS")
   val deliveryDate: LocalDateTime,
   val dltLoadId: String,
   val dltId: String,
