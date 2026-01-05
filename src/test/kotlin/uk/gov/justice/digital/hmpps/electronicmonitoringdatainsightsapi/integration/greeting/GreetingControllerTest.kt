@@ -56,6 +56,45 @@ class GreetingControllerTest : IntegrationTestBase() {
       assertThat(result.createdAt).isEqualTo(now)
       assertThat(result.updatedAt).isEqualTo(now)
     }
+
+    @Test
+    fun `should return 400 when message is missing`() {
+      val invalidBody = mapOf<String, Any>()
+
+      webTestClient.post()
+        .uri("/greeting")
+        .headers(setAuthorisation())
+        .contentType(MediaType.APPLICATION_JSON)
+        .bodyValue(invalidBody)
+        .exchange()
+        .expectStatus().isBadRequest
+    }
+
+    @Test
+    fun `should return 400 when message is empty`() {
+      val emptyRequest = GreetingRequest(message = "")
+
+      webTestClient.post()
+        .uri("/greeting")
+        .headers(setAuthorisation())
+        .contentType(MediaType.APPLICATION_JSON)
+        .bodyValue(emptyRequest)
+        .exchange()
+        .expectStatus().isBadRequest
+    }
+
+    @Test
+    fun `should return 400 when message is not a string`() {
+      val invalidBody = mapOf("message" to mapOf("foo" to "bar"))
+
+      webTestClient.post()
+        .uri("/greeting")
+        .headers(setAuthorisation())
+        .contentType(MediaType.APPLICATION_JSON)
+        .bodyValue(invalidBody)
+        .exchange()
+        .expectStatus().isBadRequest
+    }
   }
 
   @Nested
