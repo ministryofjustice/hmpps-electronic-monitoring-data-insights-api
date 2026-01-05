@@ -10,6 +10,9 @@ services:
       - "8080:8080"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/health/ping"]
+    volumes:
+      - ~/.aws:/home/appuser/.aws
+
     environment:
       - SERVER_PORT=8080
       - HMPPS_AUTH_URL=http://hmpps-auth:8080/auth
@@ -19,6 +22,8 @@ services:
       - DB_PASSWORD=${DB_PASSWORD}
       - DB_PORT=${DB_PORT}
       - DB_NAME=${DB_NAME}
+      - AWS_PROFILE=modernisation-platform-data-eng-396913731313
+      - AWS_REGION=eu-west-2
 
   hmpps-auth:
     image: quay.io/hmpps/hmpps-auth:latest
