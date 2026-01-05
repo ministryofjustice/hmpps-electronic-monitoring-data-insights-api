@@ -21,9 +21,19 @@ dependencies {
   implementation("org.jetbrains.exposed:exposed-java-time:0.51.1")
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core")
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor")
-
   implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.3")
   implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.6.0")
+
+
+  implementation(platform("software.amazon.awssdk:bom:2.25.27"))
+  implementation("software.amazon.awssdk:athena")
+  implementation("software.amazon.awssdk:sso")
+  implementation("software.amazon.awssdk:ssooidc")
+  implementation("software.amazon.awssdk:sts")
+
+
+  implementation(platform("software.amazon.awssdk:bom:2.25.27"))
+  implementation("software.amazon.awssdk:athena")
 
   implementation("org.postgresql:postgresql:42.6.0")
 
