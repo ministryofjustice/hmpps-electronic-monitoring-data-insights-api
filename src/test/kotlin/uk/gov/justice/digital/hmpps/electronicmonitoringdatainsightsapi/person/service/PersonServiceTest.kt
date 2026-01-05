@@ -11,8 +11,6 @@ import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.r
 class PersonServiceTest {
 
   private val personRepository = mockk<PersonRepository>()
-
-  // 2. Inject the mock into the service
   private val personService = PersonService(personRepository)
 
   @Test
@@ -31,8 +29,6 @@ class PersonServiceTest {
     // Assert
     assertThat(result).isEqualTo(mockPerson)
     assertThat(result[0].personId).isEqualTo("123456")
-
-    // Verify the repository was actually called with the correct CRN
     verify(exactly = 1) { personRepository.findByCrn(crn) }
   }
 }

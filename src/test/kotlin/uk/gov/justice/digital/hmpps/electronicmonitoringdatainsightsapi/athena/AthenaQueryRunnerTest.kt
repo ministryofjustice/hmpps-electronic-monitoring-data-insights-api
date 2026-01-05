@@ -27,6 +27,7 @@ class AthenaQueryRunnerTest {
 
   @Test
   fun `run should wait for query to succeed and map all results`() {
+    // Arrange
     val sql = "SELECT * FROM test"
     val executionId = "exec-123"
 
@@ -50,15 +51,16 @@ class AthenaQueryRunnerTest {
         .nextToken(null)
         .build()
 
-    // Specify <String> to help Kotlin infer the mapper return type
     val results = runner.run<String>(sql) { it[0].varCharValue() }
 
+    // Act
     assertThat(results).containsExactly("actual_value")
     verify(exactly = 2) { athenaClient.getQueryExecution(any<GetQueryExecutionRequest>()) }
   }
 
   @Test
   fun `fetchPaged should use existing executionId from cursor and not start new query`() {
+    // Arrange
     val executionId = "existing-exec-id"
     val cursor = AthenaCursor(executionId, "token-abc").encode()
 
@@ -70,12 +72,10 @@ class AthenaQueryRunnerTest {
 
     val result = runner.fetchPaged<String>(sql = "SELECT...", cursor = cursor) { it[0].varCharValue() }
 
+    // Assert
     assertThat(result.items).containsExactly("paged-data")
-
-    // Assertions to verify the "Pure" logic (no new query started)
     verify(exactly = 0) { athenaClient.startQueryExecution(any<StartQueryExecutionRequest>()) }
     verify(exactly = 0) { athenaClient.getQueryExecution(any<GetQueryExecutionRequest>()) }
-
     val decodedNext = AthenaCursor.decode(result.nextToken)
     assertThat(decodedNext?.queryExecutionId).isEqualTo(executionId)
     assertThat(decodedNext?.nextToken).isEqualTo("token-xyz")
@@ -99,10 +99,9 @@ class AthenaQueryRunnerTest {
     val ex = assertThrows<IllegalStateException> {
       runner.run<String>("SELECT *") { "irrelevant" }
     }
+    // Assert
     assertThat(ex.message).contains("FAILED : Access Denied")
   }
-
-  // --- Helper Methods ---
 
   private fun buildExecutionResponse(state: QueryExecutionState) = GetQueryExecutionResponse.builder()
     .queryExecution(QueryExecution.builder()

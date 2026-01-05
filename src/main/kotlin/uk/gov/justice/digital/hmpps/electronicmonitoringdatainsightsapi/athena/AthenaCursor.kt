@@ -10,7 +10,6 @@ data class AthenaCursor(val queryExecutionId: String, val nextToken: String?) {
   }
 
   companion object {
-    // Explicitly naming the class is safer in Kotlin companion objects
     private val log = LoggerFactory.getLogger(AthenaCursor::class.java)
     fun decode(cursor: String?): AthenaCursor? {
       if (cursor.isNullOrBlank()) return null

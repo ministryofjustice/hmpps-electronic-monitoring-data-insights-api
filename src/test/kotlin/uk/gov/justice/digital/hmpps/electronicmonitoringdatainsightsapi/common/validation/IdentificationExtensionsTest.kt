@@ -8,24 +8,30 @@ class IdentificationExtensionsTest {
 
   @Test
   fun `toPersonId should convert valid numeric string to Long`() {
+    // Arrange & Act
     val result = "123456789".toPersonId()
+    // Assert
     assertThat(result).isEqualTo(123456789L)
   }
 
   @Test
   fun `toPersonId should throw IllegalArgumentException for non-numeric CRN`() {
+    // Arrange & Act
     val invalidCrn = "ABC123"
     val exception = assertThrows<IllegalArgumentException> {
       invalidCrn.toPersonId()
     }
+    // Assert
     assertThat(exception.message).isEqualTo("The CRN provided (ABC123) must be a numeric personId")
   }
 
   @Test
   fun `toLocationId should throw IllegalArgumentException for empty string`() {
+    // Arrange & Act
     val exception = assertThrows<IllegalArgumentException> {
       "".toLocationId()
     }
+    // Assert
     assertThat(exception.message).contains("must be a numeric locationId")
   }
 }

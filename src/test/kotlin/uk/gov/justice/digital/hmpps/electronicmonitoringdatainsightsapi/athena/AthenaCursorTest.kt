@@ -7,11 +7,14 @@ class AthenaCursorTest {
 
   @Test
   fun `should encode and decode a full cursor correctly`() {
+    // Arrange
     val original = AthenaCursor(queryExecutionId = "123-xyz", nextToken = "next-token-123")
 
+    // Act
     val encoded = original.encode()
     val decoded = AthenaCursor.decode(encoded)
 
+    // Assert
     assertThat(decoded).isEqualTo(original)
     assertThat(decoded?.queryExecutionId).isEqualTo("123-xyz")
     assertThat(decoded?.nextToken).isEqualTo("next-token-123")
@@ -19,11 +22,14 @@ class AthenaCursorTest {
 
   @Test
   fun `should handle null nextToken during round-trip`() {
+    // Arrange
     val original = AthenaCursor(queryExecutionId = "123-xyz", nextToken = null)
 
+    // Act
     val encoded = original.encode()
     val decoded = AthenaCursor.decode(encoded)
 
+    // Assert
     assertThat(decoded).isEqualTo(original)
     assertThat(decoded?.nextToken).isNull()
   }

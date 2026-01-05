@@ -11,10 +11,7 @@ import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.greeting
 
 class DeviceServiceTest {
 
-  // 1. Create a mock of the interface/dependency
   private val deviceRepository = mockk<DeviceRepository>()
-
-  // 2. Inject the mock into the service
   private val deviceService = DeviceService(deviceRepository)
 
   @Test
@@ -25,7 +22,6 @@ class DeviceServiceTest {
       Device(deviceId = 1, personId = 123, deviceStatus = "ACTIVE")
     )
 
-    // Tell the mock what to do when called
     every { deviceRepository.findByCrn(crn) } returns mockDevices
 
     // Act
@@ -34,8 +30,6 @@ class DeviceServiceTest {
     // Assert
     assertThat(result).isEqualTo(mockDevices)
     assertThat(result[0].deviceId).isEqualTo(1)
-
-    // Verify the repository was actually called with the correct CRN
     verify(exactly = 1) { deviceRepository.findByCrn(crn) }
   }
 }
