@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.hello
+package uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.greeting
 
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.DisplayName
@@ -28,7 +28,7 @@ class GreetingControllerTest : IntegrationTestBase() {
   inner class PostGreeting {
     @Test
     fun `it should return a 201 and store greeting value`() {
-      val message = "test hello message"
+      val message = "test greeting message"
       val id = UUID.randomUUID()
       val created = Greeting(
         id = id,

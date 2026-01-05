@@ -15,7 +15,6 @@ class DevSecurityConfig {
     http
       .authorizeHttpRequests {
         it.requestMatchers("/greeting/**").permitAll()
-        it.requestMatchers("/hello/**").permitAll()
         it.anyRequest().authenticated()
       }
       .csrf { it.disable() } // disable CSRF for local dev
