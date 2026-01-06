@@ -18,7 +18,7 @@ class PersonServiceTest {
     // Arrange
     val crn = "ABC123"
     val mockPerson = listOf(
-      Person(personId = "123456")
+      Person(personId = "123456"),
     )
 
     every { personRepository.findByCrn(crn) } returns mockPerson

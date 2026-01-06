@@ -4,5 +4,5 @@ import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.location
 
 data class LocationResponse(
   val items: List<Location>,
-  val nextToken: String?
+  val nextToken: String?,
 )

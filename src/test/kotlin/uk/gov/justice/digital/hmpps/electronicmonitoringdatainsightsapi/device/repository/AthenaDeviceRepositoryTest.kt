@@ -28,7 +28,7 @@ class AthenaDeviceRepositoryTest {
     } returns emptyList<Nothing>()
     repository.findByCrn(crn)
 
-    /// Assert
+    // / Assert
     assertThat(sqlSlot.captured).contains("person_id = 12345")
     assertThat(sqlSlot.captured).contains("WITH latest_device AS")
     assertThat(sqlSlot.captured).contains("LEFT JOIN latest_activation")
@@ -38,23 +38,23 @@ class AthenaDeviceRepositoryTest {
   fun `mapRow should correctly map all Athena columns to Device object`() {
     // Arrange
     val mockRow = listOf(
-      datum("101"),          // COL_DEVICE_ID
-      datum("GPS Tag"),      // COL_DEVICE_DESC
-      datum("1"),            // COL_DEVICE_MODEL_ID
-      datum("Model X"),      // COL_DEVICE_MODEL_NAME
-      datum("SN-999"),       // COL_DEVICE_SERIAL_NUMBER
-      datum("ACTIVE"),       // COL_DEVICE_STATUS
-      datum("5"),            // COL_FIRMWARE_ID
+      datum("101"), // COL_DEVICE_ID
+      datum("GPS Tag"), // COL_DEVICE_DESC
+      datum("1"), // COL_DEVICE_MODEL_ID
+      datum("Model X"), // COL_DEVICE_MODEL_NAME
+      datum("SN-999"), // COL_DEVICE_SERIAL_NUMBER
+      datum("ACTIVE"), // COL_DEVICE_STATUS
+      datum("5"), // COL_FIRMWARE_ID
       datum("2026-10-27 10:00:00.000000"), // COL_FIRMWARE_LAST_UPDATED_DATE
-      datum("v1.0"),         // COL_FIRMWARE_VERSION
-      datum("Vodafone"),     // COL_OPERATOR_NAME
-      datum("07123456789"),  // COL_SIM_NUMBER
+      datum("v1.0"), // COL_FIRMWARE_VERSION
+      datum("Vodafone"), // COL_OPERATOR_NAME
+      datum("07123456789"), // COL_SIM_NUMBER
       datum("2026-10-27 12:00:00.000000"), // COL_LAST_UPDATED_DATE
-      datum("54321"),        // COL_PERSON_ID
-      datum("99"),           // COL_LOCATION_ID
+      datum("54321"), // COL_PERSON_ID
+      datum("99"), // COL_LOCATION_ID
       datum("End of sentence"), // COL_DEACTIVATION_REASON
       datum("2026-01-01 09:00:00.000000"), // COL_DEVICE_ACTIVATION_DATE
-      datum(null)            // COL_DEVICE_DEACTIVATION_DATE
+      datum(null), // COL_DEVICE_DEACTIVATION_DATE
     )
 
     // Act

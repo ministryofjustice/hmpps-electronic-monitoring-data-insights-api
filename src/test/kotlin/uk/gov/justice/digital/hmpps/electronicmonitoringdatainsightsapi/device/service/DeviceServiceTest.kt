@@ -19,7 +19,7 @@ class DeviceServiceTest {
     // Arrange
     val crn = "X123456"
     val mockDevices = listOf(
-      Device(deviceId = 1, personId = 123, deviceStatus = "ACTIVE")
+      Device(deviceId = 1, personId = 123, deviceStatus = "ACTIVE"),
     )
 
     every { deviceRepository.findByCrn(crn) } returns mockDevices
