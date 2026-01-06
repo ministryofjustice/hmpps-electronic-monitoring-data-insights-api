@@ -9,7 +9,5 @@ import kotlin.time.ExperimentalTime
 class PersonService(private val personRepository: PersonRepository) {
 
   @OptIn(ExperimentalTime::class)
-  fun findByCrn(crn: String): List<Person> {
-    return personRepository.findByCrn(crn)
-  }
+  fun findByCrn(crn: String): List<Person> = personRepository.findByCrn(crn)
 }

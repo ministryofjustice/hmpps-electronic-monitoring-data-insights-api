@@ -14,8 +14,10 @@ import java.time.ZoneOffset
 import kotlin.String
 
 @Repository
-class AthenaDeviceRepository(private val runner: AthenaQueryRunner,
-                             @Value("\${athena.mdssDatabase}") private val mdssDatabase: String) : DeviceRepository {
+class AthenaDeviceRepository(
+  private val runner: AthenaQueryRunner,
+  @Value("\${athena.mdssDatabase}") private val mdssDatabase: String,
+) : DeviceRepository {
 
   override fun findByCrn(crn: String): List<Device> {
     val personId = crn.toPersonId()
@@ -53,14 +55,13 @@ class AthenaDeviceRepository(private val runner: AthenaQueryRunner,
     WHERE d.rn = 1 
       AND da.rn = 1
       AND person_id = $personId
-        """.trimIndent()
+    """.trimIndent()
 
   private fun mapRow(cols: List<Datum>): Device {
     fun v(i: Int): String? = cols.getOrNull(i)?.varCharValue()
 
     // Helper to handle required numeric fields with clear context
-    fun requiredInt(i: Int, fieldName: String): Int =
-      v(i)?.toIntOrNull() ?: throw DataIntegrityException("$fieldName is missing or invalid at index $i")
+    fun requiredInt(i: Int, fieldName: String): Int = v(i)?.toIntOrNull() ?: throw DataIntegrityException("$fieldName is missing or invalid at index $i")
 
     fun ts(i: Int): Instant? = v(i)
       ?.takeIf { it.isNotBlank() }
@@ -83,7 +84,7 @@ class AthenaDeviceRepository(private val runner: AthenaQueryRunner,
       locationId = v(COL_LOCATION_ID)?.toIntOrNull(),
       deactivationReasonName = v(COL_DEACTIVATION_REASON),
       deviceActivationDate = ts(COL_DEVICE_ACTIVATION_DATE),
-      deviceDeactivationDate = ts(COL_DEVICE_DEACTIVATION_DATE)
+      deviceDeactivationDate = ts(COL_DEVICE_DEACTIVATION_DATE),
     )
   }
 

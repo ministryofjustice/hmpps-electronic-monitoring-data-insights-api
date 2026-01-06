@@ -1,9 +1,11 @@
 package uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.device.model
 
-import kotlin.time.ExperimentalTime
 import java.time.Instant
+import kotlin.time.ExperimentalTime
 
-data class Device @OptIn(ExperimentalTime::class) constructor(
+data class Device
+@OptIn(ExperimentalTime::class)
+constructor(
   val deviceId: Int,
   val personId: Int,
   val deviceStatus: String? = null,

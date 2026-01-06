@@ -1,9 +1,11 @@
 package uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.model
 
-import kotlin.time.ExperimentalTime
 import java.time.Instant
+import kotlin.time.ExperimentalTime
 
-data class Person @OptIn(ExperimentalTime::class) constructor(
+data class Person
+@OptIn(ExperimentalTime::class)
+constructor(
   val personId: String?,
   val firstName: String? = null,
   val lastName: String? = null,
@@ -16,5 +18,5 @@ data class Person @OptIn(ExperimentalTime::class) constructor(
   val orderType: String? = null,
   val orderTypeDescription: String? = null,
   val orderStart: Instant? = null,
-  val orderEnd: Instant? = null
+  val orderEnd: Instant? = null,
 )

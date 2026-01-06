@@ -1,7 +1,7 @@
 package uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.athena
 
-import java.util.Base64
 import org.slf4j.LoggerFactory
+import java.util.Base64
 
 data class AthenaCursor(val queryExecutionId: String, val nextToken: String?) {
   fun encode(): String {

@@ -31,7 +31,7 @@ class AthenaLocationRepositoryTest {
 
     val mockRunnerResult = PaginatedResult(
       items = listOf(mockk<Location>()),
-      nextToken = "new-cursor"
+      nextToken = "new-cursor",
     )
 
     // Act
@@ -41,7 +41,7 @@ class AthenaLocationRepositoryTest {
         database = eq(mdssDatabase),
         cursor = eq(nextToken),
         pageSize = 100,
-        mapper = any<(List<Datum>) -> Location>()
+        mapper = any<(List<Datum>) -> Location>(),
       )
     } returns mockRunnerResult
     val result = repository.findAllByCrnAndTimespan(crn, from, to, nextToken)
@@ -76,24 +76,24 @@ class AthenaLocationRepositoryTest {
   fun `mapRow should correctly map double values and numeric fields`() {
     // Arrange
     val mockRow = listOf(
-      datum("999"),           // 0: position_id
-      datum("123456"),         // 1: person_id
-      datum("555"),           // 2: device_id
+      datum("999"), // 0: position_id
+      datum("123456"), // 1: person_id
+      datum("555"), // 2: device_id
       datum("2026-10-01 10:00:00.000000"), // 3: position_gps_date
       datum("2026-10-01 10:01:00.000000"), // 4: recorded_date
       datum("2026-10-01 10:02:00.000000"), // 5: uploaded_date
-      datum("30"),            // 6: speed
-      datum("8"),             // 7: satellite
-      datum("180"),           // 8: direction
-      datum("1"),             // 9: precision
-      datum("0"),             // 10: lbs
-      datum("1"),             // 11: hdop
-      datum("POINT(...)"),    // 12: geometry
-      datum("51.5074"),       // 13: latitude
-      datum("-0.1278"),       // 14: longitude
-      datum("1"),             // 15: client_id
-      datum("10"),            // 16: location_id
-      datum("100")            // 17: circulation_id
+      datum("30"), // 6: speed
+      datum("8"), // 7: satellite
+      datum("180"), // 8: direction
+      datum("1"), // 9: precision
+      datum("0"), // 10: lbs
+      datum("1"), // 11: hdop
+      datum("POINT(...)"), // 12: geometry
+      datum("51.5074"), // 13: latitude
+      datum("-0.1278"), // 14: longitude
+      datum("1"), // 15: client_id
+      datum("10"), // 16: location_id
+      datum("100"), // 17: circulation_id
     )
 
     // Act

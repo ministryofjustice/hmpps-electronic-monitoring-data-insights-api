@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.greeting
 
+import jakarta.validation.Valid
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
@@ -15,13 +16,13 @@ import java.util.UUID
 class GreetingController(private val greetingService: GreetingService) {
 
   @PostMapping
-  fun createGreeting(@RequestBody request: GreetingRequest): ResponseEntity<Greeting> {
+  fun createGreeting(@Valid @RequestBody request: GreetingRequest): ResponseEntity<Greeting> {
     val greeting = greetingService.createGreeting(request.message)
     return ResponseEntity.status(201).body(greeting)
   }
 
   @PutMapping("/{id}")
-  fun updateGreeting(@PathVariable id: UUID, @RequestBody request: GreetingRequest): ResponseEntity<Greeting> {
+  fun updateGreeting(@PathVariable id: UUID, @Valid @RequestBody request: GreetingRequest): ResponseEntity<Greeting> {
     val updated = greetingService.updateGreeting(id, request.message)
     return if (updated != null) {
       ResponseEntity.ok(updated)

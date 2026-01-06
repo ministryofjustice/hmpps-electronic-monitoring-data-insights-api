@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.hello
+package uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.greeting
 
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.DisplayName
@@ -28,7 +28,7 @@ class GreetingControllerTest : IntegrationTestBase() {
   inner class PostGreeting {
     @Test
     fun `it should return a 201 and store greeting value`() {
-      val message = "test hello message"
+      val message = "test greeting message"
       val id = UUID.randomUUID()
       val created = Greeting(
         id = id,
@@ -55,6 +55,45 @@ class GreetingControllerTest : IntegrationTestBase() {
       assertThat(result.message).isEqualTo(message)
       assertThat(result.createdAt).isEqualTo(now)
       assertThat(result.updatedAt).isEqualTo(now)
+    }
+
+    @Test
+    fun `should return 400 when message is missing`() {
+      val invalidBody = mapOf<String, Any>()
+
+      webTestClient.post()
+        .uri("/greeting")
+        .headers(setAuthorisation())
+        .contentType(MediaType.APPLICATION_JSON)
+        .bodyValue(invalidBody)
+        .exchange()
+        .expectStatus().isBadRequest
+    }
+
+    @Test
+    fun `should return 400 when message is empty`() {
+      val emptyRequest = GreetingRequest(message = "")
+
+      webTestClient.post()
+        .uri("/greeting")
+        .headers(setAuthorisation())
+        .contentType(MediaType.APPLICATION_JSON)
+        .bodyValue(emptyRequest)
+        .exchange()
+        .expectStatus().isBadRequest
+    }
+
+    @Test
+    fun `should return 400 when message is not a string`() {
+      val invalidBody = mapOf("message" to mapOf("foo" to "bar"))
+
+      webTestClient.post()
+        .uri("/greeting")
+        .headers(setAuthorisation())
+        .contentType(MediaType.APPLICATION_JSON)
+        .bodyValue(invalidBody)
+        .exchange()
+        .expectStatus().isBadRequest
     }
   }
 

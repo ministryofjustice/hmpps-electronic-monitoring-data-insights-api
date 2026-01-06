@@ -14,16 +14,20 @@ import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.m
 import kotlin.math.min
 
 @Component
-class AthenaQueryRunner(private val athena: AthenaClient,
+class AthenaQueryRunner(
+  private val athena: AthenaClient,
   @Value("\${athena.defaultDatabase}") private val defaultDatabase: String,
   @Value("\${athena.outputLocation}") private val outputLocation: String,
   @Value("\${athena.pollIntervalMs:500}") private val pollIntervalMs: Long,
   @Value("\${athena.timeoutMs:60000}") private val timeoutMs: Long,
 ) {
 
-  fun <T> run(sql: String, database: String = defaultDatabase, skipHeaderRow: Boolean = true,
-      mapper: (List<Datum>) -> T, ): List<T> {
-
+  fun <T> run(
+    sql: String,
+    database: String = defaultDatabase,
+    skipHeaderRow: Boolean = true,
+    mapper: (List<Datum>) -> T,
+  ): List<T> {
     val executionId = startQuery(sql, database)
     waitForCompletion(executionId)
     return fetchAllResults(executionId, skipHeaderRow, mapper)
@@ -33,9 +37,13 @@ class AthenaQueryRunner(private val athena: AthenaClient,
    * If [cursor] is null, starts a new query.
    * If [cursor] is present, fetches the next batch for the existing query.
    */
-  fun <T> fetchPaged(sql: String, database: String = defaultDatabase, cursor: String? = null, pageSize: Int = 100,
-      mapper: (List<Datum>) -> T): PaginatedResult<T> {
-
+  fun <T> fetchPaged(
+    sql: String,
+    database: String = defaultDatabase,
+    cursor: String? = null,
+    pageSize: Int = 100,
+    mapper: (List<Datum>) -> T,
+  ): PaginatedResult<T> {
     val athenaCursor = AthenaCursor.decode(cursor)
 
     val executionId = if (athenaCursor == null) {
@@ -74,12 +82,12 @@ class AthenaQueryRunner(private val athena: AthenaClient,
       .queryExecutionContext(
         QueryExecutionContext.builder()
           .database(database)
-          .build()
+          .build(),
       )
       .resultConfiguration(
         ResultConfiguration.builder()
           .outputLocation(outputLocation)
-          .build()
+          .build(),
       )
       .build()
 
@@ -92,7 +100,7 @@ class AthenaQueryRunner(private val athena: AthenaClient,
 
     while (true) {
       val exec = athena.getQueryExecution(
-        GetQueryExecutionRequest.builder().queryExecutionId(executionId).build()
+        GetQueryExecutionRequest.builder().queryExecutionId(executionId).build(),
       ).queryExecution()
 
       when (exec.status().state()) {
@@ -112,9 +120,7 @@ class AthenaQueryRunner(private val athena: AthenaClient,
     }
   }
 
-  private fun <T> fetchAllResults(executionId: String, skipHeaderRow: Boolean, mapper: (List<Datum>) -> T):
-      List<T> {
-
+  private fun <T> fetchAllResults(executionId: String, skipHeaderRow: Boolean, mapper: (List<Datum>) -> T): List<T> {
     val out = mutableListOf<T>()
     var nextToken: String? = null
     var firstPage = true
@@ -124,7 +130,7 @@ class AthenaQueryRunner(private val athena: AthenaClient,
         GetQueryResultsRequest.builder()
           .queryExecutionId(executionId)
           .nextToken(nextToken)
-          .build()
+          .build(),
       )
 
       val rows = resp.resultSet().rows()

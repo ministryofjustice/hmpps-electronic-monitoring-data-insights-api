@@ -10,10 +10,8 @@ import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.greeting.LocationService
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.location.model.Location
-import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.model.Person
-import java.util.UUID
-import kotlin.time.ExperimentalTime
 import java.time.Instant
+import kotlin.time.ExperimentalTime
 
 @RestController
 @RequestMapping("/people/{crn}/locations")
@@ -23,14 +21,18 @@ class LocationController(private val locationService: LocationService) {
   @OptIn(ExperimentalTime::class)
   @Operation(summary = "Get location history", description = "Returns a paginated list of GPS coordinates for a CRN within a specific timespan.")
   @GetMapping
-  fun findAllByCrnAndTimespan(@PathVariable crn: String, @RequestParam from: Instant, @RequestParam to: Instant,
-                   @RequestParam(required = false) nextToken: String?): ResponseEntity<LocationResponse> {
+  fun findAllByCrnAndTimespan(
+    @PathVariable crn: String,
+    @RequestParam from: Instant,
+    @RequestParam to: Instant,
+    @RequestParam(required = false) nextToken: String?,
+  ): ResponseEntity<LocationResponse> {
     val pagedLocations = locationService.findAllByCrnAndTimespan(crn, from, to, nextToken)
     return ResponseEntity.ok(
       LocationResponse(
         items = pagedLocations.locations,
-        nextToken = pagedLocations.nextToken
-      )
+        nextToken = pagedLocations.nextToken,
+      ),
     )
   }
 

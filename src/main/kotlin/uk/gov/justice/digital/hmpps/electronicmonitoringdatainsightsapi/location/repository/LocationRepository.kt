@@ -2,7 +2,6 @@ package uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.locatio
 
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.location.model.Location
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.location.model.PagedLocations
-import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.model.Person
 import java.time.Instant
 
 interface LocationRepository {

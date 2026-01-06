@@ -6,33 +6,38 @@ import software.amazon.awssdk.services.athena.model.Datum
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.athena.AthenaQueryRunner
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.exception.DataIntegrityException
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.util.DateTimeConstants
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.validation.toLocationId
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.validation.toPersonId
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.location.model.Location
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.location.model.PagedLocations
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneOffset
-import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.validation.toPersonId
-import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.validation.toLocationId
 
 @Repository
-class AthenaLocationRepository(private val runner: AthenaQueryRunner,
+class AthenaLocationRepository(
+  private val runner: AthenaQueryRunner,
   @Value("\${athena.mdssDatabase}") private val mdssDatabase: String,
 ) : LocationRepository {
 
   override fun findAllByCrnAndTimespan(crn: String, from: Instant, to: Instant, nextToken: String?): PagedLocations {
     val personId = crn.toPersonId()
     val sql = buildTimeSpanSql(personId, from, to)
-    val result = runner.fetchPaged(sql = sql, database = mdssDatabase, cursor = nextToken, pageSize = 100,
-      mapper = ::mapRow
+    val result = runner.fetchPaged(
+      sql = sql,
+      database = mdssDatabase,
+      cursor = nextToken,
+      pageSize = 100,
+      mapper = ::mapRow,
     )
 
     return PagedLocations(
       locations = result.items,
-      nextToken = result.nextToken
+      nextToken = result.nextToken,
     )
   }
 
-  override fun findByCrnAndId(crn: String, locationId: String):  List<Location> {
+  override fun findByCrnAndId(crn: String, locationId: String): List<Location> {
     val personId = crn.toPersonId()
     val locationId = locationId.toLocationId()
     val sql = buildLocationIdSql(personId, locationId)
@@ -66,8 +71,7 @@ class AthenaLocationRepository(private val runner: AthenaQueryRunner,
     fun v(i: Int): String? = cols.getOrNull(i)?.varCharValue()
 
     // Helper to handle required numeric fields with clear context
-    fun requiredInt(i: Int, fieldName: String): Int =
-      v(i)?.toIntOrNull() ?: throw DataIntegrityException("$fieldName is missing or invalid at index $i")
+    fun requiredInt(i: Int, fieldName: String): Int = v(i)?.toIntOrNull() ?: throw DataIntegrityException("$fieldName is missing or invalid at index $i")
 
     fun ts(i: Int): Instant? = v(i)
       ?.takeIf { it.isNotBlank() }

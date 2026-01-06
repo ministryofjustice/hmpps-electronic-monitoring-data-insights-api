@@ -13,8 +13,10 @@ import java.time.ZoneOffset
 import kotlin.String
 
 @Repository
-class AthenaPersonRepository(private val runner: AthenaQueryRunner,
-                             @Value("\${athena.fmsDatabase}") private val fmsDatabase: String) : PersonRepository {
+class AthenaPersonRepository(
+  private val runner: AthenaQueryRunner,
+  @Value("\${athena.fmsDatabase}") private val fmsDatabase: String,
+) : PersonRepository {
 
   override fun findByCrn(crn: String): List<Person> {
     val personId = validatePersonId(crn)
@@ -22,10 +24,8 @@ class AthenaPersonRepository(private val runner: AthenaQueryRunner,
     return runner.run(sql, fmsDatabase, skipHeaderRow = true, mapper = ::mapRow)
   }
 
-  private fun validatePersonId(personId: String): String {
-    return personId.takeIf { it.isNotBlank() }
-      ?: throw IllegalArgumentException("The CRN provided ($personId) must be a numeric personId")
-  }
+  private fun validatePersonId(personId: String): String = personId.takeIf { it.isNotBlank() }
+    ?: throw IllegalArgumentException("The CRN provided ($personId) must be a numeric personId")
 
   private fun buildPersonIdSql(personId: String): String =
     """
@@ -39,7 +39,7 @@ class AthenaPersonRepository(private val runner: AthenaQueryRunner,
           AND c.sys_id = '$personId'
           Order by c.sys_created_on DESC
           limit 1         
-          """.trimIndent()
+    """.trimIndent()
 
   private fun mapRow(cols: List<Datum>): Person {
     fun v(i: Int): String? = cols.getOrNull(i)?.varCharValue()
@@ -55,18 +55,18 @@ class AthenaPersonRepository(private val runner: AthenaQueryRunner,
 
     return Person(
       personId = requiredId(COL_PERSON_ID, "person_id"),
-      firstName  = v(COL_FIRST_NAME),
-      lastName  = v(COL_LAST_NAME),
-      dob  = v(COL_DOB),
-      street  = v(COL_STREET),
-      state  = v(COL_STATE),
-      city  = v(COL_CITY),
-      zip  = v(COL_ZIP),
-      country  = v(COL_COUNTRY),
-      orderType  = v(COL_ORDER_TYPE),
-      orderTypeDescription  = v(COL_ORDER_TYPE_DESC),
+      firstName = v(COL_FIRST_NAME),
+      lastName = v(COL_LAST_NAME),
+      dob = v(COL_DOB),
+      street = v(COL_STREET),
+      state = v(COL_STATE),
+      city = v(COL_CITY),
+      zip = v(COL_ZIP),
+      country = v(COL_COUNTRY),
+      orderType = v(COL_ORDER_TYPE),
+      orderTypeDescription = v(COL_ORDER_TYPE_DESC),
       orderStart = ts(COL_ORDER_START),
-      orderEnd= ts(COL_ORDER_END),
+      orderEnd = ts(COL_ORDER_END),
     )
   }
 

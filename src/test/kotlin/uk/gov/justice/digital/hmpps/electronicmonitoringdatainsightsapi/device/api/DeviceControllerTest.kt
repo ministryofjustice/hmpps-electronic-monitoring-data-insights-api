@@ -11,7 +11,9 @@ import org.springframework.http.MediaType
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
-import org.springframework.test.web.servlet.result.MockMvcResultMatchers.*
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers.content
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.device.api.DeviceController
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.device.model.Device
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.greeting.DeviceService
@@ -33,15 +35,17 @@ class DeviceControllerTest {
     val crn = "123456"
     val mockDevices = listOf(
       Device(deviceId = 101, personId = 123456, deviceStatus = "ACTIVE"),
-      Device(deviceId = 102, personId = 123456, deviceStatus = "INACTIVE")
+      Device(deviceId = 102, personId = 123456, deviceStatus = "INACTIVE"),
     )
 
     // Act
     every { deviceService.findByCrn(crn) } returns mockDevices
 
     // Assert
-    mockMvc.perform(get("/people/$crn/device")
-      .accept(MediaType.APPLICATION_JSON))
+    mockMvc.perform(
+      get("/people/$crn/device")
+        .accept(MediaType.APPLICATION_JSON),
+    )
       .andExpect(status().isOk)
       .andExpect(content().contentType(MediaType.APPLICATION_JSON))
       .andExpect(jsonPath("$.length()").value(2))

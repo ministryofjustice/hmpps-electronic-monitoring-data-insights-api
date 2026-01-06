@@ -23,7 +23,7 @@ class AthenaPersonRepositoryTest {
     val crn = "12345"
     val sqlSlot = slot<String>()
 
-    //Act
+    // Act
     every {
       runner.run(capture(sqlSlot), eq(fmsDatabase), any(), any<(List<Datum>) -> Any>())
     } returns emptyList<Nothing>()
@@ -39,19 +39,19 @@ class AthenaPersonRepositoryTest {
   fun `mapRow should map Athena columns to Person object correctly`() {
     // Arrange
     val mockRow = listOf(
-      datum("uuid-123"),    // 0: person_id
-      datum("John"),        // 1: first_name
-      datum("Doe"),         // 2: last_name
-      datum("1985-05-15"),  // 3: dob
-      datum("Main St"),     // 4: street
-      datum("London"),      // 5: state
-      datum("London"),      // 6: city
-      datum("E1 1AA"),      // 7: zip
-      datum("UK"),          // 8: country
-      datum("GPS"),         // 9: order_type
-      datum("GPS Desc"),    // 10: order_type_desc
+      datum("uuid-123"), // 0: person_id
+      datum("John"), // 1: first_name
+      datum("Doe"), // 2: last_name
+      datum("1985-05-15"), // 3: dob
+      datum("Main St"), // 4: street
+      datum("London"), // 5: state
+      datum("London"), // 6: city
+      datum("E1 1AA"), // 7: zip
+      datum("UK"), // 8: country
+      datum("GPS"), // 9: order_type
+      datum("GPS Desc"), // 10: order_type_desc
       datum("2023-01-01 10:00:00.000000"), // 11: order_start
-      datum("2023-12-31 23:59:59.000000")  // 12: order_end
+      datum("2023-12-31 23:59:59.000000"), // 12: order_end
     )
 
     // Act
@@ -78,7 +78,7 @@ class AthenaPersonRepositoryTest {
       repeat(12) { add(datum("some value")) }
     }
 
-    //Act
+    // Act
     every { runner.run<Any>(any(), any(), any(), any()) } answers {
       val mapper = it.invocation.args[3] as (List<Datum>) -> Any
       listOf(mapper(invalidRow))

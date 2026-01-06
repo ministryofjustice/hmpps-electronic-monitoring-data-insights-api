@@ -10,8 +10,7 @@ import software.amazon.awssdk.services.athena.AthenaClient
 class AthenaConfig(@Value("\${aws.region}") private val region: String) {
 
   @Bean
-  fun athenaClient(): AthenaClient =
-    AthenaClient.builder()
-      .region(Region.of(region))
-      .build()
+  fun athenaClient(): AthenaClient = AthenaClient.builder()
+    .region(Region.of(region))
+    .build()
 }

@@ -8,7 +8,18 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import software.amazon.awssdk.services.athena.AthenaClient
-import software.amazon.awssdk.services.athena.model.*
+import software.amazon.awssdk.services.athena.model.Datum
+import software.amazon.awssdk.services.athena.model.GetQueryExecutionRequest
+import software.amazon.awssdk.services.athena.model.GetQueryExecutionResponse
+import software.amazon.awssdk.services.athena.model.GetQueryResultsRequest
+import software.amazon.awssdk.services.athena.model.GetQueryResultsResponse
+import software.amazon.awssdk.services.athena.model.QueryExecution
+import software.amazon.awssdk.services.athena.model.QueryExecutionState
+import software.amazon.awssdk.services.athena.model.QueryExecutionStatus
+import software.amazon.awssdk.services.athena.model.ResultSet
+import software.amazon.awssdk.services.athena.model.Row
+import software.amazon.awssdk.services.athena.model.StartQueryExecutionRequest
+import software.amazon.awssdk.services.athena.model.StartQueryExecutionResponse
 
 class AthenaQueryRunnerTest {
   private val athenaClient = mockk<AthenaClient>()
@@ -21,7 +32,7 @@ class AthenaQueryRunnerTest {
       defaultDatabase = "test_db",
       outputLocation = "s3://test-output",
       pollIntervalMs = 1, // High speed for tests
-      timeoutMs = 1000
+      timeoutMs = 1000,
     )
   }
 
@@ -38,16 +49,18 @@ class AthenaQueryRunnerTest {
     // Mock Polling: RUNNING once, then SUCCEEDED
     every { athenaClient.getQueryExecution(any<GetQueryExecutionRequest>()) } returnsMany listOf(
       buildExecutionResponse(QueryExecutionState.RUNNING),
-      buildExecutionResponse(QueryExecutionState.SUCCEEDED)
+      buildExecutionResponse(QueryExecutionState.SUCCEEDED),
     )
 
     // Mock Results: Header row (index 0) and Data row (index 1)
     every { athenaClient.getQueryResults(any<GetQueryResultsRequest>()) } returns
       GetQueryResultsResponse.builder()
-        .resultSet(ResultSet.builder().rows(
-          buildRow("column_header"),
-          buildRow("actual_value")
-        ).build())
+        .resultSet(
+          ResultSet.builder().rows(
+            buildRow("column_header"),
+            buildRow("actual_value"),
+          ).build(),
+        )
         .nextToken(null)
         .build()
 
@@ -92,8 +105,8 @@ class AthenaQueryRunnerTest {
           QueryExecutionStatus.builder()
             .state(QueryExecutionState.FAILED)
             .stateChangeReason("Access Denied")
-            .build()
-        ).build()
+            .build(),
+        ).build(),
       ).build()
 
     val ex = assertThrows<IllegalStateException> {
@@ -104,9 +117,11 @@ class AthenaQueryRunnerTest {
   }
 
   private fun buildExecutionResponse(state: QueryExecutionState) = GetQueryExecutionResponse.builder()
-    .queryExecution(QueryExecution.builder()
-      .status(QueryExecutionStatus.builder().state(state).build())
-      .build())
+    .queryExecution(
+      QueryExecution.builder()
+        .status(QueryExecutionStatus.builder().state(state).build())
+        .build(),
+    )
     .build()
 
   private fun buildRow(value: String) = Row.builder()

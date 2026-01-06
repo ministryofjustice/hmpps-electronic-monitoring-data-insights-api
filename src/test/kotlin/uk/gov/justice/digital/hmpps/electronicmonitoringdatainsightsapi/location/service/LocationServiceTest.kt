@@ -27,7 +27,7 @@ class LocationServiceTest {
 
     val mockPagedResult = PagedLocations(
       listOf(Location(positionId = 101, personId = 12345, deviceId = 98765, positionLatitude = 51.5074, positionLongitude = -0.1278)),
-      nextToken = "next-token"
+      nextToken = "next-token",
     )
 
     // Act
@@ -53,7 +53,7 @@ class LocationServiceTest {
       locationService.findAllByCrnAndTimespan(crn, from, to, null)
     }
 
-    //Assert
+    // Assert
     assertThat(exception.message).contains("must be before or equal to")
     verify(exactly = 0) { locationRepository.findAllByCrnAndTimespan(any(), any(), any(), any()) }
   }
