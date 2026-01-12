@@ -15,7 +15,6 @@ class DevSecurityConfig {
     http
       .authorizeHttpRequests {
         it.requestMatchers("/greeting/**").permitAll()
-        it.requestMatchers("/hello/**").permitAll()
         it.requestMatchers("/people/**").permitAll()
         it.requestMatchers("/v3/api-docs/**").permitAll()
         it.requestMatchers("/swagger-ui/**").permitAll()

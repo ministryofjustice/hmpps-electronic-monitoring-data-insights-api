@@ -2,5 +2,5 @@ package uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.locatio
 
 data class PagedLocations(
   val locations: List<Location>,
-  val nextToken: String?
+  val nextToken: String?,
 )

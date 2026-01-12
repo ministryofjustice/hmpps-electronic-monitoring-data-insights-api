@@ -2,5 +2,5 @@ package uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.
 
 data class PaginatedResult<T>(
   val items: List<T>,
-  val nextToken: String?
+  val nextToken: String?,
 )

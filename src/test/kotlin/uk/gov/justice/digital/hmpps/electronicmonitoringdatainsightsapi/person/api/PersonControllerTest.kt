@@ -11,7 +11,9 @@ import org.springframework.http.MediaType
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
-import org.springframework.test.web.servlet.result.MockMvcResultMatchers.*
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers.content
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.api.PersonController
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.model.Person
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.service.PersonService
@@ -32,20 +34,21 @@ class PersonControllerTest {
     // Arrange
     val crn = "123456"
     val mockPerson = listOf(
-      Person(personId = "123456")
+      Person(personId = "123456"),
     )
 
-    //Act
+    // Act
     every { personService.findByCrn(crn) } returns mockPerson
 
     // Assert
-    mockMvc.perform(get("/people/$crn")
-      .accept(MediaType.APPLICATION_JSON))
+    mockMvc.perform(
+      get("/people/$crn")
+        .accept(MediaType.APPLICATION_JSON),
+    )
       .andExpect(status().isOk)
       .andExpect(content().contentType(MediaType.APPLICATION_JSON))
       .andExpect(jsonPath("$.length()").value(1))
       .andExpect(jsonPath("$[0].personId").value("123456"))
-
 
     verify(exactly = 1) { personService.findByCrn(crn) }
   }
@@ -58,7 +61,7 @@ class PersonControllerTest {
     // Act
     every { personService.findByCrn(crn) } returns emptyList()
 
-    //Assert
+    // Assert
     mockMvc.perform(get("/people/$crn"))
       .andExpect(status().isOk)
       .andExpect(jsonPath("$.length()").value(0))

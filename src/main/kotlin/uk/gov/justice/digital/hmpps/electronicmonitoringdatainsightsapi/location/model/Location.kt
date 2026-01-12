@@ -1,9 +1,11 @@
 package uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.location.model
 
-import kotlin.time.ExperimentalTime
 import java.time.Instant
+import kotlin.time.ExperimentalTime
 
-data class Location @OptIn(ExperimentalTime::class) constructor(
+data class Location
+@OptIn(ExperimentalTime::class)
+constructor(
   val positionId: Int,
   val personId: Int?,
   val deviceId: Int?,

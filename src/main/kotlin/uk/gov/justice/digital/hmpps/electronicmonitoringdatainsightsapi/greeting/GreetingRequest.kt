@@ -1,3 +1,8 @@
 package uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.greeting
 
-data class GreetingRequest(val message: String)
+import jakarta.validation.constraints.NotBlank
+
+data class GreetingRequest(
+  @field:NotBlank(message = "Message must not be blank")
+  val message: String,
+)
