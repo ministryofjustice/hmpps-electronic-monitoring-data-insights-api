@@ -135,3 +135,33 @@ docker compose pull && docker compose up --scale hmpps-electronic-monitoring-dat
 
 will just start a docker instance of HMPPS Auth. The application should then be started with a `dev` active profile
 in Intellij.
+
+
+### Running the application with connection to dev Athena
+
+When deployed to cloud-platform, the pod running the service is configured to use a service account which gives 
+it the permissions of the linked IAM role. The linked IAM role is allowed to assume a role that gives it access to the 
+Electronic Monitoring Datastore (Athena). When we're running the application locally, we want to try to connect to 
+AWS/Athena in a similar way to the deployed service. To achieve this, we can get a programmatic access key which will 
+give our workstation access to AWS.
+
+Navigate to https://moj.awsapps.com/start/#/?tab=accounts and retrieve access keys for 
+`electronic-monitoring-data-test`. Add these to the `.env` file in root of this project. N.B. These will expire so you
+will need to refresh them periodically.
+
+e.g.
+```env
+AWS_ACCESS_KEY_ID="ASIAIOSFODNN7EXAMPLE"
+AWS_SECRET_ACCESS_KEY="wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+AWS_SESSION_TOKEN="IQoJb3JpZ2luX2IQoJb3JpZ2luX2IQoJb3JpZ2luX2IQoJb3JpZ2luX2IQoJb3JpZVERYLONGSTRINGEXAMPLE"
+```
+
+These credentials will allow access to Athena without any additional configuration, however, the goal is to connect 
+to Athena in a similar way the deployed service will, so we will also configure a role to assume. The 
+`./scripts/get-athena-credentials.sh` script will fetch the ARN of the role the dev environment will use to connect to 
+Athena. Add this to your `.env` file.
+
+e.g.
+```env
+ATHENA_GENERAL_IAM_ROLE=""
+```
