@@ -27,7 +27,9 @@ class ElectronicMonitoringDataInsightsApiExceptionHandler {
         userMessage = "Validation failure: ${e.message}",
         developerMessage = e.message,
       ),
-    ).also { log.info("Validation exception: {}", e.message) }
+    ).also {
+      log.info("Validation exception: {}", e.message)
+    }
 
   @ExceptionHandler(NoResourceFoundException::class)
   fun handleNoResourceFoundException(e: NoResourceFoundException): ResponseEntity<ErrorResponse> = ResponseEntity

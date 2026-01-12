@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.model.entity
+package uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.device.model
 
 import kotlinx.datetime.LocalDateTime
 import kotlinx.serialization.Serializable

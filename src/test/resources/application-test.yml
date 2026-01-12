@@ -7,3 +7,15 @@ management.endpoint:
 
 hmpps-auth:
   url: "http://localhost:8090/auth"
+
+aws:
+  region: eu-west-2
+
+athena:
+  defaultDatabase: "test_db"
+  fmsDatabase: "fms_test_db"
+  mdssDatabase: "mdss_test_db"
+  outputLocation: s3://test/output
+  workgroup: test_default
+  pollIntervalMs: 500
+  timeoutMs: 60000

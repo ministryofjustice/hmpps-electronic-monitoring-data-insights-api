@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.deviceevents
+package uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.device.model
 
 import kotlinx.serialization.json.Json
 import org.jetbrains.exposed.sql.Table
