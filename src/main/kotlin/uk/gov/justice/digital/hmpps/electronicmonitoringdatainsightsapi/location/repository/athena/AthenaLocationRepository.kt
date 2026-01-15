@@ -44,6 +44,19 @@ class AthenaLocationRepository(
     return runner.run(sql, mdssDatabase, skipHeaderRow = true, mapper = ::mapRow)
   }
 
+  override fun findRecordsSince(tableName: String, dateField: String, lastWatermark: String): List<Location> {
+    val sql = """
+      SELECT position_id, person_id, device_id, position_gps_date, position_recorded_date, position_uploaded_date,
+             position_speed, position_satellite, position_direction, position_precision, position_lbs, position_hdop,
+             position_geometry, position_latitude, position_longitude, client_id, location_id, position_circulation_id
+      FROM $tableName
+      WHERE $dateField > from_iso8601_timestamp('$lastWatermark')
+      ORDER BY $dateField
+    """.trimIndent()
+
+    return runner.run(sql, mdssDatabase, skipHeaderRow = true, mapper = ::mapRow)
+  }
+
   private fun buildTimeSpanSql(personId: Long, from: Instant, to: Instant): String =
     """
       SELECT position_id, person_id, device_id, position_gps_date, position_recorded_date, position_uploaded_date,
