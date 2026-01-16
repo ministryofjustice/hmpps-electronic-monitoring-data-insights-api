@@ -7,4 +7,5 @@ import java.time.Instant
 interface LocationRepository {
   fun findAllByCrnAndTimespan(crn: String, from: Instant, to: Instant, nextToken: String?): PagedLocations
   fun findByCrnAndId(crn: String, locationId: String): List<Location>
+  fun findRecordsSince(tableName: String, dateField: String, lastWatermark: String): List<Location>
 }
