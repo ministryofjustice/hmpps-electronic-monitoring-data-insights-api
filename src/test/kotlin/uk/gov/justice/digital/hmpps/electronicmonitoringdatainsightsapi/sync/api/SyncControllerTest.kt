@@ -16,8 +16,8 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.content
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.ElectronicMonitoringDataInsightsApi
-import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.sync.AthenaRdsSyncService
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.sync.api.SyncController
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.sync.service.AthenaRdsSyncService
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.sync.utils.SyncResult
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.watermark.SyncStatus
 

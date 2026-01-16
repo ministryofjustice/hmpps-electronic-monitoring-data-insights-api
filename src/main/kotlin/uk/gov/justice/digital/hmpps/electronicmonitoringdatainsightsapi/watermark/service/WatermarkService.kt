@@ -1,8 +1,7 @@
-package uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.watermark
+package uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.watermark.service
 
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.watermark.SyncStatus
-import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.watermark.Watermark
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.watermark.repository.WatermarkRepository
 import java.time.Instant
 import java.util.UUID

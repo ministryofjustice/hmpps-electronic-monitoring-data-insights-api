@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.sync
+package uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.sync.service
 
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.util.DateTimeUtils.toAthenaString
@@ -6,7 +6,7 @@ import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.location
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.location.repository.RdsLocationRepository
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.sync.utils.SyncResult
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.watermark.SyncStatus
-import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.watermark.WatermarkService
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.watermark.service.WatermarkService
 import java.time.Instant
 
 @Service
