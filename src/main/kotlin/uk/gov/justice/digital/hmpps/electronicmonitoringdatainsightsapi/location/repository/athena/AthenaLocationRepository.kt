@@ -50,8 +50,9 @@ class AthenaLocationRepository(
              position_speed, position_satellite, position_direction, position_precision, position_lbs, position_hdop,
              position_geometry, position_latitude, position_longitude, client_id, location_id, position_circulation_id
       FROM $tableName
-      WHERE $dateField > from_iso8601_timestamp('$lastWatermark')
+      WHERE $dateField > timestamp '$lastWatermark'
       ORDER BY $dateField
+      LIMIT 20
     """.trimIndent()
 
     return runner.run(sql, mdssDatabase, skipHeaderRow = true, mapper = ::mapRow)

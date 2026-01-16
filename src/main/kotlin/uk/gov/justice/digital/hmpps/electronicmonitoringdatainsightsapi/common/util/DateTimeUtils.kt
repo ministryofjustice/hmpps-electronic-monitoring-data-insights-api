@@ -1,10 +1,9 @@
 package uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.util
 
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.util.DateTimeConstants.ATHENA_TIMESTAMP
-import java.time.ZoneOffset
 import java.time.Instant
 import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
+import java.time.ZoneOffset
 
 object DateTimeUtils {
   /**

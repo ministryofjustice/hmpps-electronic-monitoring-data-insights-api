@@ -1,14 +1,13 @@
 package uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.sync
 
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.util.DateTimeUtils.toAthenaString
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.location.repository.AthenaLocationRepository
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.location.repository.RdsLocationRepository
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.sync.utils.SyncResult
-import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.util.DateTimeUtils.toAthenaString
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.watermark.SyncStatus
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.watermark.WatermarkService
 import java.time.Instant
-
 
 @Service
 class AthenaRdsSyncService(
@@ -40,8 +39,8 @@ class AthenaRdsSyncService(
         dateField,
         athenaQueryTimestamp,
       )
-
-      println("Found ${newRecords.size} new records")
+      // TODO: Remove limit after testing
+      println("Found ${newRecords.size} new records (limited to 20 for testing)")
 
       if (newRecords.isEmpty()) {
         watermarkService.updateWatermarkSkipped(syncId)
@@ -60,6 +59,7 @@ class AthenaRdsSyncService(
         syncId = syncId,
         newWatermark = newWatermark,
         recordsProcessed = recordsInserted,
+        updatedAt = Instant.now(),
       )
       println("Sync completed successfully. New watermark: $newWatermark")
 

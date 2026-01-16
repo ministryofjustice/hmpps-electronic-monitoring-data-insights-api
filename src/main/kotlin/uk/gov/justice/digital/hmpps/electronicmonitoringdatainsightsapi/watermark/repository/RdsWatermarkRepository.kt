@@ -34,18 +34,17 @@ class RdsWatermarkRepository : WatermarkRepository {
     return lastCompletedSync?.toInstant(ZoneOffset.UTC) ?: Instant.EPOCH
   }
 
-  override fun create(id: UUID, tableName: String, lastSyncDate: Instant, syncStatus: SyncStatus): UUID {
-    return transaction {
-      Watermarks.insert {
-        it[Watermarks.id] = id
-        it[Watermarks.sourceTableName] = tableName
-        // Convert Instant to LocalDateTime for the Exposed .datetime() column
-        it[Watermarks.lastSyncDate] = LocalDateTime.ofInstant(lastSyncDate, ZoneOffset.UTC)
-        it[Watermarks.syncStatus] = syncStatus
-        it[Watermarks.createdAt] = LocalDateTime.now()
-        it[Watermarks.updatedAt] = LocalDateTime.now()
-      }[Watermarks.id]
-    }
+  override fun create(id: UUID, tableName: String, lastSyncDate: Instant, syncStatus: SyncStatus): UUID = transaction {
+    Watermarks.insert {
+      it[Watermarks.id] = id
+      it[Watermarks.sourceTableName] = tableName
+      // Convert Instant to LocalDateTime for the Exposed .datetime() column
+      it[Watermarks.lastSyncDate] = LocalDateTime.ofInstant(lastSyncDate, ZoneOffset.UTC)
+      it[Watermarks.syncStatus] = syncStatus
+      it[Watermarks.recordsSynced] = 0
+      it[Watermarks.createdAt] = LocalDateTime.now()
+      it[Watermarks.updatedAt] = LocalDateTime.now()
+    }[Watermarks.id]
   }
 
   override fun updateStatus(id: UUID, status: SyncStatus, updatedAt: Instant, error: String?) {

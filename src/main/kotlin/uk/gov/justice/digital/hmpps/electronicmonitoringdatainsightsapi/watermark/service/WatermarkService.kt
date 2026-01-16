@@ -46,12 +46,13 @@ class WatermarkService(
     syncId: String,
     newWatermark: Instant,
     recordsProcessed: Int,
+    updatedAt: Instant,
   ) {
     watermarkRepository.finalizeSuccess(
       id = UUID.fromString(syncId),
       newWatermark = newWatermark,
       count = recordsProcessed,
-      updatedAt = Instant.now(),
+      updatedAt = updatedAt,
     )
   }
 
