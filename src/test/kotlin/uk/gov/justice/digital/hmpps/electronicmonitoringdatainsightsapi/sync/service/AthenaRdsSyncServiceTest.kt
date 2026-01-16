@@ -5,6 +5,7 @@ import io.mockk.mockk
 import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.location.model.Location
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.location.repository.AthenaLocationRepository
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.location.repository.RdsLocationRepository
@@ -61,5 +62,37 @@ class AthenaRdsSyncServiceTest {
         updatedAt = any(),
       )
     }
+  }
+
+  @Test
+  fun `performDailySync should update watermark failure and rethrow exception when sync fails`() {
+    // Arrange
+    val tableName = "position"
+    val syncId = UUID.randomUUID().toString()
+    val lastWatermark = Instant.parse("2024-01-01T10:00:00Z")
+    val exceptionMessage = "Athena connection timeout"
+    val exception = RuntimeException(exceptionMessage)
+
+    every { watermarkService.getEffectiveStartTimestamp(tableName) } returns lastWatermark
+    every { watermarkService.startSyncRecord(tableName, lastWatermark, SyncStatus.RUNNING) } returns syncId
+    every { athenaLocationRepository.findRecordsSince(any(), any(), any()) } throws exception
+
+    // Act & Assert
+    val thrown = assertThrows<RuntimeException> {
+      service.performDailySync(tableName)
+    }
+
+    // Verify
+    assertThat(thrown.message).isEqualTo(exceptionMessage)
+
+    verify {
+      watermarkService.updateWatermarkFailure(
+        syncId = syncId,
+        errorMessage = exceptionMessage,
+      )
+    }
+
+    // Ensure saveAll was never called since we failed before that step
+    verify(exactly = 0) { rdsLocationRepository.saveAll(any()) }
   }
 }
