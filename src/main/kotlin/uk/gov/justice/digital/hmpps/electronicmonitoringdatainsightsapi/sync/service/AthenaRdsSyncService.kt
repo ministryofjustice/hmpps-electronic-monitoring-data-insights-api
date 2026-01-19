@@ -16,7 +16,7 @@ class AthenaRdsSyncService(
   private val athenaLocationRepository: AthenaLocationRepository,
 ) {
 
-  fun performDailySync(tableName: String, dateField: String = "position_gps_date"): SyncResult {
+  fun performDailySync(tableName: String): SyncResult {
     val lastWatermark: Instant = watermarkService.getEffectiveStartTimestamp(tableName)
     println("Last sync watermark: $lastWatermark")
 
@@ -34,11 +34,7 @@ class AthenaRdsSyncService(
     try {
       val athenaQueryTimestamp = lastWatermark.toAthenaString()
 
-      val newRecords = athenaLocationRepository.findRecordsSince(
-        tableName,
-        dateField,
-        athenaQueryTimestamp,
-      )
+      val newRecords = athenaLocationRepository.findRecordsSince(athenaQueryTimestamp)
       // TODO: Remove limit after testing
       println("Found ${newRecords.size} new records (limited to 20 for testing)")
 

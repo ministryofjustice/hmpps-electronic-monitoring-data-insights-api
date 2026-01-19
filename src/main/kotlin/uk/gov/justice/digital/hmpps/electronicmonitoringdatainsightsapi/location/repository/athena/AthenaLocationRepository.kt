@@ -41,21 +41,21 @@ class AthenaLocationRepository(
     val personId = crn.toPersonId()
     val locationId = locationId.toLocationId()
     val sql = buildLocationIdSql(personId, locationId)
-    return runner.run(sql, mdssDatabase, skipHeaderRow = true, mapper = ::mapRow)
+    return runner.run(sql, mdssDatabase, skipHeaderRow = true, mapper = ::mapRow, params = listOf(personId.toString(), locationId.toString()))
   }
 
-  override fun findRecordsSince(tableName: String, dateField: String, lastWatermark: String): List<Location> {
+  override fun findRecordsSince(lastWatermark: String): List<Location> {
     val sql = """
       SELECT position_id, person_id, device_id, position_gps_date, position_recorded_date, position_uploaded_date,
              position_speed, position_satellite, position_direction, position_precision, position_lbs, position_hdop,
              position_geometry, position_latitude, position_longitude, client_id, location_id, position_circulation_id
-      FROM $tableName
-      WHERE $dateField > timestamp '$lastWatermark'
-      ORDER BY $dateField
+      FROM position
+      WHERE position_gps_date > timestamp '$lastWatermark'
+      ORDER BY position_gps_date
       LIMIT 20
     """.trimIndent()
 
-    return runner.run(sql, mdssDatabase, skipHeaderRow = true, mapper = ::mapRow)
+    return runner.run(sql, mdssDatabase, skipHeaderRow = true, mapper = ::mapRow, params = listOf(lastWatermark))
   }
 
   private fun buildTimeSpanSql(personId: Long, from: Instant, to: Instant): String =

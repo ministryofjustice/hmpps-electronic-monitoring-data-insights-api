@@ -55,7 +55,7 @@ class AthenaPersonRepositoryTest {
     )
 
     // Act
-    every { runner.run<Any>(any(), any(), any(), any()) } answers {
+    every { runner.run<Any>(any(), any(), any(), any(), any()) } answers {
       val mapper = it.invocation.args[3] as (List<Datum>) -> Any
       listOf(mapper(mockRow))
     }
@@ -79,7 +79,7 @@ class AthenaPersonRepositoryTest {
     }
 
     // Act
-    every { runner.run<Any>(any(), any(), any(), any()) } answers {
+    every { runner.run<Any>(any(), any(), any(), any(), any()) } answers {
       val mapper = it.invocation.args[3] as (List<Datum>) -> Any
       listOf(mapper(invalidRow))
     }

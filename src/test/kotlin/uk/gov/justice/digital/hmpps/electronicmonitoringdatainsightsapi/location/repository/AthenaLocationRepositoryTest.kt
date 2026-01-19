@@ -63,7 +63,7 @@ class AthenaLocationRepositoryTest {
 
     // Act
     every {
-      runner.run(capture(sqlSlot), eq(mdssDatabase), true, any<(List<Datum>) -> Location>())
+      runner.run(capture(sqlSlot), eq(mdssDatabase), true, any<(List<Datum>) -> Location>(), any())
     } returns emptyList()
     repository.findByCrnAndId(crn, locationId)
 
@@ -97,7 +97,7 @@ class AthenaLocationRepositoryTest {
     )
 
     // Act
-    every { runner.run<Location>(any(), any(), any(), any()) } answers {
+    every { runner.run<Location>(any(), any(), any(), any(), any()) } answers {
       val mapper = it.invocation.args[3] as (List<Datum>) -> Location
       listOf(mapper(mockRow))
     }
@@ -115,7 +115,7 @@ class AthenaLocationRepositoryTest {
     val invalidRow = List(18) { datum(null) }
 
     // Act
-    every { runner.run<Location>(any(), any(), any(), any()) } answers {
+    every { runner.run<Location>(any(), any(), any(), any(), any()) } answers {
       val mapper = it.invocation.args[3] as (List<Datum>) -> Location
       listOf(mapper(invalidRow))
     }

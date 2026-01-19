@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.athena
 
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.slot
 import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
@@ -20,7 +21,6 @@ import software.amazon.awssdk.services.athena.model.ResultSet
 import software.amazon.awssdk.services.athena.model.Row
 import software.amazon.awssdk.services.athena.model.StartQueryExecutionRequest
 import software.amazon.awssdk.services.athena.model.StartQueryExecutionResponse
-
 class AthenaQueryRunnerTest {
   private val athenaClient = mockk<AthenaClient>()
   private lateinit var runner: AthenaQueryRunner
@@ -41,6 +41,7 @@ class AthenaQueryRunnerTest {
     // Arrange
     val sql = "SELECT * FROM test"
     val executionId = "exec-123"
+    val params = listOf("123L")
 
     // Mock Start
     every { athenaClient.startQueryExecution(any<StartQueryExecutionRequest>()) } returns
@@ -64,7 +65,11 @@ class AthenaQueryRunnerTest {
         .nextToken(null)
         .build()
 
-    val results = runner.run<String>(sql) { it[0].varCharValue() }
+    val results = runner.run(
+      sql = sql,
+      params = params,
+      mapper = { it[0].varCharValue() },
+    )
 
     // Act
     assertThat(results).containsExactly("actual_value")
@@ -96,6 +101,7 @@ class AthenaQueryRunnerTest {
 
   @Test
   fun `run should throw IllegalStateException when query fails`() {
+    val params = listOf("123L")
     every { athenaClient.startQueryExecution(any<StartQueryExecutionRequest>()) } returns
       StartQueryExecutionResponse.builder().queryExecutionId("fail-id").build()
 
@@ -110,10 +116,49 @@ class AthenaQueryRunnerTest {
       ).build()
 
     val ex = assertThrows<IllegalStateException> {
-      runner.run<String>("SELECT *") { "irrelevant" }
+      runner.run(
+        sql = "SELECT *",
+        params = params,
+        mapper = { "irrelevant" },
+      )
     }
     // Assert
     assertThat(ex.message).contains("FAILED : Access Denied")
+  }
+
+  @Test
+  fun `run should pass execution parameters to athena when provided`() {
+    // Arrange
+    val sql = "SELECT * FROM position WHERE position_id = ?"
+    val params = listOf("123L")
+    val executionId = "exec-params-123"
+    val requestSlot = slot<StartQueryExecutionRequest>()
+
+    // Mock the start query to capture the request
+    every { athenaClient.startQueryExecution(capture(requestSlot)) } returns
+      StartQueryExecutionResponse.builder().queryExecutionId(executionId).build()
+
+    // Mock polling as SUCCEEDED immediately
+    every { athenaClient.getQueryExecution(any<GetQueryExecutionRequest>()) } returns buildExecutionResponse(QueryExecutionState.SUCCEEDED)
+
+    // Mock empty results for simplicity
+    every { athenaClient.getQueryResults(any<GetQueryResultsRequest>()) } returns
+      GetQueryResultsResponse.builder()
+        .resultSet(ResultSet.builder().rows(buildRow("header")).build())
+        .build()
+
+    // Act
+    // runner.run<String>(sql = sql, params = params) { it[0].varCharValue() }
+    runner.run(
+      sql = sql,
+      params = params,
+      mapper = { data: List<Datum> -> data[0].varCharValue() },
+    )
+
+    // Assert
+    val capturedRequest = requestSlot.captured
+    assertThat(capturedRequest.queryString()).isEqualTo(sql)
+    assertThat(capturedRequest.executionParameters()).containsExactlyElementsOf(params)
   }
 
   private fun buildExecutionResponse(state: QueryExecutionState) = GetQueryExecutionResponse.builder()

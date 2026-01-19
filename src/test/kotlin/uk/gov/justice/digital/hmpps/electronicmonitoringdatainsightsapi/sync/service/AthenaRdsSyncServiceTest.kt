@@ -42,7 +42,7 @@ class AthenaRdsSyncServiceTest {
 
     every { watermarkService.getEffectiveStartTimestamp(tableName) } returns lastWatermark
     every { watermarkService.startSyncRecord(tableName, lastWatermark, SyncStatus.RUNNING) } returns syncId
-    every { athenaLocationRepository.findRecordsSince(tableName, any(), any()) } returns newRecords
+    every { athenaLocationRepository.findRecordsSince(any()) } returns newRecords
     every { rdsLocationRepository.saveAll(newRecords) } returns 1
 
     // Act
@@ -75,7 +75,7 @@ class AthenaRdsSyncServiceTest {
 
     every { watermarkService.getEffectiveStartTimestamp(tableName) } returns lastWatermark
     every { watermarkService.startSyncRecord(tableName, lastWatermark, SyncStatus.RUNNING) } returns syncId
-    every { athenaLocationRepository.findRecordsSince(any(), any(), any()) } throws exception
+    every { athenaLocationRepository.findRecordsSince(any()) } throws exception
 
     // Act & Assert
     val thrown = assertThrows<RuntimeException> {

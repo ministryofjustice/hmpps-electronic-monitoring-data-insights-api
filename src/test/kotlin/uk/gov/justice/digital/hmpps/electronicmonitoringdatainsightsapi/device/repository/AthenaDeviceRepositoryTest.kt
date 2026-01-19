@@ -58,7 +58,7 @@ class AthenaDeviceRepositoryTest {
     )
 
     // Act
-    every { runner.run<Any>(any(), any(), any(), any()) } answers {
+    every { runner.run<Any>(any(), any(), any(), any(), any()) } answers {
       val mapper = it.invocation.args[3] as (List<Datum>) -> Any
       listOf(mapper(mockRow))
     }
@@ -76,11 +76,11 @@ class AthenaDeviceRepositoryTest {
   fun `mapRow should throw DataIntegrityException when required field is missing`() {
     // Arrange
     val invalidRow = List(17) { datum(null) } // All nulls
+    val mapperSlot = slot<(List<Datum>) -> Any>()
 
     // Act
-    every { runner.run<Any>(any(), any(), any(), any()) } answers {
-      val mapper = it.invocation.args[3] as (List<Datum>) -> Any
-      listOf(mapper(invalidRow))
+    every { runner.run<Any>(any(), any(), any(), capture(mapperSlot), any()) } answers {
+      listOf(mapperSlot.captured(invalidRow))
     }
 
     // Assert

@@ -27,8 +27,9 @@ class AthenaQueryRunner(
     database: String = defaultDatabase,
     skipHeaderRow: Boolean = true,
     mapper: (List<Datum>) -> T,
+    params: List<String> = emptyList(),
   ): List<T> {
-    val executionId = startQuery(sql, database)
+    val executionId = startQuery(sql, database, params)
     waitForCompletion(executionId)
     return fetchAllResults(executionId, skipHeaderRow, mapper)
   }
@@ -41,13 +42,14 @@ class AthenaQueryRunner(
     sql: String,
     database: String = defaultDatabase,
     cursor: String? = null,
+    params: List<String> = emptyList(),
     pageSize: Int = 100,
     mapper: (List<Datum>) -> T,
   ): PaginatedResult<T> {
     val athenaCursor = AthenaCursor.decode(cursor)
 
     val executionId = if (athenaCursor == null) {
-      val id = startQuery(sql, database)
+      val id = startQuery(sql, database, params)
       waitForCompletion(id)
       id
     } else {
@@ -76,9 +78,10 @@ class AthenaQueryRunner(
     return PaginatedResult(items, nextCursor)
   }
 
-  private fun startQuery(sql: String, database: String): String {
+  private fun startQuery(sql: String, database: String, params: List<String> = emptyList()): String {
     val req = StartQueryExecutionRequest.builder()
       .queryString(sql)
+      .executionParameters(params)
       .queryExecutionContext(
         QueryExecutionContext.builder()
           .database(database)
