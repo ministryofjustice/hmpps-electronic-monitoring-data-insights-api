@@ -42,6 +42,7 @@ class AthenaLocationRepositoryTest {
         cursor = eq(nextToken),
         pageSize = 100,
         mapper = any<(List<Datum>) -> Location>(),
+        params = any<List<String>>(),
       )
     } returns mockRunnerResult
     val result = repository.findAllByCrnAndTimespan(crn, from, to, nextToken)
@@ -50,8 +51,8 @@ class AthenaLocationRepositoryTest {
     assertThat(result).isInstanceOf(PagedLocations::class.java)
     assertThat(result.locations).hasSize(1)
     assertThat(result.nextToken).isEqualTo("new-cursor")
-    assertThat(sqlSlot.captured).contains("person_id = 123456")
-    assertThat(sqlSlot.captured).contains("BETWEEN from_iso8601_timestamp('2026-10-01T10:00:00Z')")
+    assertThat(sqlSlot.captured).contains("person_id = CAST(? AS BIGINT)")
+    assertThat(sqlSlot.captured).contains("BETWEEN from_iso8601_timestamp(?)")
   }
 
   @Test
@@ -68,8 +69,8 @@ class AthenaLocationRepositoryTest {
     repository.findByCrnAndId(crn, locationId)
 
     // Assert
-    assertThat(sqlSlot.captured).contains("WHERE person_id = 123456")
-    assertThat(sqlSlot.captured).contains("AND position_id = 999")
+    assertThat(sqlSlot.captured).contains("WHERE person_id = CAST(? AS BIGINT)")
+    assertThat(sqlSlot.captured).contains("AND position_id = CAST(? AS BIGINT)")
   }
 
   @Test

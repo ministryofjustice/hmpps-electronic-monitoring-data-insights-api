@@ -30,6 +30,7 @@ class AthenaQueryRunner(
     params: List<String> = emptyList(),
   ): List<T> {
     val executionId = startQuery(sql, database, params)
+    print("xxx Started Athena query with executionId: $executionId")
     waitForCompletion(executionId)
     return fetchAllResults(executionId, skipHeaderRow, mapper)
   }
@@ -79,6 +80,7 @@ class AthenaQueryRunner(
   }
 
   private fun startQuery(sql: String, database: String, params: List<String> = emptyList()): String {
+    print("xxx Starting Athena query: $sql with params: $params")
     val req = StartQueryExecutionRequest.builder()
       .queryString(sql)
       .executionParameters(params)

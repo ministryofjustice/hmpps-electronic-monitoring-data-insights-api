@@ -22,13 +22,14 @@ class AthenaLocationRepository(
 
   override fun findAllByCrnAndTimespan(crn: String, from: Instant, to: Instant, nextToken: String?): PagedLocations {
     val personId = crn.toPersonId()
-    val sql = buildTimeSpanSql(personId, from, to)
+    val sql = buildTimeSpanSql()
     val result = runner.fetchPaged(
       sql = sql,
       database = mdssDatabase,
       cursor = nextToken,
       pageSize = 100,
       mapper = ::mapRow,
+      params = listOf(personId.toString(), from.toString(), to.toString()),
     )
 
     return PagedLocations(
@@ -40,7 +41,7 @@ class AthenaLocationRepository(
   override fun findByCrnAndId(crn: String, locationId: String): List<Location> {
     val personId = crn.toPersonId()
     val locationId = locationId.toLocationId()
-    val sql = buildLocationIdSql(personId, locationId)
+    val sql = buildLocationIdSql()
     return runner.run(sql, mdssDatabase, skipHeaderRow = true, mapper = ::mapRow, params = listOf(personId.toString(), locationId.toString()))
   }
 
@@ -50,7 +51,7 @@ class AthenaLocationRepository(
              position_speed, position_satellite, position_direction, position_precision, position_lbs, position_hdop,
              position_geometry, position_latitude, position_longitude, client_id, location_id, position_circulation_id
       FROM position
-      WHERE position_gps_date > timestamp '$lastWatermark'
+      WHERE position_gps_date > CAST(? AS TIMESTAMP)
       ORDER BY position_gps_date
       LIMIT 20
     """.trimIndent()
@@ -58,26 +59,26 @@ class AthenaLocationRepository(
     return runner.run(sql, mdssDatabase, skipHeaderRow = true, mapper = ::mapRow, params = listOf(lastWatermark))
   }
 
-  private fun buildTimeSpanSql(personId: Long, from: Instant, to: Instant): String =
+  private fun buildTimeSpanSql(): String =
     """
       SELECT position_id, person_id, device_id, position_gps_date, position_recorded_date, position_uploaded_date,
              position_speed, position_satellite, position_direction, position_precision, position_lbs, position_hdop,
              position_geometry, position_latitude, position_longitude, client_id, location_id, position_circulation_id
       FROM position
-      WHERE person_id = $personId
-        AND position_gps_date BETWEEN from_iso8601_timestamp('$from')
-                                AND from_iso8601_timestamp('$to')
+      WHERE person_id = CAST(? AS BIGINT)
+        AND position_gps_date BETWEEN from_iso8601_timestamp(?)
+                                AND from_iso8601_timestamp(?)
       ORDER BY position_gps_date      
     """.trimIndent()
 
-  private fun buildLocationIdSql(personId: Long, positionId: Long): String =
+  private fun buildLocationIdSql(): String =
     """
       SELECT position_id, person_id, device_id, position_gps_date, position_recorded_date, position_uploaded_date,
              position_speed, position_satellite, position_direction, position_precision, position_lbs, position_hdop,
              position_geometry, position_latitude, position_longitude, client_id, location_id, position_circulation_id
       FROM position
-      WHERE person_id = $personId
-        AND position_id = $positionId
+      WHERE person_id = CAST(? AS BIGINT)
+        AND position_id = CAST(? AS BIGINT)
       ORDER BY position_gps_date      
     """.trimIndent()
 

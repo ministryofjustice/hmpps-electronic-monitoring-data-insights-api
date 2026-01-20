@@ -21,11 +21,11 @@ class AthenaDeviceRepository(
 
   override fun findByCrn(crn: String): List<Device> {
     val personId = crn.toPersonId()
-    val sql = buildSql(personId)
-    return runner.run(sql, mdssDatabase, skipHeaderRow = true, mapper = ::mapRow)
+    val sql = buildSql()
+    return runner.run(sql, mdssDatabase, skipHeaderRow = true, mapper = ::mapRow, params = listOf(personId.toString()))
   }
 
-  private fun buildSql(personId: Long): String =
+  private fun buildSql(): String =
     """
       WITH latest_device AS (
       SELECT
@@ -54,7 +54,7 @@ class AthenaDeviceRepository(
       ON d.device_id = da.device_id
     WHERE d.rn = 1 
       AND da.rn = 1
-      AND person_id = $personId
+      AND person_id = CAST(? AS BIGINT)
     """.trimIndent()
 
   private fun mapRow(cols: List<Datum>): Device {

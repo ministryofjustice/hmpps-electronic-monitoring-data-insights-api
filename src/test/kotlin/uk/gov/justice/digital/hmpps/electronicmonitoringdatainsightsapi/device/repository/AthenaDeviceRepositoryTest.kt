@@ -24,12 +24,12 @@ class AthenaDeviceRepositoryTest {
 
     // Act
     every {
-      runner.run(capture(sqlSlot), eq(database), any(), any<(List<Datum>) -> Any>())
+      runner.run(capture(sqlSlot), eq(database), any(), any<(List<Datum>) -> Any>(), any())
     } returns emptyList<Nothing>()
     repository.findByCrn(crn)
 
     // / Assert
-    assertThat(sqlSlot.captured).contains("person_id = 12345")
+    assertThat(sqlSlot.captured).contains("person_id = CAST(? AS BIGINT)")
     assertThat(sqlSlot.captured).contains("WITH latest_device AS")
     assertThat(sqlSlot.captured).contains("LEFT JOIN latest_activation")
   }
