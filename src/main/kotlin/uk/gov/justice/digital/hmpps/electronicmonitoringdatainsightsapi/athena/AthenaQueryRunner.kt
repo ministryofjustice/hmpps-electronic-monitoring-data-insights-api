@@ -80,7 +80,6 @@ class AthenaQueryRunner(
   }
 
   private fun startQuery(sql: String, database: String, params: List<String> = emptyList()): String {
-    print("xxx Starting Athena query: $sql with params: $params")
     val req = StartQueryExecutionRequest.builder()
       .queryString(sql)
       .executionParameters(params)
