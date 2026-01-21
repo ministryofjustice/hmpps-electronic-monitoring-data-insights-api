@@ -35,6 +35,9 @@ dependencies {
 
   implementation("org.postgresql:postgresql:42.6.0")
 
+  implementation("software.amazon.awssdk:s3:2.40.13")
+  implementation("software.amazon.awssdk:athena:2.40.13")
+
   testImplementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter-test:1.4.5")
   testImplementation("org.wiremock:wiremock-standalone:3.13.0")
   testImplementation("com.ninja-squad:springmockk:4.0.2")
