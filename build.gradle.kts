@@ -1,6 +1,6 @@
 plugins {
-  val kotlinVersion = "2.1.21"
-  id("uk.gov.justice.hmpps.gradle-spring-boot") version "8.2.0"
+  val kotlinVersion = "2.3.0"
+  id("uk.gov.justice.hmpps.gradle-spring-boot") version "8.3.7"
   kotlin("plugin.spring") version kotlinVersion
   kotlin("plugin.serialization") version kotlinVersion
 }
@@ -10,38 +10,38 @@ configurations {
 }
 
 dependencies {
-  implementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter:1.4.5")
+  implementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter:1.8.2")
   implementation("org.springframework.boot:spring-boot-starter-webflux")
-  implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.8")
+  implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.15")
 
-  implementation("org.jetbrains.exposed:exposed-core:0.51.1")
-  implementation("org.jetbrains.exposed:exposed-json:0.51.1")
-  implementation("org.jetbrains.exposed:exposed-dao:0.51.1")
-  implementation("org.jetbrains.exposed:exposed-jdbc:0.51.1")
-  implementation("org.jetbrains.exposed:exposed-java-time:0.51.1")
+  implementation("org.jetbrains.exposed:exposed-core:0.61.0")
+  implementation("org.jetbrains.exposed:exposed-json:0.61.0")
+  implementation("org.jetbrains.exposed:exposed-dao:0.61.0")
+  implementation("org.jetbrains.exposed:exposed-jdbc:0.61.0")
+  implementation("org.jetbrains.exposed:exposed-java-time:0.61.0")
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core")
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor")
-  implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.3")
-  implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.6.0")
+  implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.10.0")
+  implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.7.1-0.6.x-compat")
 
-  implementation(platform("software.amazon.awssdk:bom:2.25.27"))
+  implementation(platform("software.amazon.awssdk:bom:2.41.12"))
   implementation("software.amazon.awssdk:athena")
   implementation("software.amazon.awssdk:sso")
   implementation("software.amazon.awssdk:ssooidc")
   implementation("software.amazon.awssdk:sts")
 
-  implementation(platform("software.amazon.awssdk:bom:2.25.27"))
+  implementation(platform("software.amazon.awssdk:bom:2.41.12"))
   implementation("software.amazon.awssdk:athena")
 
-  implementation("org.postgresql:postgresql:42.6.0")
+  implementation("org.postgresql:postgresql:42.7.9")
 
-  implementation("software.amazon.awssdk:s3:2.40.13")
-  implementation("software.amazon.awssdk:athena:2.40.13")
+  implementation("software.amazon.awssdk:s3:2.41.12")
+  implementation("software.amazon.awssdk:athena:2.41.12")
 
-  testImplementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter-test:1.4.5")
-  testImplementation("org.wiremock:wiremock-standalone:3.13.0")
+  testImplementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter-test:1.8.2")
+  testImplementation("org.wiremock:wiremock-standalone:3.13.2")
   testImplementation("com.ninja-squad:springmockk:4.0.2")
-  testImplementation("io.swagger.parser.v3:swagger-parser:2.1.29") {
+  testImplementation("io.swagger.parser.v3:swagger-parser:2.1.37") {
     exclude(group = "io.swagger.core.v3")
   }
   testImplementation("com.h2database:h2:2.4.240")
