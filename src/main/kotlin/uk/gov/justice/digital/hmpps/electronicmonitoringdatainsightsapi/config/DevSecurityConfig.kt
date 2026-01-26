@@ -21,6 +21,7 @@ class DevSecurityConfig {
         it.requestMatchers("/swagger-ui/**").permitAll()
         it.requestMatchers("/swagger-ui.html").permitAll()
         it.requestMatchers("/v3/api-docs.yaml").permitAll()
+        it.requestMatchers("/health/ping").permitAll()
         it.anyRequest().authenticated()
       }
       .csrf { it.disable() } // disable CSRF for local dev
