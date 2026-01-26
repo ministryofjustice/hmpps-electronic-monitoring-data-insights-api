@@ -55,3 +55,15 @@ management:
     info:
       cache:
         time-to-live: 2000ms
+
+  aws:
+    region: eu-west-2
+  athena:
+    role: ${ATHENA_GENERAL_IAM_ROLE}
+  s3:
+    bucket-name: emdi-data-storage
+
+  datastore:
+    fms-database: ${FMS_DATABASE:serco_servicenow_test}
+    mdss-database: ${MDSS_DATABASE:allied_mdss_test}
+    output-bucket-arn: ${ATHENA_OUTPUT_BUCKET}

@@ -7,7 +7,6 @@ spring:
     password: hmpps
 aws:
   region: eu-west-2
-
 athena:
   defaultDatabase: allied_mdss_test
   mdssDatabase: allied_mdss_test
@@ -16,3 +15,4 @@ athena:
   workgroup: 396913731313_default
   pollIntervalMs: 500
   timeoutMs: 60000
+  role: ${ATHENA_GENERAL_IAM_ROLE}
