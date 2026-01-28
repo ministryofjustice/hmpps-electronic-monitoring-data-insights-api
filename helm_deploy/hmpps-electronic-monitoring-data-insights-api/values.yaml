@@ -4,7 +4,7 @@ generic-service:
 
   replicaCount: 4
 
-  image:
+  image:-
     repository: ghcr.io/ministryofjustice/hmpps-electronic-monitoring-data-insights-api
     tag: app_version # override at deployment time
     port: 8080
