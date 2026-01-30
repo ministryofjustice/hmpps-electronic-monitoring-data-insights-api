@@ -4,7 +4,7 @@
 generic-service:
   replicaCount: 2
 
-  serviceAccountName: "hmpps-em-emdi-maps-dev"
+  serviceAccountName: "hmpps-em-data-insights-dev"
 
   ingress:
     host: electronic-monitoring-data-insights-api-dev.hmpps.service.justice.gov.uk
