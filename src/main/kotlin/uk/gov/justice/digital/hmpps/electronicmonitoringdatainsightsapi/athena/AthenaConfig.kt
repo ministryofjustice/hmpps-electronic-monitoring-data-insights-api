@@ -11,8 +11,7 @@ import software.amazon.awssdk.services.sts.auth.StsAssumeRoleCredentialsProvider
 @EnableConfigurationProperties(
   AwsProperties::class,
 )
-
-class AthenaConfig(private val properties: AwsProperties,) {
+class AthenaConfig(private val properties: AwsProperties) {
   val sessionId: String = "EMDIApiSession"
 
   @Bean
@@ -37,15 +36,10 @@ class AthenaConfig(private val properties: AwsProperties,) {
           .refreshRequest { b ->
             b.roleArn(roleArn).roleSessionName(sessionId)
           }
-          .build()
+          .build(),
       )
     }
 
     return clientBuilder.build()
   }
 }
-
-
-
-
-
