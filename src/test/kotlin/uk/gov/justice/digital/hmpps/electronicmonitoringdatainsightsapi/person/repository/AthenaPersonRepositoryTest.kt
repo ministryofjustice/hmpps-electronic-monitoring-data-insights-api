@@ -6,16 +6,33 @@ import io.mockk.slot
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
+import software.amazon.awssdk.regions.Region
 import software.amazon.awssdk.services.athena.model.Datum
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.athena.AthenaProperties
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.athena.AthenaQueryRunner
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.athena.AwsProperties
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.exception.DataIntegrityException
 import java.time.Instant
 
 class AthenaPersonRepositoryTest {
 
   private val runner = mockk<AthenaQueryRunner>()
-  private val fmsDatabase = "fms_db"
-  private val repository = AthenaPersonRepository(runner, fmsDatabase)
+
+  private val properties = AwsProperties(
+    region = Region.EU_WEST_2,
+    athena = AthenaProperties(
+      role = null,
+      mdssDatabase = "allied_mdss_test",
+      fmsDatabase = "serco_fms_test",
+      defaultDatabase = "allied_mdss_test",
+      outputLocation = "s3://bucket/output",
+      workgroup = "wg",
+      pollIntervalMs = 500,
+      timeoutMs = 60000,
+    ),
+  )
+
+  private val repository = AthenaPersonRepository(runner, properties)
 
   @Test
   fun `findByCrn should capture and verify the generated SQL`() {
@@ -25,7 +42,7 @@ class AthenaPersonRepositoryTest {
 
     // Act
     every {
-      runner.run(capture(sqlSlot), eq(fmsDatabase), any(), any<(List<Datum>) -> Any>())
+      runner.run(capture(sqlSlot), eq(properties.athena.fmsDatabase), any(), any<(List<Datum>) -> Any>())
     } returns emptyList<Nothing>()
 
     repository.findByCrn(crn)

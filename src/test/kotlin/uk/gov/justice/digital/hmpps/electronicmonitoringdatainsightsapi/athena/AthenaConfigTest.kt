@@ -7,16 +7,14 @@ import software.amazon.awssdk.regions.Region
 
 class AthenaConfigTest {
 
-  @AfterEach
-  fun tearDown() {
-    System.clearProperty("aws.region")
-  }
-
   @Test
-  fun `uses default region provider when aws region property is blank`() {
-    System.setProperty("aws.region", "eu-west-2")
+  fun `uses configured aws region`() {
+    val props = AwsProperties(
+      region = Region.of("eu-west-2"),
+      athena = AthenaProperties(role = null),
+    )
 
-    val client = AthenaConfig("").athenaClient()
+    val client = AthenaConfig(props).athenaClient()
 
     try {
       assertThat(client.serviceClientConfiguration().region()).isEqualTo(Region.of("eu-west-2"))

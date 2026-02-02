@@ -6,8 +6,11 @@ import io.mockk.slot
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
+import software.amazon.awssdk.regions.Region
 import software.amazon.awssdk.services.athena.model.Datum
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.athena.AthenaProperties
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.athena.AthenaQueryRunner
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.athena.AwsProperties
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.exception.DataIntegrityException
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.model.PaginatedResult
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.location.model.Location
@@ -17,8 +20,22 @@ import java.time.Instant
 class AthenaLocationRepositoryTest {
 
   private val runner = mockk<AthenaQueryRunner>()
-  private val mdssDatabase = "test_mdss_db"
-  private val repository = AthenaLocationRepository(runner, mdssDatabase)
+
+  private val properties = AwsProperties(
+    region = Region.EU_WEST_2,
+    athena = AthenaProperties(
+      role = null,
+      mdssDatabase = "allied_mdss_test",
+      fmsDatabase = "serco_fms_test",
+      defaultDatabase = "allied_mdss_test",
+      outputLocation = "s3://bucket/output",
+      workgroup = "wg",
+      pollIntervalMs = 500,
+      timeoutMs = 60000,
+    ),
+  )
+
+  private val repository = AthenaLocationRepository(runner, properties)
 
   @Test
   fun `findAllByCrnAndTimespan should build SQL and map PaginatedResult to PagedLocations`() {
@@ -38,7 +55,7 @@ class AthenaLocationRepositoryTest {
     every {
       runner.fetchPaged(
         sql = capture(sqlSlot),
-        database = eq(mdssDatabase),
+        database = eq(properties.athena.mdssDatabase),
         cursor = eq(nextToken),
         pageSize = 100,
         mapper = any<(List<Datum>) -> Location>(),
@@ -64,7 +81,7 @@ class AthenaLocationRepositoryTest {
 
     // Act
     every {
-      runner.run(capture(sqlSlot), eq(mdssDatabase), true, any<(List<Datum>) -> Location>(), any())
+      runner.run(capture(sqlSlot), eq(properties.athena.mdssDatabase), true, any<(List<Datum>) -> Location>(), any())
     } returns emptyList()
     repository.findByCrnAndId(crn, locationId)
 

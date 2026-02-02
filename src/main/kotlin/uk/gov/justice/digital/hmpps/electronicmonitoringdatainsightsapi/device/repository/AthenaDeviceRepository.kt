@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Repository
 import software.amazon.awssdk.services.athena.model.Datum
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.athena.AthenaQueryRunner
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.athena.AwsProperties
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.exception.DataIntegrityException
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.util.DateTimeConstants
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.validation.toPersonId
@@ -16,13 +17,13 @@ import kotlin.String
 @Repository
 class AthenaDeviceRepository(
   private val runner: AthenaQueryRunner,
-  @Value("\${athena.mdssDatabase}") private val mdssDatabase: String,
+  private val properties: AwsProperties,
 ) : DeviceRepository {
 
   override fun findByCrn(crn: String): List<Device> {
     val personId = crn.toPersonId()
     val sql = buildSql()
-    return runner.run(sql, mdssDatabase, skipHeaderRow = true, mapper = ::mapRow, params = listOf(personId.toString()))
+    return runner.run(sql, properties.athena.mdssDatabase, skipHeaderRow = true, mapper = ::mapRow, params = listOf(personId.toString()))
   }
 
   private fun buildSql(): String =

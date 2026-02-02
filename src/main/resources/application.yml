@@ -38,20 +38,20 @@ server:
   error:
     include-message: always
 
-
 aws:
   region: eu-west-2
-athena:
-  defaultDatabase: allied_mdss_test
-  mdssDatabase: allied_mdss_test
-  fmsDatabase: serco_fms_test
-  outputLocation: s3://emds-test-athena-query-results-20240923095933297100000013/output
-  workgroup: 396913731313_default
-  pollIntervalMs: 500
-  timeoutMs: 60000
-  role: ${ATHENA_GENERAL_IAM_ROLE}
-s3:
-  bucket-name: emdi-data-storage
+
+  athena:
+    defaultDatabase: allied_mdss_test
+    mdssDatabase: allied_mdss_test
+    fmsDatabase: serco_fms_test
+    outputLocation: s3://emds-test-athena-query-results-20240923095933297100000013/output
+    workgroup: 396913731313_default
+    pollIntervalMs: 500
+    timeoutMs: 60000
+    role: ${ATHENA_GENERAL_IAM_ROLE:}
+  s3:
+    bucket-name: emdi-data-storage
 
 datastore:
   fms-database: ${FMS_DATABASE:serco_servicenow_test}
