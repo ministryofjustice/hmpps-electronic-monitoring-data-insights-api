@@ -41,10 +41,10 @@ class AthenaDeviceRepositoryTest {
     every {
       runner.run(
         capture(sqlSlot),
-        any(),                 // <-- don't pin DB here
-        any(),                 // skipHeaderRow
+        any(), // <-- don't pin DB here
+        any(), // skipHeaderRow
         any<(List<Datum>) -> Any>(),
-        any()                  // params list
+        any(), // params list
       )
     } returns emptyList()
 
