@@ -35,17 +35,21 @@ class AthenaDeviceRepositoryTest {
 
   @Test
   fun `findByCrn should build SQL with correct personId and call runner`() {
-    // Arrange
     val crn = "12345"
     val sqlSlot = slot<String>()
 
-    // Act
     every {
-      runner.run(capture(sqlSlot), eq(database), any(), any<(List<Datum>) -> Any>(), any())
-    } returns emptyList<Nothing>()
+      runner.run(
+        capture(sqlSlot),
+        any(),                 // <-- don't pin DB here
+        any(),                 // skipHeaderRow
+        any<(List<Datum>) -> Any>(),
+        any()                  // params list
+      )
+    } returns emptyList()
+
     repository.findByCrn(crn)
 
-    // / Assert
     assertThat(sqlSlot.captured).contains("person_id = CAST(? AS BIGINT)")
     assertThat(sqlSlot.captured).contains("WITH latest_device AS")
     assertThat(sqlSlot.captured).contains("LEFT JOIN latest_activation")

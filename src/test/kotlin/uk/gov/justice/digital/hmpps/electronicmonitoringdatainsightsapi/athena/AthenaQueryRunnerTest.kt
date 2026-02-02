@@ -8,6 +8,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
+import software.amazon.awssdk.regions.Region
 import software.amazon.awssdk.services.athena.AthenaClient
 import software.amazon.awssdk.services.athena.model.Datum
 import software.amazon.awssdk.services.athena.model.GetQueryExecutionRequest
@@ -27,12 +28,21 @@ class AthenaQueryRunnerTest {
 
   @BeforeEach
   fun setUp() {
+    val props = AwsProperties(
+      region = Region.EU_WEST_2,
+      athena = AthenaProperties(
+        defaultDatabase = "test_db",
+        outputLocation = "s3://test-output",
+        pollIntervalMs = 1,
+        timeoutMs = 1000,
+        role = null,
+        workgroup = null,
+      ),
+    )
+
     runner = AthenaQueryRunner(
       athena = athenaClient,
-      defaultDatabase = "test_db",
-      outputLocation = "s3://test-output",
-      pollIntervalMs = 1, // High speed for tests
-      timeoutMs = 1000,
+      properties = props, // or props.athena depending on your ctor
     )
   }
 
