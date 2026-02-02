@@ -6,29 +6,50 @@ import io.mockk.slot
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
+import software.amazon.awssdk.regions.Region
 import software.amazon.awssdk.services.athena.model.Datum
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.athena.AthenaProperties
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.athena.AthenaQueryRunner
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.athena.AwsProperties
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.exception.DataIntegrityException
 
 class AthenaDeviceRepositoryTest {
 
+  private val properties = AwsProperties(
+    region = Region.EU_WEST_2,
+    athena = AthenaProperties(
+      role = null,
+      mdssDatabase = "allied_mdss_test",
+      fmsDatabase = "serco_fms_test",
+      defaultDatabase = "allied_mdss_test",
+      outputLocation = "s3://bucket/output",
+      workgroup = "wg",
+      pollIntervalMs = 500,
+      timeoutMs = 60000,
+    ),
+  )
+
   private val runner = mockk<AthenaQueryRunner>()
   private val database = "test_db"
-  private val repository = AthenaDeviceRepository(runner, database)
+  private val repository = AthenaDeviceRepository(runner, properties)
 
   @Test
   fun `findByCrn should build SQL with correct personId and call runner`() {
-    // Arrange
     val crn = "12345"
     val sqlSlot = slot<String>()
 
-    // Act
     every {
-      runner.run(capture(sqlSlot), eq(database), any(), any<(List<Datum>) -> Any>(), any())
-    } returns emptyList<Nothing>()
+      runner.run(
+        capture(sqlSlot),
+        any(), // <-- don't pin DB here
+        any(), // skipHeaderRow
+        any<(List<Datum>) -> Any>(),
+        any(), // params list
+      )
+    } returns emptyList()
+
     repository.findByCrn(crn)
 
-    // / Assert
     assertThat(sqlSlot.captured).contains("person_id = CAST(? AS BIGINT)")
     assertThat(sqlSlot.captured).contains("WITH latest_device AS")
     assertThat(sqlSlot.captured).contains("LEFT JOIN latest_activation")

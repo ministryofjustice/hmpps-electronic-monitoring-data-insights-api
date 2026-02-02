@@ -1,25 +1,45 @@
 package uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.athena
 
-import org.springframework.beans.factory.annotation.Value
+import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
-import software.amazon.awssdk.regions.Region
-import software.amazon.awssdk.regions.providers.DefaultAwsRegionProviderChain
 import software.amazon.awssdk.services.athena.AthenaClient
+import software.amazon.awssdk.services.sts.StsClient
+import software.amazon.awssdk.services.sts.auth.StsAssumeRoleCredentialsProvider
 
 @Configuration
-class AthenaConfig(@Value("\${aws.region:}") private val region: String) {
+@EnableConfigurationProperties(
+  AwsProperties::class,
+)
+class AthenaConfig(private val properties: AwsProperties) {
+  val sessionId: String = "EMDIApiSession"
+
+  @Bean
+  fun stsClient(): StsClient {
+    val clientBuilder = StsClient.builder()
+      .region(properties.region)
+
+    return clientBuilder.build()
+  }
 
   @Bean
   fun athenaClient(): AthenaClient {
-    val resolvedRegion = if (region.isEmpty()) {
-      DefaultAwsRegionProviderChain().region
-    } else {
-      Region.of(region)
+    val clientBuilder = AthenaClient.builder()
+      .region(properties.region)
+
+    val roleArn = properties.athena.role?.trim()
+
+    if (!roleArn.isNullOrBlank() && !roleArn.startsWith("\${")) {
+      clientBuilder.credentialsProvider(
+        StsAssumeRoleCredentialsProvider.builder()
+          .stsClient(stsClient())
+          .refreshRequest { b ->
+            b.roleArn(roleArn).roleSessionName(sessionId)
+          }
+          .build(),
+      )
     }
 
-    return AthenaClient.builder()
-      .region(resolvedRegion)
-      .build()
+    return clientBuilder.build()
   }
 }

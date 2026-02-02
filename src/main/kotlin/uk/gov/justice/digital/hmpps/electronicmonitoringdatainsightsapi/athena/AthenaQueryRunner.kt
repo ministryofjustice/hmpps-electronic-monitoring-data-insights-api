@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.athena
 
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 import software.amazon.awssdk.services.athena.AthenaClient
 import software.amazon.awssdk.services.athena.model.Datum
@@ -16,15 +15,12 @@ import kotlin.math.min
 @Component
 class AthenaQueryRunner(
   private val athena: AthenaClient,
-  @Value("\${athena.defaultDatabase}") private val defaultDatabase: String,
-  @Value("\${athena.outputLocation}") private val outputLocation: String,
-  @Value("\${athena.pollIntervalMs:500}") private val pollIntervalMs: Long,
-  @Value("\${athena.timeoutMs:60000}") private val timeoutMs: Long,
+  private val properties: AwsProperties,
 ) {
 
   fun <T> run(
     sql: String,
-    database: String = defaultDatabase,
+    database: String = properties.athena.defaultDatabase,
     skipHeaderRow: Boolean = true,
     mapper: (List<Datum>) -> T,
     params: List<String> = emptyList(),
@@ -41,7 +37,7 @@ class AthenaQueryRunner(
    */
   fun <T> fetchPaged(
     sql: String,
-    database: String = defaultDatabase,
+    database: String = properties.athena.defaultDatabase,
     cursor: String? = null,
     params: List<String> = emptyList(),
     pageSize: Int = 100,
@@ -90,7 +86,7 @@ class AthenaQueryRunner(
       )
       .resultConfiguration(
         ResultConfiguration.builder()
-          .outputLocation(outputLocation)
+          .outputLocation(properties.athena.outputLocation)
           .build(),
       )
       .build()
@@ -99,8 +95,8 @@ class AthenaQueryRunner(
   }
 
   private fun waitForCompletion(executionId: String) {
-    val deadline = System.currentTimeMillis() + timeoutMs
-    var sleepMs = pollIntervalMs
+    val deadline = System.currentTimeMillis() + properties.athena.timeoutMs
+    var sleepMs = properties.athena.pollIntervalMs
 
     while (true) {
       val exec = athena.getQueryExecution(
@@ -115,10 +111,10 @@ class AthenaQueryRunner(
         }
         else -> {
           if (System.currentTimeMillis() > deadline) {
-            throw IllegalStateException("Athena query $executionId timed out after ${timeoutMs}ms")
+            throw IllegalStateException("Athena query $executionId timed out after ${properties.athena.timeoutMs}ms")
           }
           Thread.sleep(sleepMs)
-          sleepMs = min((sleepMs * 1.2).toLong().coerceAtLeast(pollIntervalMs), 2000L)
+          sleepMs = min((sleepMs * 1.2).toLong().coerceAtLeast(properties.athena.pollIntervalMs), 2000L)
         }
       }
     }

@@ -1,9 +1,9 @@
 package uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.location.repository
 
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Repository
 import software.amazon.awssdk.services.athena.model.Datum
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.athena.AthenaQueryRunner
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.athena.AwsProperties
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.exception.DataIntegrityException
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.util.DateTimeConstants
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.validation.toLocationId
@@ -17,7 +17,7 @@ import java.time.ZoneOffset
 @Repository
 class AthenaLocationRepository(
   private val runner: AthenaQueryRunner,
-  @Value("\${athena.mdssDatabase}") private val mdssDatabase: String,
+  private val properties: AwsProperties,
 ) : LocationRepository {
 
   override fun findAllByCrnAndTimespan(crn: String, from: Instant, to: Instant, nextToken: String?): PagedLocations {
@@ -25,7 +25,7 @@ class AthenaLocationRepository(
     val sql = buildTimeSpanSql()
     val result = runner.fetchPaged(
       sql = sql,
-      database = mdssDatabase,
+      database = properties.athena.mdssDatabase,
       cursor = nextToken,
       pageSize = 100,
       mapper = ::mapRow,
@@ -42,7 +42,7 @@ class AthenaLocationRepository(
     val personId = crn.toPersonId()
     val locationId = locationId.toLocationId()
     val sql = buildLocationIdSql()
-    return runner.run(sql, mdssDatabase, skipHeaderRow = true, mapper = ::mapRow, params = listOf(personId.toString(), locationId.toString()))
+    return runner.run(sql, properties.athena.mdssDatabase, skipHeaderRow = true, mapper = ::mapRow, params = listOf(personId.toString(), locationId.toString()))
   }
 
   override fun findRecordsSince(lastWatermark: String): List<Location> {
@@ -56,7 +56,7 @@ class AthenaLocationRepository(
       LIMIT 20
     """.trimIndent()
 
-    return runner.run(sql, mdssDatabase, skipHeaderRow = true, mapper = ::mapRow, params = listOf(lastWatermark))
+    return runner.run(sql, properties.athena.mdssDatabase, skipHeaderRow = true, mapper = ::mapRow, params = listOf(lastWatermark))
   }
 
   private fun buildTimeSpanSql(): String =
