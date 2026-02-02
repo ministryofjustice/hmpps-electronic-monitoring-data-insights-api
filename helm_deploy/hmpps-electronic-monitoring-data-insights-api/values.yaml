@@ -34,6 +34,8 @@ generic-service:
       DB_USER: "database_username"
       DB_PASSWORD: "database_password"
       DB_HOST: "rds_instance_address"
+    athena-roles:
+      ATHENA_GENERAL_IAM_ROLE: "general_role_arn"
 
   allowlist:
     groups:
