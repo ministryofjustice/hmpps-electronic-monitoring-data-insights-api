@@ -17,5 +17,5 @@ constructor(
   val hdop: Int? = null,
   val geometry: String? = null,
   val latitude: Double? = null,
-  val longitude: Double? = null
+  val longitude: Double? = null,
 )
