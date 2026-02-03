@@ -26,7 +26,7 @@ class LocationServiceTest {
     val nextToken = "some-token"
 
     val mockPagedResult = PagedLocations(
-      listOf(Location(positionId = 101, personId = 12345, deviceId = 98765, positionLatitude = 51.5074, positionLongitude = -0.1278)),
+      listOf(Location(positionId = 101, deviceId = 98765, latitude = 51.5074, longitude = -0.1278)),
       nextToken = "next-token",
     )
 
@@ -63,7 +63,7 @@ class LocationServiceTest {
     // Arrange
     val crn = "X123456"
     val id = "location-uuid"
-    val mockList = listOf(Location(positionId = 101, personId = 12345, deviceId = 98765, positionLatitude = 51.5074, positionLongitude = -0.1278))
+    val mockList = listOf(Location(positionId = 101, deviceId = 98765, latitude = 51.5074, longitude = -0.1278))
 
     every { locationRepository.findByCrnAndId(crn, id) } returns mockList
 

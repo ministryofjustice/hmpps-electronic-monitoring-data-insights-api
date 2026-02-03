@@ -48,7 +48,7 @@ class AthenaRdsSyncService(
       println("Inserted $recordsInserted records into RDS")
 
       val newWatermark: Instant = newRecords
-        .mapNotNull { it.positionGpsDate }
+        .mapNotNull { it.gpsDate }
         .maxOrNull() ?: lastWatermark
 
       watermarkService.updateWatermarkSuccess(

@@ -95,11 +95,8 @@ class AthenaLocationRepositoryTest {
     // Arrange
     val mockRow = listOf(
       datum("999"), // 0: position_id
-      datum("123456"), // 1: person_id
       datum("555"), // 2: device_id
       datum("2026-10-01 10:00:00.000000"), // 3: position_gps_date
-      datum("2026-10-01 10:01:00.000000"), // 4: recorded_date
-      datum("2026-10-01 10:02:00.000000"), // 5: uploaded_date
       datum("30"), // 6: speed
       datum("8"), // 7: satellite
       datum("180"), // 8: direction
@@ -109,9 +106,6 @@ class AthenaLocationRepositoryTest {
       datum("POINT(...)"), // 12: geometry
       datum("51.5074"), // 13: latitude
       datum("-0.1278"), // 14: longitude
-      datum("1"), // 15: client_id
-      datum("10"), // 16: location_id
-      datum("100"), // 17: circulation_id
     )
 
     // Act
@@ -123,8 +117,8 @@ class AthenaLocationRepositoryTest {
     val location = result[0]
 
     // Assert
-    assertThat(location.positionLatitude).isEqualTo(51.5074)
-    assertThat(location.positionLongitude).isEqualTo(-0.1278)
+    assertThat(location.latitude).isEqualTo(51.5074)
+    assertThat(location.longitude).isEqualTo(-0.1278)
   }
 
   @Test

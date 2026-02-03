@@ -3,6 +3,6 @@ package uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.locatio
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.location.model.Location
 
 data class LocationResponse(
-  val items: List<Location>,
+  val locations: List<Location>,
   val nextToken: String?,
 )
