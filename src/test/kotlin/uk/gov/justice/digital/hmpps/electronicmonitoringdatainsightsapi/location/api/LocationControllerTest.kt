@@ -37,8 +37,8 @@ class LocationControllerTest {
     val nextToken = "token123"
 
     val mockLocations = listOf(
-      Location(positionId = 101, personId = 12345, deviceId = 98765, positionLatitude = 51.5074, positionLongitude = -0.1278),
-      Location(positionId = 101, personId = 12345, deviceId = 98765, positionLatitude = 51.5075, positionLongitude = -0.1279),
+      Location(positionId = 101, deviceId = 98765, latitude = 51.5074, longitude = -0.1278),
+      Location(positionId = 101, deviceId = 98765, latitude = 51.5075, longitude = -0.1279),
     )
     val pagedResult = PagedLocations(locations = mockLocations, nextToken = "next-token-456")
 
@@ -55,8 +55,8 @@ class LocationControllerTest {
         .param("nextToken", nextToken),
     )
       .andExpect(status().isOk)
-      .andExpect(jsonPath("$.items.length()").value(2))
-      .andExpect(jsonPath("$.items[0].positionId").value(101))
+      .andExpect(jsonPath("$.locations.length()").value(2))
+      .andExpect(jsonPath("$.locations[0].positionId").value(101))
       .andExpect(jsonPath("$.nextToken").value("next-token-456"))
   }
 
@@ -65,7 +65,7 @@ class LocationControllerTest {
     // Arrange
     val crn = "ABC123"
     val positionId = "101"
-    val mockLocation = listOf(Location(positionId = 101, personId = 12345, deviceId = 98765, positionLatitude = 51.5074, positionLongitude = -0.1278))
+    val mockLocation = listOf(Location(positionId = 101, deviceId = 98765, latitude = 51.5074, longitude = -0.1278))
 
     // Act
     every { locationService.findByCrnAndId(crn, positionId) } returns mockLocation

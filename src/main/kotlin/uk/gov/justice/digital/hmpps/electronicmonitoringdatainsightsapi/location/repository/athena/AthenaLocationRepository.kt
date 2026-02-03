@@ -47,9 +47,9 @@ class AthenaLocationRepository(
 
   override fun findRecordsSince(lastWatermark: String): List<Location> {
     val sql = """
-      SELECT position_id, person_id, device_id, position_gps_date, position_recorded_date, position_uploaded_date,
+      SELECT position_id, device_id, position_gps_date,
              position_speed, position_satellite, position_direction, position_precision, position_lbs, position_hdop,
-             position_geometry, position_latitude, position_longitude, client_id, location_id, position_circulation_id
+             position_geometry, position_latitude, position_longitude
       FROM position
       WHERE position_gps_date > CAST(? AS TIMESTAMP)
       ORDER BY position_gps_date
@@ -61,21 +61,21 @@ class AthenaLocationRepository(
 
   private fun buildTimeSpanSql(): String =
     """
-      SELECT position_id, person_id, device_id, position_gps_date, position_recorded_date, position_uploaded_date,
+      SELECT position_id, device_id, position_gps_date,
              position_speed, position_satellite, position_direction, position_precision, position_lbs, position_hdop,
-             position_geometry, position_latitude, position_longitude, client_id, location_id, position_circulation_id
+             position_geometry, position_latitude, position_longitude
       FROM position
       WHERE person_id = CAST(? AS BIGINT)
         AND position_gps_date BETWEEN from_iso8601_timestamp(?)
                                 AND from_iso8601_timestamp(?)
-      ORDER BY position_gps_date      
+      ORDER BY position_gps_date       
     """.trimIndent()
 
   private fun buildLocationIdSql(): String =
     """
-      SELECT position_id, person_id, device_id, position_gps_date, position_recorded_date, position_uploaded_date,
+      SELECT position_id, device_id, position_gps_date,
              position_speed, position_satellite, position_direction, position_precision, position_lbs, position_hdop,
-             position_geometry, position_latitude, position_longitude, client_id, location_id, position_circulation_id
+             position_geometry, position_latitude, position_longitude
       FROM position
       WHERE person_id = CAST(? AS BIGINT)
         AND position_id = CAST(? AS BIGINT)
@@ -94,44 +94,32 @@ class AthenaLocationRepository(
 
     return Location(
       positionId = requiredInt(COL_POSITION_ID, "position_id"),
-      personId = requiredInt(COL_PERSON_ID, "person_id"),
       deviceId = requiredInt(COL_DEVICE_ID, "device_id"),
-      positionGpsDate = ts(COL_POSITION_GPS_DATE),
-      positionRecordedDate = ts(COL_POSITION_RECORDED_DATE),
-      positionUploadedDate = ts(COL_POSITION_UPLOADED_DATE),
-      positionSpeed = v(COL_POSITION_SPEED)?.toIntOrNull(),
-      positionSatellite = v(COL_POSITION_SATELLITE)?.toIntOrNull(),
-      positionDirection = v(COL_POSITION_DIRECTION)?.toIntOrNull(),
-      positionPrecision = v(COL_POSITION_PRECISION)?.toIntOrNull(),
-      positionLbs = v(COL_POSITION_LBS)?.toIntOrNull(),
-      positionHdop = v(COL_POSITION_HDOP)?.toIntOrNull(),
-      positionGeometry = v(COL_POSITION_GEOMETRY),
-      positionLatitude = v(COL_POSITION_LATITUDE)?.toDoubleOrNull(),
-      positionLongitude = v(COL_POSITION_LONGITUDE)?.toDoubleOrNull(),
-      clientId = v(COL_CLIENT_ID)?.toIntOrNull(),
-      locationId = v(COL_LOCATION_ID)?.toIntOrNull(),
-      positionCirculationId = v(COL_POSITION_CIRCULATION_ID)?.toIntOrNull(),
+      gpsDate = ts(COL_GPS_DATE),
+      speed = v(COL_POSITION_SPEED)?.toIntOrNull(),
+      satellite = v(COL_POSITION_SATELLITE)?.toIntOrNull(),
+      direction = v(COL_POSITION_DIRECTION)?.toIntOrNull(),
+      precision = v(COL_POSITION_PRECISION)?.toIntOrNull(),
+      lbs = v(COL_POSITION_LBS)?.toIntOrNull(),
+      hdop = v(COL_POSITION_HDOP)?.toIntOrNull(),
+      geometry = v(COL_POSITION_GEOMETRY),
+      latitude = v(COL_POSITION_LATITUDE)?.toDoubleOrNull(),
+      longitude = v(COL_POSITION_LONGITUDE)?.toDoubleOrNull(),
     )
   }
 
   companion object {
     private const val COL_POSITION_ID = 0
-    private const val COL_PERSON_ID = 1
-    private const val COL_DEVICE_ID = 2
-    private const val COL_POSITION_GPS_DATE = 3
-    private const val COL_POSITION_RECORDED_DATE = 4
-    private const val COL_POSITION_UPLOADED_DATE = 5
-    private const val COL_POSITION_SPEED = 6
-    private const val COL_POSITION_SATELLITE = 7
-    private const val COL_POSITION_DIRECTION = 8
-    private const val COL_POSITION_PRECISION = 9
-    private const val COL_POSITION_LBS = 10
-    private const val COL_POSITION_HDOP = 11
-    private const val COL_POSITION_GEOMETRY = 12
-    private const val COL_POSITION_LATITUDE = 13
-    private const val COL_POSITION_LONGITUDE = 14
-    private const val COL_CLIENT_ID = 15
-    private const val COL_LOCATION_ID = 16
-    private const val COL_POSITION_CIRCULATION_ID = 17
+    private const val COL_DEVICE_ID = 1
+    private const val COL_GPS_DATE = 2
+    private const val COL_POSITION_SPEED = 3
+    private const val COL_POSITION_SATELLITE = 4
+    private const val COL_POSITION_DIRECTION = 5
+    private const val COL_POSITION_PRECISION = 6
+    private const val COL_POSITION_LBS = 7
+    private const val COL_POSITION_HDOP = 8
+    private const val COL_POSITION_GEOMETRY = 9
+    private const val COL_POSITION_LATITUDE = 10
+    private const val COL_POSITION_LONGITUDE = 11
   }
 }

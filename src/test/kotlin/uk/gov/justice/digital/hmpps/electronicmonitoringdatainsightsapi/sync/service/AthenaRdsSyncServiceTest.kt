@@ -36,7 +36,7 @@ class AthenaRdsSyncServiceTest {
 
     // Mock data
     val mockRecord = mockk<Location> {
-      every { positionGpsDate } returns latestRecordTime
+      every { gpsDate } returns latestRecordTime
     }
     val newRecords = listOf(mockRecord)
 

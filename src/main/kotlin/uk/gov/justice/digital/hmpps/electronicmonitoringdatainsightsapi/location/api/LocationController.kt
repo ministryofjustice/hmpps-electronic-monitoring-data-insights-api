@@ -30,7 +30,7 @@ class LocationController(private val locationService: LocationService) {
     val pagedLocations = locationService.findAllByCrnAndTimespan(crn, from, to, nextToken)
     return ResponseEntity.ok(
       LocationResponse(
-        items = pagedLocations.locations,
+        locations = pagedLocations.locations,
         nextToken = pagedLocations.nextToken,
       ),
     )
