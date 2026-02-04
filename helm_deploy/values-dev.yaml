@@ -15,7 +15,5 @@ generic-service:
     ATHENA_OUTPUT_BUCKET: "s3://emds-test-athena-query-results-20240923095933297100000013"
     MFA_REQUIRED: "false"
 
-# CloudPlatform AlertManager receiver to route prometheus alerts to slack
-# See https://user-guide.cloud-platform.service.justice.gov.uk/documentation/monitoring-an-app/how-to-create-alarms.html#creating-your-own-custom-alerts
 generic-prometheus-alerts:
-  alertSeverity: hmpps_electronic_monitoring_data_insights_alerts_noprod
+  alertSeverity: hmpps-electronic-monitoring-data-insights-dev
