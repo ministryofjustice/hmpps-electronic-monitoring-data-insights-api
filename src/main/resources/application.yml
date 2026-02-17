@@ -45,7 +45,7 @@ aws:
     defaultDatabase: allied_mdss_dev
     mdssDatabase: allied_mdss_dev
     fmsDatabase: serco_fms_dev
-    outputLocation: s3://emds-test-athena-query-results-20240923095933297100000013/output
+    outputLocation: s3://emds-dev-athena-query-results-20240917144028307600000004/output
     workgroup: 800964199911_default
     pollIntervalMs: 500
     timeoutMs: 60000

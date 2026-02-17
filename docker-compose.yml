@@ -22,7 +22,7 @@ services:
       - DB_PASSWORD=${DB_PASSWORD}
       - DB_PORT=${DB_PORT}
       - DB_NAME=${DB_NAME}
-      - AWS_PROFILE=modernisation-platform-data-eng-396913731313
+      - AWS_PROFILE=modernisation-platform-data-eng-800964199911
       - AWS_REGION=eu-west-2
 
   hmpps-auth:
