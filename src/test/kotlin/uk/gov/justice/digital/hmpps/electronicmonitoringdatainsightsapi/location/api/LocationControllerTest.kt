@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.api
+package uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.location.api
 
 import com.ninjasquad.springmockk.MockkBean
 import io.mockk.every
@@ -11,10 +11,10 @@ import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
-import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.greeting.LocationService
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.location.api.LocationController
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.location.model.Location
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.location.model.PagedLocations
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.location.service.LocationService
 import java.time.Instant
 
 @ActiveProfiles("test")
