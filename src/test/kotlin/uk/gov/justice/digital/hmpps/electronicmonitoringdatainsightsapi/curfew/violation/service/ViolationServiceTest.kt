@@ -25,7 +25,6 @@ class ViolationServiceTest {
     val to = Instant.parse("2023-10-01T11:00:00Z")
     val nextToken = "some-token"
 
-
     val mockViolations = listOf(
       Violation(
         violationId = "1234567890abcdef1234567890abcdef",
@@ -43,7 +42,7 @@ class ViolationServiceTest {
         authorisedAbsence = "No",
         includedInTotalAtvCalculation = "Yes",
         outForEntireCurfewPeriod = "No",
-        outcomeReason = "Confirmed breach"
+        outcomeReason = "Confirmed breach",
       ),
       Violation(
         violationId = "fedcba0987654321fedcba0987654321",
@@ -61,8 +60,8 @@ class ViolationServiceTest {
         authorisedAbsence = "No",
         includedInTotalAtvCalculation = "Yes",
         outForEntireCurfewPeriod = "Yes",
-        outcomeReason = "Serious breach"
-      )
+        outcomeReason = "Serious breach",
+      ),
     )
 
     val pagedResult = PagedViolations(violations = mockViolations, nextToken = "next-token-456")
@@ -118,8 +117,9 @@ class ViolationServiceTest {
         authorisedAbsence = "No",
         includedInTotalAtvCalculation = "Yes",
         outForEntireCurfewPeriod = "No",
-        outcomeReason = "Confirmed breach"
-      ))
+        outcomeReason = "Confirmed breach",
+      ),
+    )
 
     every { violationRepository.findByCrnAndId(crn, violationId) } returns mockViolations
 

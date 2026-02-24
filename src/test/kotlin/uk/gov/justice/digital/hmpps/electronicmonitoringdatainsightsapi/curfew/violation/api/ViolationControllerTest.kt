@@ -12,8 +12,8 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.curfew.violation.model.PagedViolations
-import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.service.ViolationService
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.curfew.violation.model.Violation
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.service.ViolationService
 import java.time.Instant
 
 @ActiveProfiles("test")
@@ -52,7 +52,7 @@ class ViolationControllerTest {
         authorisedAbsence = "No",
         includedInTotalAtvCalculation = "Yes",
         outForEntireCurfewPeriod = "No",
-        outcomeReason = "Confirmed breach"
+        outcomeReason = "Confirmed breach",
       ),
       Violation(
         violationId = "fedcba0987654321fedcba0987654321",
@@ -70,8 +70,8 @@ class ViolationControllerTest {
         authorisedAbsence = "No",
         includedInTotalAtvCalculation = "Yes",
         outForEntireCurfewPeriod = "Yes",
-        outcomeReason = "Serious breach"
-      )
+        outcomeReason = "Serious breach",
+      ),
     )
 
     val pagedResult = PagedViolations(violations = mockViolations, nextToken = "next-token-456")
@@ -117,8 +117,9 @@ class ViolationControllerTest {
         authorisedAbsence = "No",
         includedInTotalAtvCalculation = "Yes",
         outForEntireCurfewPeriod = "No",
-        outcomeReason = "Confirmed breach"
-      ))
+        outcomeReason = "Confirmed breach",
+      ),
+    )
 
     // Act
     every { violationService.findByCrnAndId(crn, violationId) } returns mockViolation
@@ -129,4 +130,3 @@ class ViolationControllerTest {
       .andExpect(jsonPath("$[0].violationId").value(violationId))
   }
 }
-

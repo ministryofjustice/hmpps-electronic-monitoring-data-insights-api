@@ -16,6 +16,7 @@ fun String.toViolationId(): String {
   }
   return this
 }
+
 /** Validates DeviceWearerId String conforms to SNOW ID */
 fun String.toDeviceWearerId(): String {
   require(this.isNotBlank()) { "The DeviceWearerId must not be blank" }
@@ -24,4 +25,3 @@ fun String.toDeviceWearerId(): String {
   }
   return this
 }
-

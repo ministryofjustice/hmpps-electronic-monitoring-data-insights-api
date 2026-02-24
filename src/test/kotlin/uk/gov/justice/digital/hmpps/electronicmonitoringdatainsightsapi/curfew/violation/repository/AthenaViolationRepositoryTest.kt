@@ -97,20 +97,20 @@ class AthenaViolationRepositoryTest {
     val mockRow = listOf(
       datum("1234567890abcdef1234567890abcdef"), // 0: violation_id
       datum("abcdef1234567890abcdef1234567890"), // 1: device_wearer
-      datum("2026-02-16 21:45:00.000000"),        // 2: sys_created_on
-      datum("Home Detention Curfew Violation"),   // 3: category
-      datum("2026-02-16 00:25:00.000000"),        // 4: duration (per your model it's Instant)
-      datum("2026-02-16T21:20:00Z"),              // 5: start (String in your model)
-      datum("2026-02-16 21:45:00.000000"),        // 6: end
-      datum("Closed"),                            // 7: state
-      datum("false"),                             // 8: active
-      datum("Subject outside permitted zone"),     // 9: short_description/description
-      datum("Escalated"),                         // 10: response_action
-      datum("No"),                                // 11: reasonable_excuse
-      datum("No"),                                // 12: authorised_absence
-      datum("Yes"),                               // 13: included_in_total_atv_calculation
-      datum("Yes"),                               // 14: out_for_entire_curfew_period
-      datum("Serious breach"),                    // 15: outcome_reason
+      datum("2026-02-16 21:45:00.000000"), // 2: sys_created_on
+      datum("Home Detention Curfew Violation"), // 3: category
+      datum("2026-02-16 00:25:00.000000"), // 4: duration (per your model it's Instant)
+      datum("2026-02-16T21:20:00Z"), // 5: start (String in your model)
+      datum("2026-02-16 21:45:00.000000"), // 6: end
+      datum("Closed"), // 7: state
+      datum("false"), // 8: active
+      datum("Subject outside permitted zone"), // 9: short_description/description
+      datum("Escalated"), // 10: response_action
+      datum("No"), // 11: reasonable_excuse
+      datum("No"), // 12: authorised_absence
+      datum("Yes"), // 13: included_in_total_atv_calculation
+      datum("Yes"), // 14: out_for_entire_curfew_period
+      datum("Serious breach"), // 15: outcome_reason
     )
 
     // Act
@@ -121,7 +121,7 @@ class AthenaViolationRepositoryTest {
 
     val result = repository.findByCrnAndId(
       crn = "abcdef1234567890abcdef1234567890",
-      violationId = "abcdef1234567890abcdef1234567890"
+      violationId = "abcdef1234567890abcdef1234567890",
     )
 
     val violation = result[0]
@@ -136,7 +136,6 @@ class AthenaViolationRepositoryTest {
     assertThat(violation.description).isEqualTo("Subject outside permitted zone")
     assertThat(violation.outcomeReason).isEqualTo("Serious breach")
   }
-
 
   @Test
   fun `mapRow should throw DataIntegrityException when mandatory ID is missing`() {

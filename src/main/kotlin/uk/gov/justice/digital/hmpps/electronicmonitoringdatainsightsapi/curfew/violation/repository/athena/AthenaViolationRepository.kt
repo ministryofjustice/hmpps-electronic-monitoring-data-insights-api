@@ -92,9 +92,8 @@ class AthenaViolationRepository(
     // Helper to handle required numeric fields with clear context
     fun requiredInt(i: Int, fieldName: String): Int = v(i)?.toIntOrNull() ?: throw DataIntegrityException("$fieldName is missing or invalid at index $i")
 
-    fun requiredStr(i: Int, fieldName: String): String =
-      v(i)?.takeIf { it.isNotBlank() }
-        ?: throw DataIntegrityException("$fieldName is missing or blank at index $i")
+    fun requiredStr(i: Int, fieldName: String): String = v(i)?.takeIf { it.isNotBlank() }
+      ?: throw DataIntegrityException("$fieldName is missing or blank at index $i")
 
     fun ts(i: Int): Instant? = v(i)
       ?.takeIf { it.isNotBlank() }
