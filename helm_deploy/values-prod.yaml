@@ -2,6 +2,10 @@
 # Per environment values which override defaults in hmpps-electronic-monitoring-data-insights-api/values.yaml
 
 generic-service:
+  replicaCount: 2
+
+  serviceAccountName: "hmpps-em-data-insights-prod"
+
   ingress:
     host: electronic-monitoring-data-insights-api.hmpps.service.justice.gov.uk
 

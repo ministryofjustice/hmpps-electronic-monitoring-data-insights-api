@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.greeting
+package uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.location.service
 
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.location.model.Location

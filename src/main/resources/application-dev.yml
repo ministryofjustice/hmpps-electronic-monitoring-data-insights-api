@@ -16,4 +16,4 @@ aws:
     workgroup: 800964199911_default
     pollIntervalMs: 500
     timeoutMs: 60000
-    role: ${ATHENA_GENERAL_IAM_ROLE:}git status
+    role: ${ATHENA_GENERAL_IAM_ROLE:}

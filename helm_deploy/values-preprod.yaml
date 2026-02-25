@@ -4,6 +4,8 @@
 generic-service:
   replicaCount: 2
 
+  serviceAccountName: "hmpps-em-data-insights-preprod"
+
   ingress:
     host: electronic-monitoring-data-insights-api-preprod.hmpps.service.justice.gov.uk
 
