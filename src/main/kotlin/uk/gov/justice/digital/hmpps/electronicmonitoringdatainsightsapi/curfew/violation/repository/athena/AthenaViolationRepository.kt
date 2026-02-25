@@ -47,9 +47,9 @@ class AthenaViolationRepository(
 
   private fun buildTimeSpanSql(): String =
     """
-      SELECT v.sys_id, v.sys_created_on, v.category, v.duration, "end", v.start, v.state, v.active,
+      SELECT v.sys_id, v.device_wearer, v.sys_created_on, v.category, v.duration, v.start, v."end", v.state, v.active,
         v.short_description, v.response_action, v.reasonable_excuse, v.authorised_absence,
-        v.included_in_total_atv_calculation, v.out_for_entire_curfew_period, v.outcome_reason, v.device_wearer
+        v.included_in_total_atv_calculation, v.out_for_entire_curfew_period, v.outcome_reason,
         FROM serco_fms_dev.x_serg2_ems_mom_mo mo
         JOIN serco_fms_dev.x_serg2_ems_mom_mr mr
         ON mr.monitoring_order = mo.sys_id
@@ -68,9 +68,9 @@ class AthenaViolationRepository(
 
   private fun buildViolationIdSql(): String =
     """
-      SELECT v.sys_id, v.device_wearer, v.sys_created_on, v.category, v.duration, v.start, v.end, v.state, v.active,
+      SELECT v.sys_id, v.device_wearer, v.sys_created_on, v.category, v.duration, v.start, v."end", v.state, v.active,
         v.short_description, v.response_action, v.reasonable_excuse, v.authorised_absence,
-        v.included_in_total_atv_calculation, v.out_for_entire_curfew_period, v.outcome_reason, 
+        v.included_in_total_atv_calculation, v.out_for_entire_curfew_period, v.outcome_reason
         FROM serco_fms_dev.x_serg2_ems_mom_mo mo
         JOIN serco_fms_dev.x_serg2_ems_mom_mr mr
         ON mr.monitoring_order = mo.sys_id
