@@ -14,7 +14,7 @@ dependencies {
   implementation("org.springframework.boot:spring-boot-starter-webflux")
   implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.15")
 
-  implementation("org.jetbrains.exposed:exposed-core:0.61.0")
+  implementation("org.jetbrains.exposed:exposed-core:1.1.1")
   implementation("org.jetbrains.exposed:exposed-json:0.61.0")
   implementation("org.jetbrains.exposed:exposed-dao:0.61.0")
   implementation("org.jetbrains.exposed:exposed-jdbc:0.61.0")
