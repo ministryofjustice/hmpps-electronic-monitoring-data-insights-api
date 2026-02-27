@@ -18,7 +18,7 @@ dependencies {
   implementation("org.jetbrains.exposed:exposed-json:0.61.0")
   implementation("org.jetbrains.exposed:exposed-dao:0.61.0")
   implementation("org.jetbrains.exposed:exposed-jdbc:0.61.0")
-  implementation("org.jetbrains.exposed:exposed-java-time:0.61.0")
+  implementation("org.jetbrains.exposed:exposed-java-time:1.1.1")
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core")
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor")
   implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.10.0")
