@@ -13,6 +13,8 @@ import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.athena.A
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.athena.AwsProperties
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.exception.DataIntegrityException
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.model.Person
+import java.time.LocalDate
+import kotlin.String
 
 class AthenaPersonRepositoryTest {
 
@@ -35,21 +37,27 @@ class AthenaPersonRepositoryTest {
   private val repository = AthenaPersonRepository(runner, properties)
 
   @Test
-  fun `findByCrn should capture and verify the generated SQL`() {
+  fun `findById should capture and verify the generated SQL`() {
     // Arrange
     val personId = "12345"
     val sqlSlot = slot<String>()
 
-    // Act
     every {
-      runner.run(capture(sqlSlot), eq(properties.athena.fmsDatabase), any(), any<(List<Datum>) -> Any>())
-    } returns emptyList<Nothing>()
+      runner.run<Person>(
+        sql = capture(sqlSlot),
+        database = eq(properties.athena.mdssDatabase),
+        skipHeaderRow = eq(true),
+        mapper = any(),
+        params = eq(listOf(personId)),
+      )
+    } returns emptyList()
 
+    // Act
     repository.getPersonById(personId)
 
-    // Asset
-    assertThat(sqlSlot.captured).contains("AND c.sys_id = '12345'")
-    assertThat(sqlSlot.captured).contains("limit 1")
+    // Assert (SQL now parameterised)
+    assertThat(sqlSlot.captured).contains("WHERE p.person_id = CAST(? AS BIGINT)")
+    assertThat(sqlSlot.captured).contains("LIMIT 1")
   }
 
   @Test
@@ -57,13 +65,25 @@ class AthenaPersonRepositoryTest {
     // Arrange
     val mockRow = listOf(
       datum("41593"), // 0: person_id
-      datum("O4649LX"), // 1: nomis
-      datum("UF19/934776L"), // 2: pnc
-      datum("X26170"), // 3: delius
-      datum("C6263919"), // 4: horId
-      datum("0987654321"), // 5: ceprid
-      datum("X69847"), // 6: prison
+      datum("b4b313f41b6c3e1072e76283b24bcbf6"), // 1: consumer_id
+      datum("Sigmund Freud"), // 2: person name
+      datum("O4649LX"), // 3: nomis_id
+      datum("UF19/934776L"), // 4: pnc_id
+      datum("X26170"), // 5: delius_id
+      datum("C6263919"), // 5: hor_id
+      datum("0987654321"), // 6: cepr_id
+      datum("X69847"), // 7: prison_id
+      datum("2020-01-01"), // 8: dob
+      datum("LON 1243"), // 9: zip
+      datum("City"), // 10: city
+      datum("Street"), // 11: street
     )
+
+
+
+
+
+
 
     every { runner.run<Person>(any(), any(), any(), any(), any()) } answers {
       val mapper = it.invocation.args[3] as (List<Datum>) -> Person
