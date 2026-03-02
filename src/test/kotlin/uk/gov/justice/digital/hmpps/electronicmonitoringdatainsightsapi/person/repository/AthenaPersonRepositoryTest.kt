@@ -13,7 +13,6 @@ import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.athena.A
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.athena.AwsProperties
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.exception.DataIntegrityException
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.model.Person
-import java.time.LocalDate
 import kotlin.String
 
 class AthenaPersonRepositoryTest {
@@ -78,12 +77,6 @@ class AthenaPersonRepositoryTest {
       datum("City"), // 10: city
       datum("Street"), // 11: street
     )
-
-
-
-
-
-
 
     every { runner.run<Person>(any(), any(), any(), any(), any()) } answers {
       val mapper = it.invocation.args[3] as (List<Datum>) -> Person
