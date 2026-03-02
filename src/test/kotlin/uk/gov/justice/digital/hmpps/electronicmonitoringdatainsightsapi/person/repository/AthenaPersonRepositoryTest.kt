@@ -12,7 +12,7 @@ import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.athena.A
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.athena.AthenaQueryRunner
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.athena.AwsProperties
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.exception.DataIntegrityException
-import java.time.Instant
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.model.Person
 
 class AthenaPersonRepositoryTest {
 
@@ -37,7 +37,7 @@ class AthenaPersonRepositoryTest {
   @Test
   fun `findByCrn should capture and verify the generated SQL`() {
     // Arrange
-    val crn = "12345"
+    val personId = "12345"
     val sqlSlot = slot<String>()
 
     // Act
@@ -45,7 +45,7 @@ class AthenaPersonRepositoryTest {
       runner.run(capture(sqlSlot), eq(properties.athena.fmsDatabase), any(), any<(List<Datum>) -> Any>())
     } returns emptyList<Nothing>()
 
-    repository.findByCrn(crn)
+    repository.getPersonById(personId)
 
     // Asset
     assertThat(sqlSlot.captured).contains("AND c.sys_id = '12345'")
@@ -56,35 +56,32 @@ class AthenaPersonRepositoryTest {
   fun `mapRow should map Athena columns to Person object correctly`() {
     // Arrange
     val mockRow = listOf(
-      datum("uuid-123"), // 0: person_id
-      datum("John"), // 1: first_name
-      datum("Doe"), // 2: last_name
-      datum("1985-05-15"), // 3: dob
-      datum("Main St"), // 4: street
-      datum("London"), // 5: state
-      datum("London"), // 6: city
-      datum("E1 1AA"), // 7: zip
-      datum("UK"), // 8: country
-      datum("GPS"), // 9: order_type
-      datum("GPS Desc"), // 10: order_type_desc
-      datum("2023-01-01 10:00:00.000000"), // 11: order_start
-      datum("2023-12-31 23:59:59.000000"), // 12: order_end
+      datum("41593"), // 0: person_id
+      datum("O4649LX"), // 1: nomis
+      datum("UF19/934776L"), // 2: pnc
+      datum("X26170"), // 3: delius
+      datum("C6263919"), // 4: horId
+      datum("0987654321"), // 5: ceprid
+      datum("X69847"), // 6: prison
     )
 
-    // Act
-    every { runner.run<Any>(any(), any(), any(), any(), any()) } answers {
-      val mapper = it.invocation.args[3] as (List<Datum>) -> Any
+    every { runner.run<Person>(any(), any(), any(), any(), any()) } answers {
+      val mapper = it.invocation.args[3] as (List<Datum>) -> Person
       listOf(mapper(mockRow))
     }
 
-    val result = repository.findByCrn("uuid-123")
-    val person = result[0]
+    // Act
+    val person = repository.getPersonById("41593")
 
     // Assert
-    assertThat(person.personId).isEqualTo("uuid-123")
-    assertThat(person.firstName).isEqualTo("John")
-    assertThat(person.orderStart).isInstanceOf(Instant::class.java)
-    assertThat(person.orderTypeDescription).isEqualTo("GPS Desc")
+    requireNotNull(person)
+    assertThat(person.personId).isEqualTo("41593")
+    assertThat(person.nomisId).isEqualTo("O4649LX")
+    assertThat(person.pncId).isEqualTo("UF19/934776L")
+    assertThat(person.deliusId).isEqualTo("X26170")
+    assertThat(person.horId).isEqualTo("C6263919")
+    assertThat(person.ceprId).isEqualTo("0987654321")
+    assertThat(person.prisonId).isEqualTo("X69847")
   }
 
   @Test
@@ -103,7 +100,7 @@ class AthenaPersonRepositoryTest {
 
     // Assert
     assertThrows<DataIntegrityException> {
-      repository.findByCrn("some-crn")
+      repository.getPersonById("some-personId")
     }
   }
 
