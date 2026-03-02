@@ -1,22 +1,22 @@
 package uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.model
 
-import java.time.Instant
+import java.time.LocalDate
 import kotlin.time.ExperimentalTime
 
 data class Person
 @OptIn(ExperimentalTime::class)
 constructor(
   val personId: String?,
-  val firstName: String? = null,
-  val lastName: String? = null,
-  val dob: String? = null,
-  val street: String? = null,
-  val city: String? = null,
-  val state: String? = null,
+  val consumerId: String? = null,
+  val personName: String? = null,
+  val nomisId: String? = null,
+  val pncId: String? = null,
+  val deliusId: String? = null,
+  val horId: String? = null,
+  val ceprId: String? = null,
+  val prisonId: String? = null,
+  val dob: LocalDate? = null,
   val zip: String? = null,
-  val country: String? = null,
-  val orderType: String? = null,
-  val orderTypeDescription: String? = null,
-  val orderStart: Instant? = null,
-  val orderEnd: Instant? = null,
+  val city: String? = null,
+  val street: String? = null,
 )

@@ -12,7 +12,8 @@ import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.athena.A
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.athena.AthenaQueryRunner
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.athena.AwsProperties
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.exception.DataIntegrityException
-import java.time.Instant
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.model.Person
+import kotlin.String
 
 class AthenaPersonRepositoryTest {
 
@@ -35,56 +36,65 @@ class AthenaPersonRepositoryTest {
   private val repository = AthenaPersonRepository(runner, properties)
 
   @Test
-  fun `findByCrn should capture and verify the generated SQL`() {
+  fun `findById should capture and verify the generated SQL`() {
     // Arrange
-    val crn = "12345"
+    val personId = "12345"
     val sqlSlot = slot<String>()
 
-    // Act
     every {
-      runner.run(capture(sqlSlot), eq(properties.athena.fmsDatabase), any(), any<(List<Datum>) -> Any>())
-    } returns emptyList<Nothing>()
+      runner.run<Person>(
+        sql = capture(sqlSlot),
+        database = eq(properties.athena.mdssDatabase),
+        skipHeaderRow = eq(true),
+        mapper = any(),
+        params = eq(listOf(personId)),
+      )
+    } returns emptyList()
 
-    repository.findByCrn(crn)
+    // Act
+    repository.getPersonById(personId)
 
-    // Asset
-    assertThat(sqlSlot.captured).contains("AND c.sys_id = '12345'")
-    assertThat(sqlSlot.captured).contains("limit 1")
+    // Assert (SQL now parameterised)
+    assertThat(sqlSlot.captured).contains("WHERE p.person_id = CAST(? AS BIGINT)")
+    assertThat(sqlSlot.captured).contains("LIMIT 1")
   }
 
   @Test
   fun `mapRow should map Athena columns to Person object correctly`() {
     // Arrange
     val mockRow = listOf(
-      datum("uuid-123"), // 0: person_id
-      datum("John"), // 1: first_name
-      datum("Doe"), // 2: last_name
-      datum("1985-05-15"), // 3: dob
-      datum("Main St"), // 4: street
-      datum("London"), // 5: state
-      datum("London"), // 6: city
-      datum("E1 1AA"), // 7: zip
-      datum("UK"), // 8: country
-      datum("GPS"), // 9: order_type
-      datum("GPS Desc"), // 10: order_type_desc
-      datum("2023-01-01 10:00:00.000000"), // 11: order_start
-      datum("2023-12-31 23:59:59.000000"), // 12: order_end
+      datum("41593"), // 0: person_id
+      datum("b4b313f41b6c3e1072e76283b24bcbf6"), // 1: consumer_id
+      datum("Sigmund Freud"), // 2: person name
+      datum("O4649LX"), // 3: nomis_id
+      datum("UF19/934776L"), // 4: pnc_id
+      datum("X26170"), // 5: delius_id
+      datum("C6263919"), // 5: hor_id
+      datum("0987654321"), // 6: cepr_id
+      datum("X69847"), // 7: prison_id
+      datum("2020-01-01"), // 8: dob
+      datum("LON 1243"), // 9: zip
+      datum("City"), // 10: city
+      datum("Street"), // 11: street
     )
 
-    // Act
-    every { runner.run<Any>(any(), any(), any(), any(), any()) } answers {
-      val mapper = it.invocation.args[3] as (List<Datum>) -> Any
+    every { runner.run<Person>(any(), any(), any(), any(), any()) } answers {
+      val mapper = it.invocation.args[3] as (List<Datum>) -> Person
       listOf(mapper(mockRow))
     }
 
-    val result = repository.findByCrn("uuid-123")
-    val person = result[0]
+    // Act
+    val person = repository.getPersonById("41593")
 
     // Assert
-    assertThat(person.personId).isEqualTo("uuid-123")
-    assertThat(person.firstName).isEqualTo("John")
-    assertThat(person.orderStart).isInstanceOf(Instant::class.java)
-    assertThat(person.orderTypeDescription).isEqualTo("GPS Desc")
+    requireNotNull(person)
+    assertThat(person.personId).isEqualTo("41593")
+    assertThat(person.nomisId).isEqualTo("O4649LX")
+    assertThat(person.pncId).isEqualTo("UF19/934776L")
+    assertThat(person.deliusId).isEqualTo("X26170")
+    assertThat(person.horId).isEqualTo("C6263919")
+    assertThat(person.ceprId).isEqualTo("0987654321")
+    assertThat(person.prisonId).isEqualTo("X69847")
   }
 
   @Test
@@ -103,7 +113,7 @@ class AthenaPersonRepositoryTest {
 
     // Assert
     assertThrows<DataIntegrityException> {
-      repository.findByCrn("some-crn")
+      repository.getPersonById("some-personId")
     }
   }
 

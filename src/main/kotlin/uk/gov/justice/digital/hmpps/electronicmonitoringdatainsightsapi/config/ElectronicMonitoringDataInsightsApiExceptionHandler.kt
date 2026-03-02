@@ -13,6 +13,7 @@ import org.springframework.security.access.AccessDeniedException
 import org.springframework.web.bind.MethodArgumentNotValidException
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.RestControllerAdvice
+import org.springframework.web.server.ResponseStatusException
 import org.springframework.web.servlet.resource.NoResourceFoundException
 import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
 
@@ -81,6 +82,17 @@ class ElectronicMonitoringDataInsightsApiExceptionHandler {
         ),
       ).also { log.info("Malformed request body: {}", causeMessage) }
   }
+
+  @ExceptionHandler(ResponseStatusException::class)
+  fun handleResponseStatusException(e: ResponseStatusException): ResponseEntity<ErrorResponse> = ResponseEntity
+    .status(e.statusCode)
+    .body(
+      ErrorResponse(
+        status = e.statusCode.value(),
+        userMessage = "Response status error: ${e.message}",
+        developerMessage = e.message,
+      ),
+    ).also { log.info("Response status exception with message {}", e.message) }
 
   @ExceptionHandler(MethodArgumentNotValidException::class)
   fun handleBadRequest(e: MethodArgumentNotValidException): ResponseEntity<ErrorResponse?>? = ResponseEntity
