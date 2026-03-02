@@ -146,7 +146,7 @@ class AthenaPersonRepository(
 
     return Person(
       personId = requiredId(COL_PERSON_ID, "person_id"),
-      consumerId =  v(COL_CONSUMER_ID),
+      consumerId = v(COL_CONSUMER_ID),
       personName = v(COL_PERSON_NAME),
       nomisId = v(COL_NOMIS_ID),
       pncId = v(COL_PNC_ID),
@@ -175,6 +175,5 @@ class AthenaPersonRepository(
     private const val COL_ZIP = 10
     private const val COL_CITY = 11
     private const val COL_STREET = 12
-
   }
 }
