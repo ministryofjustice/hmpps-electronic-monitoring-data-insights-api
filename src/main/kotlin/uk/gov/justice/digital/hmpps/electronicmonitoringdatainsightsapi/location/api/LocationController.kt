@@ -36,14 +36,14 @@ class LocationController(private val locationService: LocationService) {
     )
   }
 
-  @Operation(summary = "Get single location", description = "Returns a specific location point for a CRN.")
+  @Operation(summary = "Get single location", description = "Returns a specific location point for a location id.")
   @GetMapping("/{locationId}") // Specific GetMapping is better
   fun findByCrnAndId(@PathVariable crn: String, @PathVariable locationId: String): ResponseEntity<List<Location>> {
     val location = locationService.findByCrnAndId(crn, locationId)
     return if (location.isNotEmpty()) {
       ResponseEntity.ok(location)
     } else {
-      ResponseEntity.ok(emptyList())
+      ResponseEntity.notFound().build()
     }
   }
 }
