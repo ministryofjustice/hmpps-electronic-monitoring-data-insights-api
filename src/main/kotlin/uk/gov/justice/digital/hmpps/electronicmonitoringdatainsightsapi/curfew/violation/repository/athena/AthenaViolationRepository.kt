@@ -27,7 +27,7 @@ class AthenaViolationRepository(
       sql = sql,
       database = properties.athena.mdssDatabase,
       cursor = nextToken,
-      pageSize = 100,
+      pageSize = properties.athena.rowLimit,
       mapper = ::mapRow,
       params = listOf(deviceWearerId, from.toString(), to.toString()),
     )
@@ -63,7 +63,7 @@ class AthenaViolationRepository(
           AND v.sys_created_on BETWEEN from_iso8601_timestamp(?)
                                 AND from_iso8601_timestamp(?)
         ORDER BY v.sys_created_on    
-        LIMIT 100
+        LIMIT ${properties.athena.rowLimit}
     """.trimIndent()
 
   private fun buildViolationIdSql(): String =
@@ -83,7 +83,7 @@ class AthenaViolationRepository(
         WHERE v.device_wearer = ?
         AND v.sys_id = ?
       ORDER BY v.sys_created_on      
-      LIMIT 100                        
+      LIMIT ${properties.athena.rowLimit}
     """.trimIndent()
 
   private fun mapRow(cols: List<Datum>): Violation {

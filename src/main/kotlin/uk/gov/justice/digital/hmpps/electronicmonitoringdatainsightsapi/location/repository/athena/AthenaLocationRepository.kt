@@ -27,7 +27,7 @@ class AthenaLocationRepository(
       sql = sql,
       database = properties.athena.mdssDatabase,
       cursor = nextToken,
-      pageSize = 100,
+      pageSize = properties.athena.rowLimit,
       mapper = ::mapRow,
       params = listOf(personId.toString(), from.toString(), to.toString()),
     )
@@ -53,7 +53,7 @@ class AthenaLocationRepository(
       FROM position
       WHERE position_gps_date > CAST(? AS TIMESTAMP)
       ORDER BY position_gps_date
-      LIMIT 100
+      LIMIT ${properties.athena.rowLimit}
     """.trimIndent()
 
     return runner.run(sql, properties.athena.mdssDatabase, skipHeaderRow = true, mapper = ::mapRow, params = listOf(lastWatermark))
@@ -69,7 +69,7 @@ class AthenaLocationRepository(
         AND position_gps_date BETWEEN from_iso8601_timestamp(?)
                                 AND from_iso8601_timestamp(?)
       ORDER BY position_gps_date   
-      LIMIT 100
+      LIMIT ${properties.athena.rowLimit}
     """.trimIndent()
 
   private fun buildLocationIdSql(): String =
@@ -81,7 +81,7 @@ class AthenaLocationRepository(
       WHERE person_id = CAST(? AS BIGINT)
         AND position_id = CAST(? AS BIGINT)
       ORDER BY position_gps_date      
-      LIMIT 100
+      LIMIT ${properties.athena.rowLimit}
     """.trimIndent()
 
   private fun mapRow(cols: List<Datum>): Location {

@@ -6,6 +6,7 @@ data class AthenaProperties(
   val fmsDatabase: String = "",
   val outputLocation: String = "",
   val workgroup: String? = null,
+  val rowLimit: Int = 100,
   val pollIntervalMs: Long = 500,
   val timeoutMs: Long = 60000,
   val role: String? = null,

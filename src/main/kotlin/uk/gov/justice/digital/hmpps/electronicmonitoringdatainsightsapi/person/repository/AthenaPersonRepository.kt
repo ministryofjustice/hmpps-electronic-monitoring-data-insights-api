@@ -24,7 +24,7 @@ class AthenaPersonRepository(
       sql = built.sql,
       database = properties.athena.fmsDatabase, // not ideal
       cursor = nextToken,
-      pageSize = 100, // take this from properties
+      pageSize = properties.athena.rowLimit,
       mapper = ::mapRow,
       params = built.params,
     )
@@ -80,7 +80,7 @@ class AthenaPersonRepository(
     LEFT JOIN ${properties.athena.fmsDatabase}.x_serg2_ems_csm_profile_sensitive pdws
       ON csm.sys_id = pdws.consumer
     $where
-    LIMIT 100
+    LIMIT ${properties.athena.rowLimit}
     """.trimIndent()
 
     return SqlAndParams(sql, params)
