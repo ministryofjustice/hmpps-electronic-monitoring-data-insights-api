@@ -36,7 +36,7 @@ class AthenaPersonRepositoryTest {
   private val repository = AthenaPersonRepository(runner, properties)
 
   @Test
-  fun `findById should capture and verify the generated SQL`() {
+  fun `findByPersonById should capture and verify the generated SQL`() {
     // Arrange
     val personId = "12345"
     val sqlSlot = slot<String>()
@@ -52,7 +52,7 @@ class AthenaPersonRepositoryTest {
     } returns emptyList()
 
     // Act
-    repository.getPersonById(personId)
+    repository.findByPersonById(personId)
 
     // Assert (SQL now parameterised)
     assertThat(sqlSlot.captured).contains("WHERE p.person_id = CAST(? AS BIGINT)")
@@ -84,7 +84,7 @@ class AthenaPersonRepositoryTest {
     }
 
     // Act
-    val person = repository.getPersonById("41593")
+    val person = repository.findByPersonById("41593")
 
     // Assert
     requireNotNull(person)
@@ -113,7 +113,7 @@ class AthenaPersonRepositoryTest {
 
     // Assert
     assertThrows<DataIntegrityException> {
-      repository.getPersonById("some-personId")
+      repository.findByPersonById("some-personId")
     }
   }
 

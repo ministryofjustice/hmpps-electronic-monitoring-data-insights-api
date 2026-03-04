@@ -14,20 +14,20 @@ import java.time.Instant
 import kotlin.time.ExperimentalTime
 
 @RestController
-@RequestMapping("/people/{crn}/curfew/violations")
+@RequestMapping("/people/{consumerId}/curfew/violations")
 @Tag(name = "Violations", description = "Endpoint to retrieve curfew violations for a person")
 class ViolationController(private val violationService: ViolationService) {
 
   @OptIn(ExperimentalTime::class)
-  @Operation(summary = "Get violation history", description = "Returns a paginated list of curfew violations for a CRN within a specific timespan.")
+  @Operation(summary = "Get violation history", description = "Returns a paginated list of curfew violations for a consumerId within a specific timespan.")
   @GetMapping
-  fun findAllByCrnAndTimespan(
-    @PathVariable crn: String,
+  fun getViolations(
+    @PathVariable consumerId: String,
     @RequestParam from: Instant,
     @RequestParam to: Instant,
     @RequestParam(required = false) nextToken: String?,
   ): ResponseEntity<ViolationResponse> {
-    val pagedViolations = violationService.findAllByCrnAndTimespan(crn, from, to, nextToken)
+    val pagedViolations = violationService.getViolationsForConsumer(consumerId, from, to, nextToken)
     return ResponseEntity.ok(
       ViolationResponse(
         violations = pagedViolations.violations,
@@ -36,14 +36,15 @@ class ViolationController(private val violationService: ViolationService) {
     )
   }
 
-  @Operation(summary = "Get single violation", description = "Returns a specific violation point for a CRN.")
+  @Operation(summary = "Get single violation", description = "Returns a specific violation point for a consumerId a and a violationId.")
   @GetMapping("/{violationId}") // Specific GetMapping is better
-  fun findByCrnAndId(@PathVariable crn: String, @PathVariable violationId: String): ResponseEntity<List<Violation>> {
-    val violation = violationService.findByCrnAndId(crn, violationId)
-    return if (violation.isNotEmpty()) {
+  fun getViolation(@PathVariable consumerId: String, @PathVariable violationId: String): ResponseEntity<Violation> {
+    val violation = violationService.getViolationForConsumer(consumerId, violationId)
+
+    return if (violation != null) {
       ResponseEntity.ok(violation)
     } else {
-      ResponseEntity.ok(emptyList())
+      ResponseEntity.notFound().build()
     }
   }
 }

@@ -8,12 +8,12 @@ import java.time.Instant
 
 @Service
 class LocationService(private val locationRepository: LocationRepository) {
-  fun findAllByCrnAndTimespan(crn: String, from: Instant, to: Instant, nextToken: String?): PagedLocations {
+  fun getLocationsForPerson(personId: String, from: Instant, to: Instant, nextToken: String?): PagedLocations {
     validateDates(from, to)
-    return locationRepository.findAllByCrnAndTimespan(crn, from, to, nextToken)
+    return locationRepository.findByPersonIdAndGpsDateBetweenOrderByGpsDateAsc(personId, from, to, nextToken)
   }
 
-  fun findByCrnAndId(crn: String, locationId: String): List<Location> = locationRepository.findByCrnAndId(crn, locationId)
+  fun getLocationForPerson(personId: String, positionId: String): List<Location> = locationRepository.findByPersonIdAndPositionId(personId, positionId)
 
   private fun validateDates(from: Instant, to: Instant) {
     require(!from.isAfter(to)) { "`from` ($from) must be before or equal to `to` ($to)" }
