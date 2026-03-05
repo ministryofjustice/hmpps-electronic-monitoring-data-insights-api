@@ -14,6 +14,7 @@ generic-service:
     HMPPS_AUTH_URL: "https://sign-in-dev.hmpps.service.justice.gov.uk/auth"
     ATHENA_OUTPUT_BUCKET: "s3://emds-test-athena-query-results-20240923095933297100000013"
     MFA_REQUIRED: "false"
+    ROW_LIMIT: "1000"
 
 generic-prometheus-alerts:
   alertSeverity: hmpps-electronic-monitoring-data-insights-dev
