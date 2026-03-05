@@ -8,12 +8,12 @@ import java.time.Instant
 
 @Service
 class ViolationService(private val violationRepository: ViolationRepository) {
-  fun findAllByCrnAndTimespan(crn: String, from: Instant, to: Instant, nextToken: String?): PagedViolations {
+  fun getViolationsForConsumer(consumerId: String, from: Instant, to: Instant, nextToken: String?): PagedViolations {
     validateDates(from, to)
-    return violationRepository.findAllByCrnAndTimespan(crn, from, to, nextToken)
+    return violationRepository.findByConsumerIdAndCreatedDateBetweenOrderByCreatedDateAsc(consumerId, from, to, nextToken)
   }
 
-  fun findByCrnAndId(crn: String, violationId: String): List<Violation> = violationRepository.findByCrnAndId(crn, violationId)
+  fun getViolationForConsumer(consumerId: String, violationId: String): Violation? = violationRepository.findByConsumerAndViolationId(consumerId, violationId)
 
   private fun validateDates(from: Instant, to: Instant) {
     require(!from.isAfter(to)) { "`from` ($from) must be before or equal to `to` ($to)" }

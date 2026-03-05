@@ -38,9 +38,9 @@ class AthenaViolationRepositoryTest {
   private val repository = AthenaViolationRepository(runner, properties)
 
   @Test
-  fun `findAllByCrnAndTimespan should build SQL and map PaginatedResult to PagedLocations`() {
+  fun `findByConsumerIdAndGpsDateBetweenOrderByGpsDateAsc should build SQL and map PaginatedResult to PagedLocations`() {
     // Arrange
-    val crn = "abcdef1234567890abcdef1234567890"
+    val consumerId = "abcdef1234567890abcdef1234567890"
     val from = Instant.parse("2026-10-01T10:00:00Z")
     val to = Instant.parse("2026-10-01T11:00:00Z")
     val nextToken = "initial-cursor"
@@ -62,7 +62,7 @@ class AthenaViolationRepositoryTest {
         params = any<List<String>>(),
       )
     } returns mockRunnerResult
-    val result = repository.findAllByCrnAndTimespan(crn, from, to, nextToken)
+    val result = repository.findByConsumerIdAndCreatedDateBetweenOrderByCreatedDateAsc(consumerId, from, to, nextToken)
 
     // Assert
     assertThat(result).isInstanceOf(PagedViolations::class.java)
@@ -73,9 +73,9 @@ class AthenaViolationRepositoryTest {
   }
 
   @Test
-  fun `findByCrnAndId should build correct SQL for a single location`() {
+  fun `findByConsumerAndViolationId should build correct SQL for a single location`() {
     // Arrange
-    val crn = "abcdef1234567890abcdef1234567890"
+    val consumerId = "abcdef1234567890abcdef1234567890"
     val violationId = "1234567890abcdef1234567890abcdef"
 
     val sqlSlot = slot<String>()
@@ -84,7 +84,7 @@ class AthenaViolationRepositoryTest {
     every {
       runner.run(capture(sqlSlot), eq(properties.athena.mdssDatabase), true, any<(List<Datum>) -> Violation>(), any())
     } returns emptyList()
-    repository.findByCrnAndId(crn, violationId)
+    repository.findByConsumerAndViolationId(consumerId, violationId)
 
     // Assert
     assertThat(sqlSlot.captured).contains("WHERE v.device_wearer = ?")
@@ -99,8 +99,8 @@ class AthenaViolationRepositoryTest {
       datum("abcdef1234567890abcdef1234567890"), // 1: device_wearer
       datum("2026-02-16 21:45:00.000000"), // 2: sys_created_on
       datum("Home Detention Curfew Violation"), // 3: category
-      datum("2026-02-16 00:25:00.000000"), // 4: duration (per your model it's Instant)
-      datum("2026-02-16T21:20:00Z"), // 5: start (String in your model)
+      datum("2026-02-16 00:25:00.000000"), // 4: duration
+      datum("2026-02-16T21:20:00Z"), // 5: start
       datum("2026-02-16 21:45:00.000000"), // 6: end
       datum("Closed"), // 7: state
       datum("false"), // 8: active
@@ -113,20 +113,23 @@ class AthenaViolationRepositoryTest {
       datum("Serious breach"), // 15: outcome_reason
     )
 
-    // Act
+    // runner.run<T> still returns List<T>, so return List<Violation> here
     every { runner.run<Violation>(any(), any(), any(), any(), any()) } answers {
+      @Suppress("UNCHECKED_CAST")
       val mapper = it.invocation.args[3] as (List<Datum>) -> Violation
       listOf(mapper(mockRow))
     }
 
-    val result = repository.findByCrnAndId(
-      crn = "abcdef1234567890abcdef1234567890",
+    // Act (repo returns Violation?)
+    val violation = repository.findByConsumerAndViolationId(
+      consumerId = "abcdef1234567890abcdef1234567890",
       violationId = "abcdef1234567890abcdef1234567890",
     )
 
-    val violation = result[0]
+    // Assert (handle nullable)
+    assertThat(violation).isNotNull
+    violation!!
 
-    // Assert
     assertThat(violation.violationId).isEqualTo("1234567890abcdef1234567890abcdef")
     assertThat(violation.deviceWearer).isEqualTo("abcdef1234567890abcdef1234567890")
     assertThat(violation.createdDate).isEqualTo(Instant.parse("2026-02-16T21:45:00Z"))
@@ -150,7 +153,7 @@ class AthenaViolationRepositoryTest {
 
     // Assert
     assertThrows<DataIntegrityException> {
-      repository.findByCrnAndId("abcdef1234567890abcdef1234567890", "abcdef1234567890abcdef1234567890")
+      repository.findByConsumerAndViolationId("abcdef1234567890abcdef1234567890", "abcdef1234567890abcdef1234567890")
     }
   }
 

@@ -17,6 +17,15 @@ fun String.toViolationId(): String {
   return this
 }
 
+/** Validates ConsumerId String conforms to SNOW ID */
+fun String.toConsumerId(): String {
+  require(this.isNotBlank()) { "The consumerId must not be blank" }
+  require(this.matches(Regex("^[a-f0-9]{32}$"))) {
+    "The consumerId ($this) must be a 32-character lowercase hex string"
+  }
+  return this
+}
+
 /** Validates DeviceWearerId String conforms to SNOW ID */
 fun String.toDeviceWearerId(): String {
   require(this.isNotBlank()) { "The DeviceWearerId must not be blank" }

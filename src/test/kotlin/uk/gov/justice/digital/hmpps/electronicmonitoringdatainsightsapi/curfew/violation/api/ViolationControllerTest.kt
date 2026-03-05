@@ -28,9 +28,9 @@ class ViolationControllerTest {
   private lateinit var violationService: ViolationService
 
   @Test
-  fun `findAllByCrnAndTimespan should return 200 and paginated violations`() {
+  fun `findAllByConsumerIdAndTimespan should return 200 and paginated violations`() {
     // Arrange
-    val crn = "7b2601d01bbf621072e76283b24bcbd5"
+    val consumerId = "7b2601d01bbf621072e76283b24bcbd5"
     val from = Instant.parse("2026-10-01T10:00:00Z")
     val to = Instant.parse("2026-10-01T11:00:00Z")
     val nextToken = "token123"
@@ -78,12 +78,12 @@ class ViolationControllerTest {
 
     // Act
     every {
-      violationService.findAllByCrnAndTimespan(crn, from, to, nextToken)
+      violationService.getViolationsForConsumer(consumerId, from, to, nextToken)
     } returns pagedResult
 
     // Assert
     mockMvc.perform(
-      get("/people/$crn/curfew/violations")
+      get("/people/$consumerId/curfew/violations")
         .param("from", from.toString())
         .param("to", to.toString())
         .param("nextToken", nextToken),
@@ -95,38 +95,35 @@ class ViolationControllerTest {
   }
 
   @Test
-  fun `findByCrnAndId should return 200 and single location list`() {
+  fun `findByConsumerIdAndViolationId should return 200 and single violation`() {
     // Arrange
-    val crn = "abcdef1234567890abcdef1234567890"
+    val consumerId = "abcdef1234567890abcdef1234567890"
     val violationId = "1234567890abcdef1234567890abcdef"
 
-    val mockViolation = listOf(
-      Violation(
-        violationId = "1234567890abcdef1234567890abcdef",
-        deviceWearer = "abcdef1234567890abcdef1234567890",
-        createdDate = Instant.parse("2026-02-15T08:30:00Z"),
-        category = "Non-Fitted Device Violation",
-        duration = Instant.parse("2026-02-15T00:10:00Z"),
-        start = "2026-02-15T08:20:00Z",
-        end = Instant.parse("2026-02-15T08:30:00Z"),
-        state = "Open",
-        active = "true",
-        description = "Device not fitted during curfew period",
-        responseAction = "Warning Issued",
-        reasonableExcuse = "No",
-        authorisedAbsence = "No",
-        includedInTotalAtvCalculation = "Yes",
-        outForEntireCurfewPeriod = "No",
-        outcomeReason = "Confirmed breach",
-      ),
+    val mockViolation = Violation(
+      violationId = violationId,
+      deviceWearer = "abcdef1234567890abcdef1234567890",
+      createdDate = Instant.parse("2026-02-15T08:30:00Z"),
+      category = "Non-Fitted Device Violation",
+      duration = Instant.parse("2026-02-15T00:10:00Z"),
+      start = "2026-02-15T08:20:00Z",
+      end = Instant.parse("2026-02-15T08:30:00Z"),
+      state = "Open",
+      active = "true",
+      description = "Device not fitted during curfew period",
+      responseAction = "Warning Issued",
+      reasonableExcuse = "No",
+      authorisedAbsence = "No",
+      includedInTotalAtvCalculation = "Yes",
+      outForEntireCurfewPeriod = "No",
+      outcomeReason = "Confirmed breach",
     )
 
-    // Act
-    every { violationService.findByCrnAndId(crn, violationId) } returns mockViolation
+    every { violationService.getViolationForConsumer(consumerId, violationId) } returns mockViolation
 
-    // Assert
-    mockMvc.perform(get("/people/$crn/curfew/violations/$violationId"))
+    // Act + Assert
+    mockMvc.perform(get("/people/$consumerId/curfew/violations/$violationId"))
       .andExpect(status().isOk)
-      .andExpect(jsonPath("$[0].violationId").value(violationId))
+      .andExpect(jsonPath("$.violationId").value(violationId))
   }
 }

@@ -13,8 +13,8 @@ import org.springframework.web.bind.annotation.RequestMethod
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.server.ResponseStatusException
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.model.PeopleQueryCriteria
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.model.Person
-import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.model.PersonsQueryCriteria
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.service.PersonService
 import kotlin.time.ExperimentalTime
 
@@ -25,20 +25,20 @@ class PersonController(private val personService: PersonService) {
 
   private val log = LoggerFactory.getLogger(this::class.java)
 
-  @Operation(tags = ["Persons"], summary = "Search for persons")
+  @Operation(tags = ["People"], summary = "Search for people")
   @RequestMapping(method = [RequestMethod.GET], produces = [MediaType.APPLICATION_JSON_VALUE])
-  fun getPersons(
+  fun searchPeople(
     @Parameter(description = "The search criteria for the query", required = true)
-    personsQueryCriteria: PersonsQueryCriteria,
+    peopleQueryCriteria: PeopleQueryCriteria,
     @RequestParam(required = false) nextToken: String?,
   ): ResponseEntity<PersonResponse> {
-    if (!personsQueryCriteria.isValid()) {
+    if (!peopleQueryCriteria.isValid()) {
       throw ResponseStatusException(
         HttpStatus.BAD_REQUEST,
-        "Query parameters are invalid: $personsQueryCriteria",
+        "Query parameters are invalid: $peopleQueryCriteria",
       )
     }
-    val pagedPeople = personService.getPersons(personsQueryCriteria, nextToken)
+    val pagedPeople = personService.searchPeople(peopleQueryCriteria, nextToken)
 
     return ResponseEntity.ok(
       PersonResponse(
@@ -49,7 +49,7 @@ class PersonController(private val personService: PersonService) {
   }
 
   @OptIn(ExperimentalTime::class)
-  @Operation(summary = "Get a person", description = "Returns a specific person for a CRN.")
+  @Operation(summary = "Get a person", description = "Returns a specific person for a personId.")
   @RequestMapping(method = [RequestMethod.GET], path = ["/{personId}" ], produces = [MediaType.APPLICATION_JSON_VALUE])
   fun getPerson(@PathVariable personId: String): ResponseEntity<Person> {
     val person = personService.getPersonById(personId)
