@@ -1,6 +1,6 @@
 package uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.model
 
-data class PersonsQueryCriteria(
+data class PeopleQueryCriteria(
   val nomisId: String? = null,
   val pncId: String? = null,
   val deliusId: String? = null,

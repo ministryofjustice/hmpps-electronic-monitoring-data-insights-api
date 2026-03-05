@@ -5,9 +5,9 @@ import software.amazon.awssdk.services.athena.model.Datum
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.athena.AthenaQueryRunner
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.athena.AwsProperties
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.exception.DataIntegrityException
-import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.model.PagedPersons
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.model.PagedPeople
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.model.PeopleQueryCriteria
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.model.Person
-import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.model.PersonsQueryCriteria
 import java.time.LocalDate
 import kotlin.String
 
@@ -17,7 +17,7 @@ class AthenaPersonRepository(
   private val properties: AwsProperties,
 ) : PersonRepository {
 
-  override fun getPersons(personsQueryCriteria: PersonsQueryCriteria, nextToken: String?): PagedPersons {
+  override fun searchPeople(personsQueryCriteria: PeopleQueryCriteria, nextToken: String?): PagedPeople {
     val built = buildPersonSearchSql(personsQueryCriteria)
 
     val result = runner.fetchPaged(
@@ -29,7 +29,7 @@ class AthenaPersonRepository(
       params = built.params,
     )
 
-    return PagedPersons(
+    return PagedPeople(
       persons = result.items,
       nextToken = result.nextToken,
     )
@@ -39,7 +39,7 @@ class AthenaPersonRepository(
 
   data class SqlAndParams(val sql: String, val params: List<String>)
 
-  private fun buildPersonSearchSql(personsQueryCriteria: PersonsQueryCriteria): SqlAndParams {
+  private fun buildPersonSearchSql(personsQueryCriteria: PeopleQueryCriteria): SqlAndParams {
     val where = StringBuilder("WHERE 1=1\n")
     val params = mutableListOf<String>()
 
@@ -86,7 +86,7 @@ class AthenaPersonRepository(
     return SqlAndParams(sql, params)
   }
 
-  override fun getPersonById(personId: String): Person? {
+  override fun findByPersonById(personId: String): Person? {
     val personId = validatePersonId(personId)
     val built = buildPersonByIdSql(personId)
     return runner.run(

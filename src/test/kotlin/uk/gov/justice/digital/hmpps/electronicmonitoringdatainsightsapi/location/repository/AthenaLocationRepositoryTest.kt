@@ -38,9 +38,9 @@ class AthenaLocationRepositoryTest {
   private val repository = AthenaLocationRepository(runner, properties)
 
   @Test
-  fun `findAllByCrnAndTimespan should build SQL and map PaginatedResult to PagedLocations`() {
+  fun `findByPersonIdAndGpsDateBetweenOrderByGpsDateAsc should build SQL and map PaginatedResult to PagedLocations`() {
     // Arrange
-    val crn = "123456"
+    val personId = "123456"
     val from = Instant.parse("2026-10-01T10:00:00Z")
     val to = Instant.parse("2026-10-01T11:00:00Z")
     val nextToken = "initial-cursor"
@@ -62,7 +62,7 @@ class AthenaLocationRepositoryTest {
         params = any<List<String>>(),
       )
     } returns mockRunnerResult
-    val result = repository.findAllByCrnAndTimespan(crn, from, to, nextToken)
+    val result = repository.findByPersonIdAndGpsDateBetweenOrderByGpsDateAsc(personId, from, to, nextToken)
 
     // Assert
     assertThat(result).isInstanceOf(PagedLocations::class.java)
@@ -73,17 +73,17 @@ class AthenaLocationRepositoryTest {
   }
 
   @Test
-  fun `findByCrnAndId should build correct SQL for a single location`() {
+  fun `findByPersonIdAndPositionId should build correct SQL for a single location`() {
     // Arrange
-    val crn = "123456"
-    val locationId = "999"
+    val personId = "123456"
+    val positionId = "29192273"
     val sqlSlot = slot<String>()
 
     // Act
     every {
       runner.run(capture(sqlSlot), eq(properties.athena.mdssDatabase), true, any<(List<Datum>) -> Location>(), any())
     } returns emptyList()
-    repository.findByCrnAndId(crn, locationId)
+    repository.findByPersonIdAndPositionId(personId, positionId)
 
     // Assert
     assertThat(sqlSlot.captured).contains("WHERE person_id = CAST(? AS BIGINT)")
@@ -113,7 +113,7 @@ class AthenaLocationRepositoryTest {
       val mapper = it.invocation.args[3] as (List<Datum>) -> Location
       listOf(mapper(mockRow))
     }
-    val result = repository.findByCrnAndId("123456", "999")
+    val result = repository.findByPersonIdAndPositionId("123456", "29192273")
     val location = result[0]
 
     // Assert
@@ -134,7 +134,7 @@ class AthenaLocationRepositoryTest {
 
     // Assert
     assertThrows<DataIntegrityException> {
-      repository.findByCrnAndId("123456", "999")
+      repository.findByPersonIdAndPositionId("123456", "29192273")
     }
   }
 

@@ -19,7 +19,7 @@ class PersonServiceTest {
     val personId = "ABC123"
     val mockPerson = Person(personId = "123456")
 
-    every { personRepository.getPersonById(personId) } returns mockPerson
+    every { personRepository.findByPersonById(personId) } returns mockPerson
 
     // Act
     val result = personService.getPersonById(personId)
@@ -28,6 +28,6 @@ class PersonServiceTest {
     assertThat(result).isEqualTo(mockPerson)
     assertThat(result?.personId).isEqualTo("123456")
 
-    verify(exactly = 1) { personRepository.getPersonById(personId) }
+    verify(exactly = 1) { personRepository.findByPersonById(personId) }
   }
 }

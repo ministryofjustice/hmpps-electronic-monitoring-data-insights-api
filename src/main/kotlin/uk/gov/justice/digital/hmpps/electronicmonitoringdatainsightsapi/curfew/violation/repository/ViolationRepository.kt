@@ -5,6 +5,6 @@ import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.curfew.v
 import java.time.Instant
 
 interface ViolationRepository {
-  fun findAllByCrnAndTimespan(crn: String, from: Instant, to: Instant, nextToken: String?): PagedViolations
-  fun findByCrnAndId(crn: String, violationId: String): List<Violation>
+  fun findByConsumerIdAndCreatedDateBetweenOrderByCreatedDateAsc(consumerId: String, from: Instant, to: Instant, nextToken: String?): PagedViolations
+  fun findByConsumerAndViolationId(consumerId: String, violationId: String): Violation?
 }

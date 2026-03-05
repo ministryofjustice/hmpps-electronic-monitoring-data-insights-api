@@ -18,9 +18,9 @@ class ViolationServiceTest {
   private val violationService = ViolationService(violationRepository)
 
   @Test
-  fun `findAllByCrnAndTimespan should call repository when dates are valid`() {
+  fun `findByConsumerIdAndCreatedDateBetweenOrderByCreatedDateAsc should call repository when dates are valid`() {
     // Arrange
-    val crn = "abcdef1234567890abcdef1234567890"
+    val consumerId = "abcdef1234567890abcdef1234567890"
     val from = Instant.parse("2023-10-01T10:00:00Z")
     val to = Instant.parse("2023-10-01T11:00:00Z")
     val nextToken = "some-token"
@@ -68,13 +68,13 @@ class ViolationServiceTest {
 
     // Act
     every {
-      violationRepository.findAllByCrnAndTimespan(crn, from, to, nextToken)
+      violationRepository.findByConsumerIdAndCreatedDateBetweenOrderByCreatedDateAsc(consumerId, from, to, nextToken)
     } returns pagedResult
-    val result = violationService.findAllByCrnAndTimespan(crn, from, to, nextToken)
+    val result = violationService.getViolationsForConsumer(consumerId, from, to, nextToken)
 
     // Assert
     assertThat(result).isEqualTo(pagedResult)
-    verify(exactly = 1) { violationRepository.findAllByCrnAndTimespan(crn, from, to, nextToken) }
+    verify(exactly = 1) { violationRepository.findByConsumerIdAndCreatedDateBetweenOrderByCreatedDateAsc(consumerId, from, to, nextToken) }
   }
 
   @Test
@@ -86,48 +86,46 @@ class ViolationServiceTest {
 
     // Act
     val exception = assertThrows<IllegalArgumentException> {
-      violationService.findAllByCrnAndTimespan(crn, from, to, null)
+      violationService.getViolationsForConsumer(crn, from, to, null)
     }
 
     // Assert
     assertThat(exception.message).contains("must be before or equal to")
-    verify(exactly = 0) { violationRepository.findAllByCrnAndTimespan(any(), any(), any(), any()) }
+    verify(exactly = 0) { violationRepository.findByConsumerIdAndCreatedDateBetweenOrderByCreatedDateAsc(any(), any(), any(), any()) }
   }
 
   @Test
-  fun `findByCrnAndId should call repository and return result`() {
+  fun `findByConsumerAndViolationId should call repository and return result`() {
     // Arrange
-    val crn = "abcdef1234567890abcdef1234567890"
+    val consumerId = "abcdef1234567890abcdef1234567890"
     val violationId = "1234567890abcdef1234567890abcdef"
 
-    val mockViolations = listOf(
-      Violation(
-        violationId = "1234567890abcdef1234567890abcdef",
-        deviceWearer = "abcdef1234567890abcdef1234567890",
-        createdDate = Instant.parse("2026-02-15T08:30:00Z"),
-        category = "Non-Fitted Device Violation",
-        duration = Instant.parse("2026-02-15T00:10:00Z"),
-        start = "2026-02-15T08:20:00Z",
-        end = Instant.parse("2026-02-15T08:30:00Z"),
-        state = "Open",
-        active = "true",
-        description = "Device not fitted during curfew period",
-        responseAction = "Warning Issued",
-        reasonableExcuse = "No",
-        authorisedAbsence = "No",
-        includedInTotalAtvCalculation = "Yes",
-        outForEntireCurfewPeriod = "No",
-        outcomeReason = "Confirmed breach",
-      ),
+    val mockViolation = Violation(
+      violationId = "1234567890abcdef1234567890abcdef",
+      deviceWearer = "abcdef1234567890abcdef1234567890",
+      createdDate = Instant.parse("2026-02-15T08:30:00Z"),
+      category = "Non-Fitted Device Violation",
+      duration = Instant.parse("2026-02-15T00:10:00Z"),
+      start = "2026-02-15T08:20:00Z",
+      end = Instant.parse("2026-02-15T08:30:00Z"),
+      state = "Open",
+      active = "true",
+      description = "Device not fitted during curfew period",
+      responseAction = "Warning Issued",
+      reasonableExcuse = "No",
+      authorisedAbsence = "No",
+      includedInTotalAtvCalculation = "Yes",
+      outForEntireCurfewPeriod = "No",
+      outcomeReason = "Confirmed breach",
     )
 
-    every { violationRepository.findByCrnAndId(crn, violationId) } returns mockViolations
+    every { violationRepository.findByConsumerAndViolationId(consumerId, violationId) } returns mockViolation
 
     // Act
-    val result = violationService.findByCrnAndId(crn, violationId)
+    val result = violationService.getViolationForConsumer(consumerId, violationId)
 
     // Assert
-    assertThat(result).isEqualTo(mockViolations)
-    verify(exactly = 1) { violationRepository.findByCrnAndId(crn, violationId) }
+    assertThat(result).isEqualTo(mockViolation)
+    verify(exactly = 1) { violationRepository.findByConsumerAndViolationId(consumerId, violationId) }
   }
 }

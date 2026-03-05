@@ -14,20 +14,20 @@ import java.time.Instant
 import kotlin.time.ExperimentalTime
 
 @RestController
-@RequestMapping("/people/{crn}/locations")
-@Tag(name = "Locations", description = "Endpoint to retrieve gsp coordinates for a person")
+@RequestMapping("/people/{personId}/locations")
+@Tag(name = "Locations", description = "Endpoint to retrieve gsp coordinates for a person by personId")
 class LocationController(private val locationService: LocationService) {
 
   @OptIn(ExperimentalTime::class)
-  @Operation(summary = "Get location history", description = "Returns a paginated list of GPS coordinates for a CRN within a specific timespan.")
+  @Operation(summary = "Get location history", description = "Returns a paginated list of GPS coordinates for a personId within a specific timespan.")
   @GetMapping
-  fun findAllByCrnAndTimespan(
-    @PathVariable crn: String,
+  fun getLocations(
+    @PathVariable personId: String,
     @RequestParam from: Instant,
     @RequestParam to: Instant,
     @RequestParam(required = false) nextToken: String?,
   ): ResponseEntity<LocationResponse> {
-    val pagedLocations = locationService.findAllByCrnAndTimespan(crn, from, to, nextToken)
+    val pagedLocations = locationService.getLocationsForPerson(personId, from, to, nextToken)
     return ResponseEntity.ok(
       LocationResponse(
         locations = pagedLocations.locations,
@@ -36,10 +36,10 @@ class LocationController(private val locationService: LocationService) {
     )
   }
 
-  @Operation(summary = "Get single location", description = "Returns a specific location point for a location id.")
-  @GetMapping("/{locationId}") // Specific GetMapping is better
-  fun findByCrnAndId(@PathVariable crn: String, @PathVariable locationId: String): ResponseEntity<List<Location>> {
-    val location = locationService.findByCrnAndId(crn, locationId)
+  @Operation(summary = "Get single location", description = "Returns a specific position for a personId and a positionId.")
+  @GetMapping("/{positionId}") // Specific GetMapping is better
+  fun getLocation(@PathVariable personId: String, @PathVariable positionId: String): ResponseEntity<List<Location>> {
+    val location = locationService.getLocationForPerson(personId, positionId)
     return if (location.isNotEmpty()) {
       ResponseEntity.ok(location)
     } else {

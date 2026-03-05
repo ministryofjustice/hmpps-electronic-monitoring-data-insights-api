@@ -6,7 +6,7 @@ import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.athena.A
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.athena.AwsProperties
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.exception.DataIntegrityException
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.util.DateTimeConstants
-import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.validation.toDeviceWearerId
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.validation.toConsumerId
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.validation.toViolationId
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.curfew.violation.model.PagedViolations
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.curfew.violation.model.Violation
@@ -20,8 +20,8 @@ class AthenaViolationRepository(
   private val properties: AwsProperties,
 ) : ViolationRepository {
 
-  override fun findAllByCrnAndTimespan(crn: String, from: Instant, to: Instant, nextToken: String?): PagedViolations {
-    val deviceWearerId = crn.toDeviceWearerId()
+  override fun findByConsumerIdAndCreatedDateBetweenOrderByCreatedDateAsc(consumerId: String, from: Instant, to: Instant, nextToken: String?): PagedViolations {
+    val consumerId = consumerId.toConsumerId()
     val sql = buildTimeSpanSql()
     val result = runner.fetchPaged(
       sql = sql,
@@ -29,7 +29,7 @@ class AthenaViolationRepository(
       cursor = nextToken,
       pageSize = 100,
       mapper = ::mapRow,
-      params = listOf(deviceWearerId, from.toString(), to.toString()),
+      params = listOf(consumerId, from.toString(), to.toString()),
     )
 
     return PagedViolations(
@@ -38,11 +38,17 @@ class AthenaViolationRepository(
     )
   }
 
-  override fun findByCrnAndId(crn: String, violationId: String): List<Violation> {
-    val deviceWearerId = crn.toDeviceWearerId()
+  override fun findByConsumerAndViolationId(consumerId: String, violationId: String): Violation? {
+    val consumerId = consumerId.toConsumerId()
     val violationId = violationId.toViolationId()
     val sql = buildViolationIdSql()
-    return runner.run(sql, properties.athena.mdssDatabase, skipHeaderRow = true, mapper = ::mapRow, params = listOf(deviceWearerId, violationId))
+    return runner.run(
+      sql,
+      properties.athena.mdssDatabase,
+      skipHeaderRow = true,
+      mapper = ::mapRow,
+      params = listOf(consumerId, violationId),
+    ).firstOrNull()
   }
 
   private fun buildTimeSpanSql(): String =
@@ -83,7 +89,7 @@ class AthenaViolationRepository(
         WHERE v.device_wearer = ?
         AND v.sys_id = ?
       ORDER BY v.sys_created_on      
-      LIMIT 100                        
+      LIMIT 1                     
     """.trimIndent()
 
   private fun mapRow(cols: List<Datum>): Violation {

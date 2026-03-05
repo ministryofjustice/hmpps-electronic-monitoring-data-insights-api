@@ -29,9 +29,9 @@ class LocationControllerTest {
   private lateinit var locationService: LocationService
 
   @Test
-  fun `findAllByCrnAndTimespan should return 200 and paginated locations`() {
+  fun `getLocationsForPerson should return 200 and paginated locations`() {
     // Arrange
-    val crn = "ABC123"
+    val personId = "123456"
     val from = Instant.parse("2026-10-01T10:00:00Z")
     val to = Instant.parse("2026-10-01T11:00:00Z")
     val nextToken = "token123"
@@ -44,12 +44,12 @@ class LocationControllerTest {
 
     // Act
     every {
-      locationService.findAllByCrnAndTimespan(crn, from, to, nextToken)
+      locationService.getLocationsForPerson(personId, from, to, nextToken)
     } returns pagedResult
 
     // Assert
     mockMvc.perform(
-      get("/people/$crn/locations")
+      get("/people/$personId/locations")
         .param("from", from.toString())
         .param("to", to.toString())
         .param("nextToken", nextToken),
@@ -61,17 +61,18 @@ class LocationControllerTest {
   }
 
   @Test
-  fun `findByCrnAndId should return 200 and single location list`() {
+  fun `getLocationForPerson should return 200 and single location list`() {
     // Arrange
-    val crn = "ABC123"
-    val positionId = "101"
-    val mockLocation = listOf(Location(positionId = 101, deviceId = 98765, latitude = 51.5074, longitude = -0.1278))
+    val personId = "123456"
+    val positionId = "29192273"
+
+    val mockLocation = listOf(Location(positionId = 29192273, deviceId = 98765, latitude = 51.5074, longitude = -0.1278))
 
     // Act
-    every { locationService.findByCrnAndId(crn, positionId) } returns mockLocation
+    every { locationService.getLocationForPerson(personId, positionId) } returns mockLocation
 
     // Assert
-    mockMvc.perform(get("/people/$crn/locations/$positionId"))
+    mockMvc.perform(get("/people/$personId/locations/$positionId"))
       .andExpect(status().isOk)
       .andExpect(jsonPath("$[0].positionId").value(positionId))
   }
