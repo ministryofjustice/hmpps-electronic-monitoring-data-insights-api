@@ -47,6 +47,7 @@ aws:
     fmsDatabase: serco_fms_dev
     outputLocation: s3://emds-dev-athena-query-results-20240917144028307600000004/output
     workgroup: 800964199911_default
+    rowLimit: ${ROW_LIMIT:100}
     pollIntervalMs: 500
     timeoutMs: 60000
     role: ${ATHENA_GENERAL_IAM_ROLE:}
@@ -75,4 +76,3 @@ management:
     info:
       cache:
         time-to-live: 2000ms
-

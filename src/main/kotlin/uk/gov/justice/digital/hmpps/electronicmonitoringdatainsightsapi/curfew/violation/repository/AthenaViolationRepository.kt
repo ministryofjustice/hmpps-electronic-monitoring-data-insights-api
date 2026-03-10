@@ -27,7 +27,7 @@ class AthenaViolationRepository(
       sql = sql,
       database = properties.athena.mdssDatabase,
       cursor = nextToken,
-      pageSize = 100,
+      pageSize = properties.athena.rowLimit,
       mapper = ::mapRow,
       params = listOf(consumerId, from.toString(), to.toString()),
     )
@@ -69,7 +69,7 @@ class AthenaViolationRepository(
           AND v.sys_created_on BETWEEN from_iso8601_timestamp(?)
                                 AND from_iso8601_timestamp(?)
         ORDER BY v.sys_created_on    
-        LIMIT 100
+        LIMIT ${properties.athena.rowLimit}
     """.trimIndent()
 
   private fun buildViolationIdSql(): String =
