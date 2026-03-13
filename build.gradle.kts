@@ -12,7 +12,7 @@ configurations {
 dependencies {
   implementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter:1.8.2")
   implementation("org.springframework.boot:spring-boot-starter-webflux")
-  implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.15")
+  implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:3.0.2")
 
   implementation("org.jetbrains.exposed:exposed-core:0.61.0")
   implementation("org.jetbrains.exposed:exposed-json:0.61.0")
