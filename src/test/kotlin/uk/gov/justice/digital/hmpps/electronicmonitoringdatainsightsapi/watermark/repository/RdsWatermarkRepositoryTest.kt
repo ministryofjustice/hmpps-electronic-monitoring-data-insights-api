@@ -1,11 +1,12 @@
 package uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.watermark.repository
 
 import org.assertj.core.api.Assertions.assertThat
-import org.jetbrains.exposed.sql.Database
-import org.jetbrains.exposed.sql.SchemaUtils
-import org.jetbrains.exposed.sql.insert
-import org.jetbrains.exposed.sql.selectAll
-import org.jetbrains.exposed.sql.transactions.transaction
+import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.jdbc.Database
+import org.jetbrains.exposed.v1.jdbc.SchemaUtils
+import org.jetbrains.exposed.v1.jdbc.insert
+import org.jetbrains.exposed.v1.jdbc.selectAll
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.watermark.SyncStatus
@@ -14,7 +15,11 @@ import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneOffset
 import java.util.UUID
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
+import kotlin.uuid.toKotlinUuid
 
+@OptIn(ExperimentalUuidApi::class)
 class RdsWatermarkRepositoryTest {
   private lateinit var watermarkRepository: RdsWatermarkRepository
 
@@ -32,7 +37,7 @@ class RdsWatermarkRepositoryTest {
   }
 
   private fun insertSyncRecord(
-    id: UUID = UUID.randomUUID(),
+    id: Uuid = UUID.randomUUID().toKotlinUuid(),
     tableName: String = "position",
     status: SyncStatus = SyncStatus.COMPLETED,
     syncDate: Instant = Instant.now(),
@@ -105,7 +110,7 @@ class RdsWatermarkRepositoryTest {
   @Test
   fun `create should persist a new watermark record and return its ID`() {
     // Arrange
-    val id = UUID.randomUUID()
+    val id = UUID.randomUUID().toKotlinUuid()
     val tableName = "position"
     val syncDate = Instant.parse("2024-01-01T10:00:00Z")
     val status = SyncStatus.COMPLETED
@@ -134,7 +139,7 @@ class RdsWatermarkRepositoryTest {
   fun `should update status and timestamp for a given ID`() {
     // Arrange
 
-    val id = UUID.randomUUID()
+    val id = UUID.randomUUID().toKotlinUuid()
     val tableName = "position"
     val status = SyncStatus.COMPLETED
     val syncDate = Instant.parse("2024-01-01T10:00:00Z")
@@ -166,7 +171,7 @@ class RdsWatermarkRepositoryTest {
   fun `update should update a watermark record for given ID`() {
     // Arrange
 
-    val id = UUID.randomUUID()
+    val id = UUID.randomUUID().toKotlinUuid()
     val tableName = "position"
     val status = SyncStatus.COMPLETED
     val syncDate = Instant.parse("2024-01-01T10:00:00Z")
@@ -197,7 +202,7 @@ class RdsWatermarkRepositoryTest {
   @Test
   fun `updateStatus should persist error message when status is FAILED`() {
     // Arrange
-    val id = UUID.randomUUID()
+    val id = UUID.randomUUID().toKotlinUuid()
     val errorText = "Athena query timeout"
     val status = SyncStatus.RUNNING
     val initialDate = Instant.parse("2024-01-01T10:00:00Z")
@@ -219,7 +224,7 @@ class RdsWatermarkRepositoryTest {
   @Test
   fun `finalizeSuccess should update status, recordsSynced and timestamp for a given ID`() {
     // Arrange
-    val id = UUID.randomUUID()
+    val id = UUID.randomUUID().toKotlinUuid()
     val status = SyncStatus.RUNNING
     val initialDate = Instant.parse("2024-01-01T10:00:00Z")
     val updateDate = Instant.parse("2024-01-01T11:00:00Z")
