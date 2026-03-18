@@ -7,7 +7,6 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.device.model.Device
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.device.repository.DeviceRepository
-import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.greeting.DeviceService
 
 class DeviceServiceTest {
 

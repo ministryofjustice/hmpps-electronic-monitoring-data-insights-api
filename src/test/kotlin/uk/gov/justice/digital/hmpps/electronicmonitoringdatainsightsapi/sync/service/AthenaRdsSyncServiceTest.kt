@@ -1,4 +1,4 @@
-package test.kotlin.uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.sync.service
+package uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.sync.service
 
 import io.mockk.every
 import io.mockk.mockk
@@ -9,7 +9,6 @@ import org.junit.jupiter.api.assertThrows
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.location.model.Location
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.location.repository.AthenaLocationRepository
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.location.repository.RdsLocationRepository
-import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.sync.service.AthenaRdsSyncService
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.watermark.SyncStatus
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.watermark.service.WatermarkService
 import java.time.Instant
