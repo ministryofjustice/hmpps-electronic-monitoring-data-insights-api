@@ -52,7 +52,7 @@ class AthenaLocationRepository(
              position_geometry, position_latitude, position_longitude
       FROM position
       WHERE position_gps_date > CAST(? AS TIMESTAMP)
-      ORDER BY position_gps_date
+      ORDER BY position_gps_date DESC
       LIMIT ${properties.athena.rowLimit}
     """.trimIndent()
 
