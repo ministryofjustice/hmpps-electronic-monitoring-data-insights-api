@@ -5,11 +5,10 @@ import software.amazon.awssdk.services.athena.model.Datum
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.athena.AthenaQueryRunner
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.athena.AwsProperties
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.exception.DataIntegrityException
-import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.util.DateTimeConstants
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.model.PagedPeople
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.model.PeopleQueryCriteria
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.model.Person
-import java.time.Instant
-import java.time.LocalDateTime
-import java.time.ZoneOffset
+import java.time.LocalDate
 import kotlin.String
 
 @Repository
@@ -18,35 +17,127 @@ class AthenaPersonRepository(
   private val properties: AwsProperties,
 ) : PersonRepository {
 
-  override fun findByCrn(crn: String): List<Person> {
-    val personId = validatePersonId(crn)
-    val sql = buildPersonIdSql(personId)
-    return runner.run(sql, properties.athena.fmsDatabase, skipHeaderRow = true, mapper = ::mapRow)
+  override fun searchPeople(personsQueryCriteria: PeopleQueryCriteria, nextToken: String?): PagedPeople {
+    val built = buildPersonSearchSql(personsQueryCriteria)
+
+    val result = runner.fetchPaged(
+      sql = built.sql,
+      database = properties.athena.fmsDatabase, // not ideal
+      cursor = nextToken,
+      pageSize = properties.athena.rowLimit,
+      mapper = ::mapRow,
+      params = built.params,
+    )
+
+    return PagedPeople(
+      persons = result.items,
+      nextToken = result.nextToken,
+    )
+  }
+
+  private fun escapeSql(value: String): String = value.replace("'", "''")
+
+  data class SqlAndParams(val sql: String, val params: List<String>)
+
+  private fun buildPersonSearchSql(personsQueryCriteria: PeopleQueryCriteria): SqlAndParams {
+    val where = StringBuilder("WHERE 1=1\n")
+    val params = mutableListOf<String>()
+
+    fun addEq(column: String, raw: String?) {
+      raw?.trim()?.takeIf { it.isNotEmpty() }?.let {
+        where.append("  AND $column = CAST(? AS VARCHAR)\n")
+        params += it // no need to escape when using parameters
+      }
+    }
+
+    addEq("pdw.u_id_nomis", personsQueryCriteria.nomisId)
+    addEq("pdw.u_id_pnc", personsQueryCriteria.pncId)
+    addEq("pdw.u_delius_id", personsQueryCriteria.deliusId)
+    addEq("pdw.u_home_office_reference", personsQueryCriteria.horId)
+    addEq("pdw.cepr", personsQueryCriteria.ceprId)
+    addEq("pdw.u_prison_number", personsQueryCriteria.prisonId)
+
+    val sql = """
+    SELECT
+      p.person_id,
+      csm.sys_id AS consumer_id,
+      p.person_name,
+      pdw.u_id_nomis,
+      pdw.u_id_pnc,
+      pdw.u_delius_id,
+      pdw.u_home_office_reference,
+      pdw.cepr,
+      pdw.u_prison_number,
+      pdws.u_dob,
+      csm.zip,
+      csm.city,
+      csm.street   
+    FROM ${properties.athena.mdssDatabase}.person p
+    LEFT JOIN ${properties.athena.fmsDatabase}.x_serg2_ems_csm_profile_device_wearer pdw
+      ON p.person_name = pdw.u_id_device_wearer
+    LEFT JOIN ${properties.athena.fmsDatabase}.csm_consumer csm
+      ON pdw.consumer = csm.sys_id
+    LEFT JOIN ${properties.athena.fmsDatabase}.x_serg2_ems_csm_profile_sensitive pdws
+      ON csm.sys_id = pdws.consumer
+    $where
+    LIMIT ${properties.athena.rowLimit}
+    """.trimIndent()
+
+    return SqlAndParams(sql, params)
+  }
+
+  override fun findByPersonById(personId: String): Person? {
+    val personId = validatePersonId(personId)
+    val built = buildPersonByIdSql(personId)
+    return runner.run(
+      sql = built.sql,
+      database = properties.athena.mdssDatabase, // root table mdss
+      skipHeaderRow = true,
+      mapper = ::mapRow,
+      params = built.params,
+    ).firstOrNull()
   }
 
   private fun validatePersonId(personId: String): String = personId.takeIf { it.isNotBlank() }
-    ?: throw IllegalArgumentException("The CRN provided ($personId) must be a numeric personId")
+    ?: throw IllegalArgumentException("The personId provided ($personId) must be a numeric personId")
 
-  private fun buildPersonIdSql(personId: String): String =
-    """
-      select c.sys_id, c.first_name, c.last_name, cp.u_dob, c.street, c.state, c.city, c.zip, c.country,
-        mo.device_wearer, mo.order_type_description, mo.order_start,  mo.order_end
-        from csm_consumer c
-        join x_serg2_ems_mom_mo mo
-          on c.sys_id = mo.device_wearer
-          join x_serg2_ems_csm_profile_sensitive cp
-          on cp.consumer = c.sys_id          
-          AND c.sys_id = '$personId'
-          Order by c.sys_created_on DESC
-          limit 1         
+  private fun buildPersonByIdSql(personId: String): SqlAndParams {
+    val safePersonId = escapeSql(personId.trim())
+
+    val sql = """
+    SELECT
+      p.person_id,
+      csm.sys_id AS consumer_id,
+      p.person_name,
+      pdw.u_id_nomis,
+      pdw.u_id_pnc,
+      pdw.u_delius_id,
+      pdw.u_home_office_reference,
+      pdw.cepr,
+      pdw.u_prison_number,
+      pdws.u_dob,
+      csm.zip,
+      csm.city,
+      csm.street, 
+      pdw.u_id_device_wearer
+    FROM ${properties.athena.mdssDatabase}.person p
+    LEFT JOIN ${properties.athena.fmsDatabase}.x_serg2_ems_csm_profile_device_wearer pdw
+      ON p.person_name = pdw.u_id_device_wearer
+    LEFT JOIN ${properties.athena.fmsDatabase}.csm_consumer csm
+      ON pdw.consumer = csm.sys_id
+    LEFT JOIN ${properties.athena.fmsDatabase}.x_serg2_ems_csm_profile_sensitive pdws
+      ON csm.sys_id = pdws.consumer
+    WHERE p.person_id = CAST(? AS BIGINT)
+    LIMIT 1
     """.trimIndent()
+
+    return SqlAndParams(sql, listOf(safePersonId))
+  }
 
   private fun mapRow(cols: List<Datum>): Person {
     fun v(i: Int): String? = cols.getOrNull(i)?.varCharValue()
 
-    fun ts(i: Int): Instant? = v(i)
-      ?.takeIf { it.isNotBlank() }
-      ?.let { LocalDateTime.parse(it, DateTimeConstants.ATHENA_TIMESTAMP).toInstant(ZoneOffset.UTC) }
+    fun date(i: Int): LocalDate? = v(i)?.trim()?.takeIf { it.isNotEmpty() }?.let { LocalDate.parse(it) } // expects YYYY-MM-DD
 
     // Helper specifically for mandatory IDs
     fun requiredId(i: Int, fieldName: String): String = v(i)
@@ -55,34 +146,34 @@ class AthenaPersonRepository(
 
     return Person(
       personId = requiredId(COL_PERSON_ID, "person_id"),
-      firstName = v(COL_FIRST_NAME),
-      lastName = v(COL_LAST_NAME),
-      dob = v(COL_DOB),
-      street = v(COL_STREET),
-      state = v(COL_STATE),
-      city = v(COL_CITY),
+      consumerId = v(COL_CONSUMER_ID),
+      personName = v(COL_PERSON_NAME),
+      nomisId = v(COL_NOMIS_ID),
+      pncId = v(COL_PNC_ID),
+      deliusId = v(COL_DELIUS_ID),
+      horId = v(COL_HO_ID),
+      ceprId = v(COL_CEP_ID),
+      prisonId = v(COL_PRISON_ID),
+      dob = date(COL_DOB),
       zip = v(COL_ZIP),
-      country = v(COL_COUNTRY),
-      orderType = v(COL_ORDER_TYPE),
-      orderTypeDescription = v(COL_ORDER_TYPE_DESC),
-      orderStart = ts(COL_ORDER_START),
-      orderEnd = ts(COL_ORDER_END),
+      city = v(COL_CITY),
+      street = v(COL_STREET),
     )
   }
 
   companion object {
     private const val COL_PERSON_ID = 0
-    private const val COL_FIRST_NAME = 1
-    private const val COL_LAST_NAME = 2
-    private const val COL_DOB = 3
-    private const val COL_STREET = 4
-    private const val COL_STATE = 5
-    private const val COL_CITY = 6
-    private const val COL_ZIP = 7
-    private const val COL_COUNTRY = 8
-    private const val COL_ORDER_TYPE = 9
-    private const val COL_ORDER_TYPE_DESC = 10
-    private const val COL_ORDER_START = 11
-    private const val COL_ORDER_END = 12
+    private const val COL_CONSUMER_ID = 1
+    private const val COL_PERSON_NAME = 2
+    private const val COL_NOMIS_ID = 3
+    private const val COL_PNC_ID = 4
+    private const val COL_DELIUS_ID = 5
+    private const val COL_HO_ID = 6
+    private const val COL_CEP_ID = 7
+    private const val COL_PRISON_ID = 8
+    private const val COL_DOB = 9
+    private const val COL_ZIP = 10
+    private const val COL_CITY = 11
+    private const val COL_STREET = 12
   }
 }

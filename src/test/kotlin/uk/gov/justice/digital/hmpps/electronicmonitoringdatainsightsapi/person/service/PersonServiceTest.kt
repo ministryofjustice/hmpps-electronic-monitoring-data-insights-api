@@ -14,21 +14,20 @@ class PersonServiceTest {
   private val personService = PersonService(personRepository)
 
   @Test
-  fun `findByCrn should call repository and return the result`() {
+  fun `getPersonById should call repository and return the result`() {
     // Arrange
-    val crn = "ABC123"
-    val mockPerson = listOf(
-      Person(personId = "123456"),
-    )
+    val personId = "ABC123"
+    val mockPerson = Person(personId = "123456")
 
-    every { personRepository.findByCrn(crn) } returns mockPerson
+    every { personRepository.findByPersonById(personId) } returns mockPerson
 
     // Act
-    val result = personService.findByCrn(crn)
+    val result = personService.getPersonById(personId)
 
     // Assert
     assertThat(result).isEqualTo(mockPerson)
-    assertThat(result[0].personId).isEqualTo("123456")
-    verify(exactly = 1) { personRepository.findByCrn(crn) }
+    assertThat(result?.personId).isEqualTo("123456")
+
+    verify(exactly = 1) { personRepository.findByPersonById(personId) }
   }
 }

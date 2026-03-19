@@ -5,8 +5,12 @@ import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.watermar
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.watermark.repository.WatermarkRepository
 import java.time.Instant
 import java.util.UUID
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
+import kotlin.uuid.toKotlinUuid
 
 @Service
+@OptIn(ExperimentalUuidApi::class)
 class WatermarkService(
   private val watermarkRepository: WatermarkRepository,
 ) {
@@ -14,8 +18,8 @@ class WatermarkService(
     tableName: String,
     lastSyncedDate: Instant,
     syncStatus: SyncStatus,
-  ): UUID = watermarkRepository.create(
-    id = UUID.randomUUID(),
+  ): Uuid = watermarkRepository.create(
+    id = UUID.randomUUID().toKotlinUuid(),
     tableName = tableName,
     lastSyncDate = lastSyncedDate,
     syncStatus = syncStatus,
@@ -35,7 +39,7 @@ class WatermarkService(
 
   fun updateWatermarkSkipped(syncId: String) {
     watermarkRepository.updateStatus(
-      id = UUID.fromString(syncId),
+      id = UUID.fromString(syncId).toKotlinUuid(),
       status = SyncStatus.SKIPPED,
       updatedAt = Instant.now(),
     )
@@ -48,7 +52,7 @@ class WatermarkService(
     updatedAt: Instant,
   ) {
     watermarkRepository.finalizeSuccess(
-      id = UUID.fromString(syncId),
+      id = UUID.fromString(syncId).toKotlinUuid(),
       newWatermark = newWatermark,
       count = recordsProcessed,
       updatedAt = updatedAt,
@@ -59,7 +63,7 @@ class WatermarkService(
     syncId: String,
     errorMessage: String,
   ) = watermarkRepository.updateStatus(
-    id = UUID.fromString(syncId),
+    id = UUID.fromString(syncId).toKotlinUuid(),
     status = SyncStatus.FAILED,
     updatedAt = Instant.now(),
     error = errorMessage,

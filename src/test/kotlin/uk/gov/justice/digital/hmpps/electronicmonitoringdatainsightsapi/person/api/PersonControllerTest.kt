@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.api
+package uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.api
 
 import com.ninjasquad.springmockk.MockkBean
 import io.mockk.every
@@ -14,7 +14,6 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.content
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
-import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.api.PersonController
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.model.Person
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.service.PersonService
 
@@ -30,42 +29,37 @@ class PersonControllerTest {
   private lateinit var personService: PersonService
 
   @Test
-  fun `findByCrn should return 200 and list of people if they exist`() {
+  fun `getPerson should return 200 and person when they exist`() {
     // Arrange
-    val crn = "123456"
-    val mockPerson = listOf(
-      Person(personId = "123456"),
-    )
+    val personId = "123456"
+    val mockPerson = Person(personId = "123456")
 
-    // Act
-    every { personService.findByCrn(crn) } returns mockPerson
+    every { personService.getPersonById(personId) } returns mockPerson
 
-    // Assert
+    // Act & Assert
     mockMvc.perform(
-      get("/people/$crn")
+      get("/people/$personId")
         .accept(MediaType.APPLICATION_JSON),
     )
       .andExpect(status().isOk)
       .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-      .andExpect(jsonPath("$.length()").value(1))
-      .andExpect(jsonPath("$[0].personId").value("123456"))
+      .andExpect(jsonPath("$.personId").value("123456"))
 
-    verify(exactly = 1) { personService.findByCrn(crn) }
+    verify(exactly = 1) { personService.getPersonById(personId) }
   }
 
   @Test
-  fun `findByCrn should return 200 and empty list when no devices found`() {
+  fun `getPerson should return 404 when person not found`() {
     // Arrange
-    val crn = "123456"
+    val personId = "123456"
+    every { personService.getPersonById(personId) } returns null
 
-    // Act
-    every { personService.findByCrn(crn) } returns emptyList()
+    // Act & Assert
+    mockMvc.perform(
+      get("/people/$personId").accept(MediaType.APPLICATION_JSON),
+    )
+      .andExpect(status().isNotFound)
 
-    // Assert
-    mockMvc.perform(get("/people/$crn"))
-      .andExpect(status().isOk)
-      .andExpect(jsonPath("$.length()").value(0))
-
-    verify(exactly = 1) { personService.findByCrn(crn) }
+    verify(exactly = 1) { personService.getPersonById(personId) }
   }
 }

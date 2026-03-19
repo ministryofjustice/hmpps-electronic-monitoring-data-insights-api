@@ -4,6 +4,8 @@
 generic-service:
   replicaCount: 2
 
+  serviceAccountName: "hmpps-em-data-insights-preprod"
+
   ingress:
     host: electronic-monitoring-data-insights-api-preprod.hmpps.service.justice.gov.uk
 
@@ -12,8 +14,7 @@ generic-service:
     HMPPS_AUTH_URL: "https://sign-in-preprod.hmpps.service.justice.gov.uk/auth"
     ATHENA_OUTPUT_BUCKET: "s3://emds-test-athena-query-results-20240923095933297100000013"
     MFA_REQUIRED: "false"
+    ROW_LIMIT: "1000"
 
-# CloudPlatform AlertManager receiver to route prometheus alerts to slack
-# See https://user-guide.cloud-platform.service.justice.gov.uk/documentation/monitoring-an-app/how-to-create-alarms.html#creating-your-own-custom-alerts
 generic-prometheus-alerts:
-  alertSeverity: hmpps_electronic_monitoring_data_insights_alerts_noprod
+  alertSeverity: hmpps-electronic-monitoring-data-insights-preprod

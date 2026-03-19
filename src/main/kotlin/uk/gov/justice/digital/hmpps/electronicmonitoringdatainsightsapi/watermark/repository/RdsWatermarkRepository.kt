@@ -1,21 +1,23 @@
 package uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.watermark.repository
 
-import org.jetbrains.exposed.sql.SortOrder
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
-import org.jetbrains.exposed.sql.and
-import org.jetbrains.exposed.sql.insert
-import org.jetbrains.exposed.sql.selectAll
-import org.jetbrains.exposed.sql.transactions.transaction
-import org.jetbrains.exposed.sql.update
+import org.jetbrains.exposed.v1.core.SortOrder
+import org.jetbrains.exposed.v1.core.and
+import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.jdbc.insert
+import org.jetbrains.exposed.v1.jdbc.selectAll
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
+import org.jetbrains.exposed.v1.jdbc.update
 import org.springframework.stereotype.Repository
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.watermark.SyncStatus
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.watermark.Watermarks
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneOffset
-import java.util.UUID
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 
 @Repository
+@OptIn(ExperimentalUuidApi::class)
 class RdsWatermarkRepository : WatermarkRepository {
 
   override fun findLatestCompletedSync(tableName: String): Instant {
@@ -34,7 +36,7 @@ class RdsWatermarkRepository : WatermarkRepository {
     return lastCompletedSync?.toInstant(ZoneOffset.UTC) ?: Instant.EPOCH
   }
 
-  override fun create(id: UUID, tableName: String, lastSyncDate: Instant, syncStatus: SyncStatus): UUID = transaction {
+  override fun create(id: Uuid, tableName: String, lastSyncDate: Instant, syncStatus: SyncStatus): Uuid = transaction {
     Watermarks.insert {
       it[Watermarks.id] = id
       it[Watermarks.sourceTableName] = tableName
@@ -47,7 +49,7 @@ class RdsWatermarkRepository : WatermarkRepository {
     }[Watermarks.id]
   }
 
-  override fun updateStatus(id: UUID, status: SyncStatus, updatedAt: Instant, error: String?) {
+  override fun updateStatus(id: Uuid, status: SyncStatus, updatedAt: Instant, error: String?) {
     transaction {
       Watermarks.update({ Watermarks.id eq id }) {
         it[Watermarks.syncStatus] = status
@@ -58,7 +60,7 @@ class RdsWatermarkRepository : WatermarkRepository {
     }
   }
 
-  override fun finalizeSuccess(id: UUID, newWatermark: Instant, count: Int, updatedAt: Instant) {
+  override fun finalizeSuccess(id: Uuid, newWatermark: Instant, count: Int, updatedAt: Instant) {
     transaction {
       Watermarks.update({ Watermarks.id eq id }) {
         it[Watermarks.lastSyncDate] = LocalDateTime.ofInstant(newWatermark, ZoneOffset.UTC)

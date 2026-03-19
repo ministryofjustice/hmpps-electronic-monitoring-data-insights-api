@@ -20,14 +20,14 @@ class AthenaLocationRepository(
   private val properties: AwsProperties,
 ) : LocationRepository {
 
-  override fun findAllByCrnAndTimespan(crn: String, from: Instant, to: Instant, nextToken: String?): PagedLocations {
-    val personId = crn.toPersonId()
+  override fun findByPersonIdAndGpsDateBetweenOrderByGpsDateAsc(personId: String, from: Instant, to: Instant, nextToken: String?): PagedLocations {
+    val personId = personId.toPersonId()
     val sql = buildTimeSpanSql()
     val result = runner.fetchPaged(
       sql = sql,
       database = properties.athena.mdssDatabase,
       cursor = nextToken,
-      pageSize = 100,
+      pageSize = properties.athena.rowLimit,
       mapper = ::mapRow,
       params = listOf(personId.toString(), from.toString(), to.toString()),
     )
@@ -38,11 +38,11 @@ class AthenaLocationRepository(
     )
   }
 
-  override fun findByCrnAndId(crn: String, locationId: String): List<Location> {
-    val personId = crn.toPersonId()
-    val locationId = locationId.toLocationId()
+  override fun findByPersonIdAndPositionId(personId: String, positionId: String): List<Location> {
+    val personId = personId.toPersonId()
+    val positionId = positionId.toLocationId()
     val sql = buildLocationIdSql()
-    return runner.run(sql, properties.athena.mdssDatabase, skipHeaderRow = true, mapper = ::mapRow, params = listOf(personId.toString(), locationId.toString()))
+    return runner.run(sql, properties.athena.mdssDatabase, skipHeaderRow = true, mapper = ::mapRow, params = listOf(personId.toString(), positionId.toString()))
   }
 
   override fun findRecordsSince(lastWatermark: String): List<Location> {
@@ -53,7 +53,7 @@ class AthenaLocationRepository(
       FROM position
       WHERE position_gps_date > CAST(? AS TIMESTAMP)
       ORDER BY position_gps_date
-      LIMIT 20
+      LIMIT ${properties.athena.rowLimit}
     """.trimIndent()
 
     return runner.run(sql, properties.athena.mdssDatabase, skipHeaderRow = true, mapper = ::mapRow, params = listOf(lastWatermark))
@@ -80,6 +80,7 @@ class AthenaLocationRepository(
       WHERE person_id = CAST(? AS BIGINT)
         AND position_id = CAST(? AS BIGINT)
       ORDER BY position_gps_date      
+      LIMIT ${properties.athena.rowLimit}
     """.trimIndent()
 
   private fun mapRow(cols: List<Datum>): Location {

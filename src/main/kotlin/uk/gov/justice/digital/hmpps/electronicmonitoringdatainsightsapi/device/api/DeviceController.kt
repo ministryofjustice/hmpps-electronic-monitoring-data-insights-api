@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.device.model.Device
-import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.greeting.DeviceService
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.device.service.DeviceService
 import kotlin.time.ExperimentalTime
 
 @RestController
