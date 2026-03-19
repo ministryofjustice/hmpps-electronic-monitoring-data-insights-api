@@ -68,6 +68,7 @@ class AthenaLocationRepository(
       WHERE person_id = CAST(? AS BIGINT)
         AND position_gps_date BETWEEN from_iso8601_timestamp(?)
                                 AND from_iso8601_timestamp(?)
+      LIMIT ${properties.athena.rowLimit}                     
       ORDER BY position_gps_date DESC   
     """.trimIndent()
 
