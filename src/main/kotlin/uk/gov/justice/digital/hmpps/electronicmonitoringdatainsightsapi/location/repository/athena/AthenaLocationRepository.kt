@@ -68,7 +68,7 @@ class AthenaLocationRepository(
       WHERE person_id = CAST(? AS BIGINT)
         AND position_gps_date BETWEEN from_iso8601_timestamp(?)
                                 AND from_iso8601_timestamp(?)
-      ORDER BY position_gps_date DESC     
+      ORDER BY position_gps_date       
     """.trimIndent()
 
   private fun buildLocationIdSql(): String =
