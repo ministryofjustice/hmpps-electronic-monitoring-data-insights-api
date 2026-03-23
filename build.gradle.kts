@@ -24,19 +24,19 @@ dependencies {
   implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.10.0")
   implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.7.1-0.6.x-compat")
 
-  implementation(platform("software.amazon.awssdk:bom:2.42.15"))
+  implementation(platform("software.amazon.awssdk:bom:2.42.18"))
   implementation("software.amazon.awssdk:athena")
   implementation("software.amazon.awssdk:sso")
   implementation("software.amazon.awssdk:ssooidc")
   implementation("software.amazon.awssdk:sts")
 
-  implementation(platform("software.amazon.awssdk:bom:2.42.15"))
+  implementation(platform("software.amazon.awssdk:bom:2.42.18"))
   implementation("software.amazon.awssdk:athena")
 
   implementation("org.postgresql:postgresql:42.7.10")
 
-  implementation("software.amazon.awssdk:s3:2.42.15")
-  implementation("software.amazon.awssdk:athena:2.42.15")
+  implementation("software.amazon.awssdk:s3:2.42.18")
+  implementation("software.amazon.awssdk:athena:2.42.18")
 
   testImplementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter-test:1.8.2")
   testImplementation("org.wiremock:wiremock-standalone:3.13.2")
