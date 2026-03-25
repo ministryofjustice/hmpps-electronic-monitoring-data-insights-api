@@ -9,7 +9,7 @@ import org.springframework.context.annotation.Profile
 class DatabaseConfig {
 
   @Bean
-  @Profile("!test") // Skip this bean when running tests
+  @Profile("!dev") // Skip this bean when running tests
   fun database(): Database {
     val host = System.getenv("DB_HOST")
     val port = System.getenv("DB_PORT") ?: "5432"

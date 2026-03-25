@@ -14,9 +14,9 @@ class ElectronicMonitoringDataInsightsApi
 fun main(args: Array<String>) {
   val ctx = SpringApplication.run(ElectronicMonitoringDataInsightsApi::class.java, *args)
   // Ensure Greetings table exists
-  transaction {
-    SchemaUtils.create(DeviceEvents)
-    SchemaUtils.create(Locations)
-    SchemaUtils.create(Watermarks)
-  }
+//  transaction {
+//    SchemaUtils.create(DeviceEvents)
+//    SchemaUtils.create(Locations)
+//    SchemaUtils.create(Watermarks)
+//  }
 }
