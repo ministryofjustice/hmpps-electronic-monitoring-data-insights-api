@@ -15,6 +15,7 @@ import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.e
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.model.PaginatedResult
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.location.model.Location
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.location.model.PagedLocations
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.location.repository.athena.AthenaLocationRepository
 import java.time.Instant
 
 class AthenaLocationRepositoryTest {

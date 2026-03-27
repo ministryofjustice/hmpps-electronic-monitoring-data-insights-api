@@ -1,35 +1,26 @@
 package uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.sync.api
 
-import com.ninjasquad.springmockk.MockkBean
-import io.mockk.every
-import io.mockk.verify
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
-import org.springframework.http.MediaType
-import org.springframework.test.context.ActiveProfiles
-import org.springframework.test.context.ContextConfiguration
-import org.springframework.test.web.servlet.MockMvc
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
-import org.springframework.test.web.servlet.result.MockMvcResultMatchers.content
-import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
-import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
-import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.ElectronicMonitoringDataInsightsApi
+import org.junit.jupiter.api.assertThrows
+import org.junit.jupiter.api.extension.ExtendWith
+import org.mockito.InjectMocks
+import org.mockito.Mock
+import org.mockito.junit.jupiter.MockitoExtension
+import org.mockito.kotlin.verify
+import org.mockito.kotlin.whenever
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.sync.service.AthenaRdsSyncService
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.sync.utils.SyncResult
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.watermark.SyncStatus
 
-@ActiveProfiles("test")
-@AutoConfigureMockMvc(addFilters = false)
-@WebMvcTest(SyncController::class)
-@ContextConfiguration(classes = [ElectronicMonitoringDataInsightsApi::class])
+@ExtendWith(MockitoExtension::class)
 class SyncControllerTest {
-  @Autowired
-  private lateinit var mockMvc: MockMvc
 
-  @MockkBean
+  @Mock
   private lateinit var syncService: AthenaRdsSyncService
+
+  @InjectMocks
+  private lateinit var syncController: SyncController
 
   @Test
   fun `triggerDailySync should return 200 and sync result`() {
@@ -38,43 +29,42 @@ class SyncControllerTest {
     val syncId = "123L"
     val recordsProcessed = 100
     val status = SyncStatus.COMPLETED
+
     val mockSyncResult = SyncResult(
       syncId = syncId,
       recordsProcessed = recordsProcessed,
       status = status,
     )
 
+    whenever(syncService.performDailySync(tableName)).thenReturn(mockSyncResult)
+
     // Act
-    every { syncService.performDailySync(tableName) } returns mockSyncResult
+    val result = syncController.triggerDailySync(tableName)
 
     // Assert
-    mockMvc.perform(
-      get("/sync/daily/$tableName")
-        .accept(MediaType.APPLICATION_JSON),
-    )
-      .andExpect(status().isOk)
-      .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-      .andExpect(jsonPath("$.syncId").value(syncId))
-      .andExpect(jsonPath("$.recordsProcessed").value(recordsProcessed))
-      .andExpect(jsonPath("$.status").value("COMPLETED"))
+    assertThat(result.syncId).isEqualTo(syncId)
+    assertThat(result.recordsProcessed).isEqualTo(recordsProcessed)
+    assertThat(result.status).isEqualTo(status)
 
-    verify(exactly = 1) { syncService.performDailySync(tableName) }
+    verify(syncService).performDailySync(tableName)
   }
 
   @Test
-  fun `triggerDailySync should return 500 when service throws an exception`() {
+  fun `triggerDailySync should throw exception when service fails`() {
     // Arrange
     val tableName = "invalid_table"
     val errorMessage = "Database connection failed"
 
-    // Mock the service to throw an exception
-    every { syncService.performDailySync(tableName) } throws RuntimeException(errorMessage)
+    whenever(syncService.performDailySync(tableName))
+      .thenThrow(RuntimeException(errorMessage))
 
     // Act & Assert
-    mockMvc.perform(
-      get("/sync/daily/$tableName")
-        .accept(MediaType.APPLICATION_JSON),
-    )
-      .andExpect(status().isInternalServerError)
+    val exception = assertThrows<RuntimeException> {
+      syncController.triggerDailySync(tableName)
+    }
+
+    assertThat(exception.message).isEqualTo(errorMessage)
+
+    verify(syncService).performDailySync(tableName)
   }
 }

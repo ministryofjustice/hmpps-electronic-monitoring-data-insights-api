@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.location.repository
+package uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.location.repository.athena
 
 import org.springframework.stereotype.Repository
 import software.amazon.awssdk.services.athena.model.Datum
