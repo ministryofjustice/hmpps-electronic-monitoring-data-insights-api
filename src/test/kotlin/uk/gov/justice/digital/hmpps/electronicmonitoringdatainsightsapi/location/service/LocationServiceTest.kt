@@ -8,8 +8,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.location.model.Location
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.location.model.PagedLocations
-import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.location.repository.LocationRepository
-import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.location.service.LocationService
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.location.repository.athena.LocationRepository
 import java.time.Instant
 
 class LocationServiceTest {

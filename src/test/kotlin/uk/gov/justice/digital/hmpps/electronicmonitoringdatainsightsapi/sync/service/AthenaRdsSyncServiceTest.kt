@@ -7,8 +7,8 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.location.model.Location
-import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.location.repository.AthenaLocationRepository
-import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.location.repository.RdsLocationRepository
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.location.repository.athena.AthenaLocationRepository
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.location.repository.rds.RdsLocationRepository
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.watermark.SyncStatus
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.watermark.service.WatermarkService
 import java.time.Instant

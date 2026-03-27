@@ -11,6 +11,7 @@ import org.springframework.boot.test.web.server.LocalServerPort
 import org.springframework.http.MediaType
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
+import kotlin.text.get
 
 class OpenApiDocsTest : IntegrationTestBase() {
   @LocalServerPort

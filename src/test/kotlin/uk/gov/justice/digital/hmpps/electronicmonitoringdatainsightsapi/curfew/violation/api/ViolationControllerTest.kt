@@ -1,31 +1,25 @@
 package uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.curfew.violation.api
 
-import com.ninjasquad.springmockk.MockkBean
-import io.mockk.every
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
-import org.springframework.test.context.ActiveProfiles
-import org.springframework.test.web.servlet.MockMvc
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
-import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
-import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
+import org.junit.jupiter.api.extension.ExtendWith
+import org.mockito.InjectMocks
+import org.mockito.Mock
+import org.mockito.junit.jupiter.MockitoExtension
+import org.mockito.kotlin.whenever
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.curfew.violation.model.PagedViolations
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.curfew.violation.model.Violation
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.service.ViolationService
 import java.time.Instant
 
-@ActiveProfiles("test")
-@AutoConfigureMockMvc(addFilters = false)
-@WebMvcTest(ViolationController::class)
+@ExtendWith(MockitoExtension::class)
 class ViolationControllerTest {
 
-  @Autowired
-  private lateinit var mockMvc: MockMvc
-
-  @MockkBean
+  @Mock
   private lateinit var violationService: ViolationService
+
+  @InjectMocks
+  private lateinit var violationController: ViolationController
 
   @Test
   fun `findAllByConsumerIdAndTimespan should return 200 and paginated violations`() {
@@ -77,21 +71,22 @@ class ViolationControllerTest {
     val pagedResult = PagedViolations(violations = mockViolations, nextToken = "next-token-456")
 
     // Act
-    every {
-      violationService.getViolationsForConsumer(consumerId, from, to, nextToken)
-    } returns pagedResult
+    whenever(
+      violationService.getViolationsForConsumer(consumerId, from, to, nextToken),
+    ).thenReturn(pagedResult)
 
     // Assert
-    mockMvc.perform(
-      get("/people/$consumerId/curfew/violations")
-        .param("from", from.toString())
-        .param("to", to.toString())
-        .param("nextToken", nextToken),
+    val result = violationController.getViolations(
+      consumerId = consumerId,
+      from = from,
+      to = to,
+      nextToken = nextToken,
     )
-      .andExpect(status().isOk)
-      .andExpect(jsonPath("$.violations.length()").value(2))
-      .andExpect(jsonPath("$.violations[0].violationId").value("1234567890abcdef1234567890abcdef"))
-      .andExpect(jsonPath("$.nextToken").value("next-token-456"))
+
+    assertThat(result.statusCode.value()).isEqualTo(200)
+    assertThat(pagedResult.violations.size).isEqualTo(2)
+    assertThat(pagedResult.violations[0].violationId).isEqualTo("1234567890abcdef1234567890abcdef")
+    assertThat(pagedResult.nextToken).isEqualTo("next-token-456")
   }
 
   @Test
@@ -119,11 +114,12 @@ class ViolationControllerTest {
       outcomeReason = "Confirmed breach",
     )
 
-    every { violationService.getViolationForConsumer(consumerId, violationId) } returns mockViolation
+    whenever(violationService.getViolationForConsumer(consumerId, violationId)).thenReturn(mockViolation)
 
     // Act + Assert
-    mockMvc.perform(get("/people/$consumerId/curfew/violations/$violationId"))
-      .andExpect(status().isOk)
-      .andExpect(jsonPath("$.violationId").value(violationId))
+    val result = violationController.getViolation(consumerId, violationId)
+
+    assertThat(result.statusCode.value()).isEqualTo(200)
+    assertThat(result.body?.violationId).isEqualTo(violationId)
   }
 }

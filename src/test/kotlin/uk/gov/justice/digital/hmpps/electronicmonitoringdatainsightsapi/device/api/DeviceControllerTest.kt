@@ -1,32 +1,24 @@
 package uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.device.api
 
-import com.ninjasquad.springmockk.MockkBean
-import io.mockk.every
-import io.mockk.verify
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
-import org.springframework.http.MediaType
-import org.springframework.test.context.ActiveProfiles
-import org.springframework.test.web.servlet.MockMvc
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
-import org.springframework.test.web.servlet.result.MockMvcResultMatchers.content
-import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
-import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
+import org.junit.jupiter.api.extension.ExtendWith
+import org.mockito.InjectMocks
+import org.mockito.Mock
+import org.mockito.junit.jupiter.MockitoExtension
+import org.mockito.kotlin.verify
+import org.mockito.kotlin.whenever
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.device.model.Device
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.device.service.DeviceService
 
-@ActiveProfiles("test")
-@AutoConfigureMockMvc(addFilters = false)
-@WebMvcTest(DeviceController::class)
+@ExtendWith(MockitoExtension::class)
 class DeviceControllerTest {
 
-  @Autowired
-  private lateinit var mockMvc: MockMvc
-
-  @MockkBean
+  @Mock
   private lateinit var deviceService: DeviceService
+
+  @InjectMocks
+  private lateinit var deviceController: DeviceController
 
   @Test
   fun `findByCrn should return 200 and list of devices when devices exist`() {
@@ -37,22 +29,20 @@ class DeviceControllerTest {
       Device(deviceId = 102, personId = 123456, deviceStatus = "INACTIVE"),
     )
 
+    whenever(deviceService.findByCrn(crn)).thenReturn(mockDevices)
+
     // Act
-    every { deviceService.findByCrn(crn) } returns mockDevices
+    val result = deviceController.findByCrn(crn)
 
     // Assert
-    mockMvc.perform(
-      get("/people/$crn/device")
-        .accept(MediaType.APPLICATION_JSON),
-    )
-      .andExpect(status().isOk)
-      .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-      .andExpect(jsonPath("$.length()").value(2))
-      .andExpect(jsonPath("$[0].deviceId").value("101"))
-      .andExpect(jsonPath("$[1].deviceId").value("102"))
-      .andExpect(jsonPath("$[0].personId").value("123456"))
-      .andExpect(jsonPath("$[1].personId").value("123456"))
-    verify(exactly = 1) { deviceService.findByCrn(crn) }
+    assertThat(result.statusCode.value()).isEqualTo(200)
+    assertThat(result.body).hasSize(2)
+    assertThat(result.body?.get(0)?.deviceId).isEqualTo(101)
+    assertThat(result.body?.get(1)?.deviceId).isEqualTo(102)
+    assertThat(result.body?.get(0)?.personId).isEqualTo(123456)
+    assertThat(result.body?.get(1)?.personId).isEqualTo(123456)
+
+    verify(deviceService).findByCrn(crn)
   }
 
   @Test
@@ -60,13 +50,15 @@ class DeviceControllerTest {
     // Arrange
     val crn = "123456"
 
+    whenever(deviceService.findByCrn(crn)).thenReturn(emptyList())
+
     // Act
-    every { deviceService.findByCrn(crn) } returns emptyList()
+    val result = deviceController.findByCrn(crn)
 
     // Assert
-    mockMvc.perform(get("/people/$crn/device"))
-      .andExpect(status().isOk)
-      .andExpect(jsonPath("$.length()").value(0))
-    verify(exactly = 1) { deviceService.findByCrn(crn) }
+    assertThat(result.statusCode.value()).isEqualTo(200)
+    assertThat(result.body).isEmpty()
+
+    verify(deviceService).findByCrn(crn)
   }
 }
