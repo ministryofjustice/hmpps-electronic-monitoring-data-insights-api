@@ -45,7 +45,7 @@ class PersonControllerTest {
     // Act & Assert
     val result = controller.getPerson(personId)
 
-    assertThat(result.statusCode.value() == 404)
+    assertThat(result.statusCode.value()).isEqualTo(404)
 
     verify(personService, times(1)).getPersonById(personId)
   }
