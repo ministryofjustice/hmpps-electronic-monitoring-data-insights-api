@@ -75,3 +75,10 @@ management:
     info:
       cache:
         time-to-live: 2000ms
+
+springdoc:
+  api-docs:
+    enabled: true
+  swagger-ui:
+    enabled: true
+    version: 5.32.1
