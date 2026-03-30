@@ -12,6 +12,7 @@ configurations {
 val springdocOpenapiVersion = "3.0.2"
 val hmppsKotlinSpringBootStarterVersion = "2.0.2"
 val kotlinLoggingVersion = "3.0.5"
+val athenaVersion = "2.42.23"
 
 dependencies {
   implementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter:$hmppsKotlinSpringBootStarterVersion")
@@ -30,19 +31,19 @@ dependencies {
   implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.10.0")
   implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.7.1-0.6.x-compat")
 
-  implementation(platform("software.amazon.awssdk:bom:2.42.18"))
+  implementation(platform("software.amazon.awssdk:bom:$athenaVersion"))
   implementation("software.amazon.awssdk:athena")
   implementation("software.amazon.awssdk:sso")
   implementation("software.amazon.awssdk:ssooidc")
   implementation("software.amazon.awssdk:sts")
 
-  implementation(platform("software.amazon.awssdk:bom:2.42.18"))
+  implementation(platform("software.amazon.awssdk:bom:$athenaVersion"))
   implementation("software.amazon.awssdk:athena")
 
   implementation("org.postgresql:postgresql:42.7.10")
 
-  implementation("software.amazon.awssdk:s3:2.42.18")
-  implementation("software.amazon.awssdk:athena:2.42.18")
+  implementation("software.amazon.awssdk:s3:$athenaVersion")
+  implementation("software.amazon.awssdk:athena:$athenaVersion")
 
   testImplementation("org.springframework.boot:spring-boot-webservices-test")
   testImplementation("org.springframework.boot:spring-boot-webflux-test")
