@@ -1,11 +1,10 @@
-package uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.location.repository
+package uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.location.repository.rds
 
 import org.jetbrains.exposed.v1.jdbc.batchInsert
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.springframework.stereotype.Repository
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.location.model.Location
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.location.model.Locations
-import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.location.repository.rds.LocationRepository
 import java.time.ZoneOffset
 
 @Repository

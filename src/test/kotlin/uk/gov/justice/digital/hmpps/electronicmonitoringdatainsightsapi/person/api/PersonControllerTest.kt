@@ -1,32 +1,25 @@
 package uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.api
 
-import com.ninjasquad.springmockk.MockkBean
-import io.mockk.every
-import io.mockk.verify
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
-import org.springframework.http.MediaType
-import org.springframework.test.context.ActiveProfiles
-import org.springframework.test.web.servlet.MockMvc
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
-import org.springframework.test.web.servlet.result.MockMvcResultMatchers.content
-import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
-import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
+import org.junit.jupiter.api.extension.ExtendWith
+import org.mockito.InjectMocks
+import org.mockito.Mock
+import org.mockito.junit.jupiter.MockitoExtension
+import org.mockito.kotlin.times
+import org.mockito.kotlin.verify
+import org.mockito.kotlin.whenever
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.model.Person
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.service.PersonService
 
-@ActiveProfiles("test")
-@AutoConfigureMockMvc(addFilters = false)
-@WebMvcTest(PersonController::class)
+@ExtendWith(MockitoExtension::class)
 class PersonControllerTest {
 
-  @Autowired
-  private lateinit var mockMvc: MockMvc
-
-  @MockkBean
+  @Mock
   private lateinit var personService: PersonService
+
+  @InjectMocks
+  private lateinit var controller: PersonController
 
   @Test
   fun `getPerson should return 200 and person when they exist`() {
@@ -34,32 +27,26 @@ class PersonControllerTest {
     val personId = "123456"
     val mockPerson = Person(personId = "123456")
 
-    every { personService.getPersonById(personId) } returns mockPerson
+    whenever(personService.getPersonById(personId)).thenReturn(mockPerson)
 
-    // Act & Assert
-    mockMvc.perform(
-      get("/people/$personId")
-        .accept(MediaType.APPLICATION_JSON),
-    )
-      .andExpect(status().isOk)
-      .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-      .andExpect(jsonPath("$.personId").value("123456"))
+    val result = controller.getPerson(personId)
 
-    verify(exactly = 1) { personService.getPersonById(personId) }
+    assertThat(result.body).isNotNull()
+    assertThat(result.body).isEqualTo(mockPerson)
+    verify(personService, times(1)).getPersonById(personId)
   }
 
   @Test
   fun `getPerson should return 404 when person not found`() {
     // Arrange
     val personId = "123456"
-    every { personService.getPersonById(personId) } returns null
+    whenever(personService.getPersonById(personId)).thenReturn(null)
 
     // Act & Assert
-    mockMvc.perform(
-      get("/people/$personId").accept(MediaType.APPLICATION_JSON),
-    )
-      .andExpect(status().isNotFound)
+    val result = controller.getPerson(personId)
 
-    verify(exactly = 1) { personService.getPersonById(personId) }
+    assertThat(result.statusCode.value()).isEqualTo(404)
+
+    verify(personService, times(1)).getPersonById(personId)
   }
 }

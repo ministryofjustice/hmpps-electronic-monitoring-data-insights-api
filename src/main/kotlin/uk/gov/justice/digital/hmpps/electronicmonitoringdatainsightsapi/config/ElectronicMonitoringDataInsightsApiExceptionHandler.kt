@@ -95,7 +95,7 @@ class ElectronicMonitoringDataInsightsApiExceptionHandler {
     ).also { log.info("Response status exception with message {}", e.message) }
 
   @ExceptionHandler(MethodArgumentNotValidException::class)
-  fun handleBadRequest(e: MethodArgumentNotValidException): ResponseEntity<ErrorResponse?>? = ResponseEntity
+  fun handleBadRequest(e: MethodArgumentNotValidException): ResponseEntity<ErrorResponse>? = ResponseEntity
     .status(BAD_REQUEST)
     .body(
       ErrorResponse(

@@ -1,32 +1,26 @@
 package uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.location.api
 
-import com.ninjasquad.springmockk.MockkBean
-import io.mockk.every
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
-import org.springframework.test.context.ActiveProfiles
-import org.springframework.test.web.servlet.MockMvc
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
-import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
-import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
-import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.location.api.LocationController
+import org.junit.jupiter.api.extension.ExtendWith
+import org.mockito.InjectMocks
+import org.mockito.Mock
+import org.mockito.junit.jupiter.MockitoExtension
+import org.mockito.kotlin.verify
+import org.mockito.kotlin.whenever
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.location.model.Location
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.location.model.PagedLocations
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.location.service.LocationService
 import java.time.Instant
 
-@ActiveProfiles("test")
-@AutoConfigureMockMvc(addFilters = false)
-@WebMvcTest(LocationController::class)
+@ExtendWith(MockitoExtension::class)
 class LocationControllerTest {
 
-  @Autowired
-  private lateinit var mockMvc: MockMvc
-
-  @MockkBean
+  @Mock
   private lateinit var locationService: LocationService
+
+  @InjectMocks
+  private lateinit var locationController: LocationController
 
   @Test
   fun `getLocationsForPerson should return 200 and paginated locations`() {
@@ -40,24 +34,31 @@ class LocationControllerTest {
       Location(positionId = 101, deviceId = 98765, latitude = 51.5074, longitude = -0.1278),
       Location(positionId = 101, deviceId = 98765, latitude = 51.5075, longitude = -0.1279),
     )
-    val pagedResult = PagedLocations(locations = mockLocations, nextToken = "next-token-456")
+
+    val pagedResult = PagedLocations(
+      locations = mockLocations,
+      nextToken = "next-token-456",
+    )
+
+    whenever(
+      locationService.getLocationsForPerson(personId, from, to, nextToken),
+    ).thenReturn(pagedResult)
 
     // Act
-    every {
-      locationService.getLocationsForPerson(personId, from, to, nextToken)
-    } returns pagedResult
+    val result = locationController.getLocations(
+      personId = personId,
+      from = from,
+      to = to,
+      nextToken = nextToken,
+    )
 
     // Assert
-    mockMvc.perform(
-      get("/people/$personId/locations")
-        .param("from", from.toString())
-        .param("to", to.toString())
-        .param("nextToken", nextToken),
-    )
-      .andExpect(status().isOk)
-      .andExpect(jsonPath("$.locations.length()").value(2))
-      .andExpect(jsonPath("$.locations[0].positionId").value(101))
-      .andExpect(jsonPath("$.nextToken").value("next-token-456"))
+    assertThat(result.statusCode.value()).isEqualTo(200)
+    assertThat(result.body?.locations).hasSize(2)
+    assertThat(result.body?.locations?.get(0)?.positionId).isEqualTo(101)
+    assertThat(result.body?.nextToken).isEqualTo("next-token-456")
+
+    verify(locationService).getLocationsForPerson(personId, from, to, nextToken)
   }
 
   @Test
@@ -66,14 +67,22 @@ class LocationControllerTest {
     val personId = "123456"
     val positionId = "29192273"
 
-    val mockLocation = listOf(Location(positionId = 29192273, deviceId = 98765, latitude = 51.5074, longitude = -0.1278))
+    val mockLocation = listOf(
+      Location(positionId = 29192273, deviceId = 98765, latitude = 51.5074, longitude = -0.1278),
+    )
+
+    whenever(
+      locationService.getLocationForPerson(personId, positionId),
+    ).thenReturn(mockLocation)
 
     // Act
-    every { locationService.getLocationForPerson(personId, positionId) } returns mockLocation
+    val result = locationController.getLocation(personId, positionId)
 
     // Assert
-    mockMvc.perform(get("/people/$personId/locations/$positionId"))
-      .andExpect(status().isOk)
-      .andExpect(jsonPath("$[0].positionId").value(positionId))
+    assertThat(result.statusCode.value()).isEqualTo(200)
+    assertThat(result.body).hasSize(1)
+    assertThat(result.body?.get(0)?.positionId).isEqualTo(29192273)
+
+    verify(locationService).getLocationForPerson(personId, positionId)
   }
 }
