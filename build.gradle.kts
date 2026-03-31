@@ -1,6 +1,6 @@
 plugins {
   val kotlinVersion = "2.3.20"
-  id("uk.gov.justice.hmpps.gradle-spring-boot") version "10.1.1"
+  id("uk.gov.justice.hmpps.gradle-spring-boot") version "10.1.2"
   kotlin("plugin.spring") version kotlinVersion
   kotlin("plugin.serialization") version kotlinVersion
 }
@@ -12,7 +12,7 @@ configurations {
 val springdocOpenapiVersion = "3.0.2"
 val hmppsKotlinSpringBootStarterVersion = "2.1.0"
 val kotlinLoggingVersion = "3.0.5"
-val athenaVersion = "2.42.23"
+val athenaVersion = "2.42.24"
 
 dependencies {
   implementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter:$hmppsKotlinSpringBootStarterVersion")
