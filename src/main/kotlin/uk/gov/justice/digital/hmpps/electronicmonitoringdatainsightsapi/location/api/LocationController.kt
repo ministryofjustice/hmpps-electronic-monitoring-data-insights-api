@@ -26,8 +26,9 @@ class LocationController(private val locationService: LocationService) {
     @RequestParam from: Instant,
     @RequestParam to: Instant,
     @RequestParam(required = false) nextToken: String?,
+    @RequestParam(defaultValue = "EPSG:4326") coordinateSystem: CoordinateSystem = CoordinateSystem.EPSG_4326,
   ): ResponseEntity<LocationResponse> {
-    val pagedLocations = locationService.getLocationsForPerson(personId, from, to, nextToken)
+    val pagedLocations = locationService.getLocationsForPerson(personId, from, to, nextToken, coordinateSystem)
     return ResponseEntity.ok(
       LocationResponse(
         locations = pagedLocations.locations,

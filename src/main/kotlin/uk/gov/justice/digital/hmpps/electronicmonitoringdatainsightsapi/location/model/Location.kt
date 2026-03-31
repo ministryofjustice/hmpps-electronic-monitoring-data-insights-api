@@ -18,4 +18,6 @@ constructor(
   val geometry: String? = null,
   val latitude: Double? = null,
   val longitude: Double? = null,
+  val northing: Double? = null,
+  val easting: Double? = null,
 )
