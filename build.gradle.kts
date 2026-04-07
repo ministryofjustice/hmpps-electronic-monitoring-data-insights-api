@@ -12,7 +12,7 @@ configurations {
 val springdocOpenapiVersion = "3.0.2"
 val hmppsKotlinSpringBootStarterVersion = "2.1.0"
 val kotlinLoggingVersion = "3.0.5"
-val athenaVersion = "2.42.24"
+val athenaVersion = "2.42.29"
 
 dependencies {
   implementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter:$hmppsKotlinSpringBootStarterVersion")
@@ -21,11 +21,11 @@ dependencies {
   implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:$springdocOpenapiVersion")
   implementation("io.github.microutils:kotlin-logging:$kotlinLoggingVersion")
 
-  implementation("org.jetbrains.exposed:exposed-core:1.1.1")
-  implementation("org.jetbrains.exposed:exposed-json:1.1.1")
-  implementation("org.jetbrains.exposed:exposed-dao:1.1.1")
-  implementation("org.jetbrains.exposed:exposed-jdbc:1.1.1")
-  implementation("org.jetbrains.exposed:exposed-java-time:1.1.1")
+  implementation("org.jetbrains.exposed:exposed-core:1.2.0")
+  implementation("org.jetbrains.exposed:exposed-json:1.2.0")
+  implementation("org.jetbrains.exposed:exposed-dao:1.2.0")
+  implementation("org.jetbrains.exposed:exposed-jdbc:1.2.0")
+  implementation("org.jetbrains.exposed:exposed-java-time:1.2.0")
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core")
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor")
   implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.10.0")
