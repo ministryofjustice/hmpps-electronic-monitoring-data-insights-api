@@ -29,6 +29,7 @@ class LocationControllerTest {
     val from = Instant.parse("2026-10-01T10:00:00Z")
     val to = Instant.parse("2026-10-01T11:00:00Z")
     val nextToken = "token123"
+    val coordinateSystem = CoordinateSystem.EPSG_4326
 
     val mockLocations = listOf(
       Location(positionId = 101, deviceId = 98765, latitude = 51.5074, longitude = -0.1278),
@@ -41,7 +42,7 @@ class LocationControllerTest {
     )
 
     whenever(
-      locationService.getLocationsForPerson(personId, from, to, nextToken),
+      locationService.getLocationsForPerson(personId, from, to, nextToken, coordinateSystem),
     ).thenReturn(pagedResult)
 
     // Act
@@ -58,7 +59,7 @@ class LocationControllerTest {
     assertThat(result.body?.locations?.get(0)?.positionId).isEqualTo(101)
     assertThat(result.body?.nextToken).isEqualTo("next-token-456")
 
-    verify(locationService).getLocationsForPerson(personId, from, to, nextToken)
+    verify(locationService).getLocationsForPerson(personId, from, to, nextToken, coordinateSystem)
   }
 
   @Test
