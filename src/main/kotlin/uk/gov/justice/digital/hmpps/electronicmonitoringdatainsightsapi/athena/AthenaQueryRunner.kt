@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.athena
 
+import mu.KotlinLogging
 import org.springframework.stereotype.Component
 import software.amazon.awssdk.services.athena.AthenaClient
 import software.amazon.awssdk.services.athena.model.Datum
@@ -11,6 +12,8 @@ import software.amazon.awssdk.services.athena.model.ResultConfiguration
 import software.amazon.awssdk.services.athena.model.StartQueryExecutionRequest
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.model.PaginatedResult
 import kotlin.math.min
+
+private val log = KotlinLogging.logger {}
 
 @Component
 class AthenaQueryRunner(
@@ -26,7 +29,7 @@ class AthenaQueryRunner(
     params: List<String> = emptyList(),
   ): List<T> {
     val executionId = startQuery(sql, database, params)
-    print("xxx Started Athena query with executionId: $executionId")
+    log.debug("xxx Started Athena query with executionId: $executionId")
     waitForCompletion(executionId)
     return fetchAllResults(executionId, skipHeaderRow, mapper)
   }

@@ -57,7 +57,7 @@ class AthenaViolationRepositoryTest {
         sql = capture(sqlSlot),
         database = eq(properties.athena.mdssDatabase),
         cursor = eq(nextToken),
-        pageSize = 20160,
+        pageSize = 1000,
         mapper = any<(List<Datum>) -> Violation>(),
         params = any<List<String>>(),
       )
