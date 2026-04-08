@@ -44,12 +44,11 @@ class AthenaLocationRepositoryTest {
     val personId = "123456"
     val from = Instant.parse("2026-10-01T10:00:00Z")
     val to = Instant.parse("2026-10-01T11:00:00Z")
-    val nextToken = "initial-cursor"
     val sqlSlot = slot<String>()
 
     val mockRunnerResult = PaginatedResult(
       items = listOf(mockk<Location>()),
-      nextToken = "new-cursor",
+      nextToken = null,
     )
 
     // Act
@@ -57,18 +56,18 @@ class AthenaLocationRepositoryTest {
       runner.fetchPaged(
         sql = capture(sqlSlot),
         database = eq(properties.athena.mdssDatabase),
-        cursor = eq(nextToken),
-        pageSize = 100,
+        cursor = null,
+        pageSize = 1000,
         mapper = any<(List<Datum>) -> Location>(),
         params = any<List<String>>(),
       )
     } returns mockRunnerResult
-    val result = repository.findByPersonIdAndGpsDateBetweenOrderByGpsDateAsc(personId, from, to, nextToken)
+    val result = repository.findByPersonIdAndGpsDateBetweenOrderByGpsDateAsc(personId, from, to, null)
 
     // Assert
     assertThat(result).isInstanceOf(PagedLocations::class.java)
     assertThat(result.locations).hasSize(1)
-    assertThat(result.nextToken).isEqualTo("new-cursor")
+    assertThat(result.nextToken).isEqualTo(null)
     assertThat(sqlSlot.captured).contains("person_id = CAST(? AS BIGINT)")
     assertThat(sqlSlot.captured).contains("BETWEEN from_iso8601_timestamp(?)")
   }

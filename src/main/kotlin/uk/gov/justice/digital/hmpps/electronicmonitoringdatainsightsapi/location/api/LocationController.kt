@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.locatio
 
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
+import mu.KotlinLogging
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
@@ -12,6 +13,8 @@ import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.location
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.location.service.LocationService
 import java.time.Instant
 import kotlin.time.ExperimentalTime
+
+private val log = KotlinLogging.logger {}
 
 @RestController
 @RequestMapping("/people/{personId}/locations")
@@ -27,7 +30,9 @@ class LocationController(private val locationService: LocationService) {
     @RequestParam to: Instant,
     @RequestParam(required = false) nextToken: String?,
   ): ResponseEntity<LocationResponse> {
+    log.debug("Getting locations for personId: {}, from: {}, to: {}", personId, from, to)
     val pagedLocations = locationService.getLocationsForPerson(personId, from, to, nextToken)
+    log.debug("Found {} locations", pagedLocations.locations.size)
     return ResponseEntity.ok(
       LocationResponse(
         locations = pagedLocations.locations,

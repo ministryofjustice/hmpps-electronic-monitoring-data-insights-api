@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.sync.service
 
+import mu.KotlinLogging
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.util.DateTimeUtils.toAthenaString
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.location.repository.athena.AthenaLocationRepository
@@ -8,6 +9,8 @@ import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.sync.uti
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.watermark.SyncStatus
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.watermark.service.WatermarkService
 import java.time.Instant
+
+private val log = KotlinLogging.logger {}
 
 @Service
 class AthenaRdsSyncService(
@@ -18,10 +21,10 @@ class AthenaRdsSyncService(
 
   fun performDailySync(tableName: String): SyncResult {
     val lastWatermark: Instant = watermarkService.getEffectiveStartTimestamp(tableName)
-    println("Last sync watermark: $lastWatermark")
+    log.debug("Last sync watermark: {}", lastWatermark)
 
     if (lastWatermark == Instant.EPOCH) {
-      println("No previous sync found. Starting from beginning of time (1970).")
+      log.debug("No previous sync found. Starting from beginning of time (1970).")
     }
 
     val syncId = watermarkService.startSyncRecord(
@@ -29,23 +32,23 @@ class AthenaRdsSyncService(
       lastWatermark = lastWatermark,
       status = SyncStatus.RUNNING,
     )
-    println("Started sync syncId: $syncId")
+    log.debug("Started sync syncId: $syncId")
 
     try {
       val athenaQueryTimestamp = lastWatermark.toAthenaString()
 
       val newRecords = athenaLocationRepository.findRecordsSince(athenaQueryTimestamp)
       // TODO: Remove limit after testing
-      println("Found ${newRecords.size} new records (limited to 20 for testing)")
+      log.debug("Found ${newRecords.size} new records (limited to 20 for testing)")
 
       if (newRecords.isEmpty()) {
         watermarkService.updateWatermarkSkipped(syncId)
-        println("No new data - sync skipped")
+        log.debug("No new data - sync skipped")
         return SyncResult(syncId, 0, SyncStatus.SKIPPED)
       }
 
       val recordsInserted = rdsLocationRepository.saveAll(newRecords)
-      println("Inserted $recordsInserted records into RDS")
+      log.debug("Inserted $recordsInserted records into RDS")
 
       val newWatermark: Instant = newRecords
         .mapNotNull { it.gpsDate }
@@ -57,12 +60,12 @@ class AthenaRdsSyncService(
         recordsProcessed = recordsInserted,
         updatedAt = Instant.now(),
       )
-      println("Sync completed successfully. New watermark: $newWatermark")
+      log.debug("Sync completed successfully. New watermark: {}", newWatermark)
 
       return SyncResult(syncId, recordsInserted, SyncStatus.COMPLETED)
     } catch (e: Exception) {
       watermarkService.updateWatermarkFailure(syncId, e.message ?: "Update Watermark Failure")
-      println("Sync failed: ${e.message}")
+      log.debug("Sync failed: ${e.message}")
       throw e
     }
   }

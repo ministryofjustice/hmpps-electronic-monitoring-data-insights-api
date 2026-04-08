@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.location.repository.athena
 
+import mu.KotlinLogging
 import org.springframework.stereotype.Repository
 import software.amazon.awssdk.services.athena.model.Datum
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.athena.AthenaQueryRunner
@@ -14,30 +15,75 @@ import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneOffset
 
+private val log = KotlinLogging.logger {}
+
 @Repository
 class AthenaLocationRepository(
   private val runner: AthenaQueryRunner,
   private val properties: AwsProperties,
 ) : LocationRepository {
 
-  override fun findByPersonIdAndGpsDateBetweenOrderByGpsDateAsc(personId: String, from: Instant, to: Instant, nextToken: String?): PagedLocations {
-    val personId = personId.toPersonId()
+  override fun findByPersonIdAndGpsDateBetweenOrderByGpsDateAsc(
+    personId: String,
+    from: Instant,
+    to: Instant,
+    nextToken: String?,
+  ): PagedLocations {
+    log.debug("using Athena properties: {}", properties)
+    log.debug("Finding locations for personId={}, from={}, to={}", personId, from, to)
+
+    val person = personId.toPersonId()
     val sql = buildTimeSpanSql()
-    val result = runner.fetchPaged(
-      sql = sql,
-      database = properties.athena.mdssDatabase,
-      cursor = nextToken,
-      pageSize = properties.athena.rowLimit,
-      mapper = ::mapRow,
-      params = listOf(personId.toString(), from.toString(), to.toString()),
+
+    val allLocations = mutableListOf<Location>()
+    var cursor = nextToken
+    var callCount = 0
+
+    val totalStart = System.nanoTime()
+
+    do {
+      val callStart = System.nanoTime()
+
+      val result = runner.fetchPaged(
+        sql = sql,
+        database = properties.athena.mdssDatabase,
+        cursor = cursor,
+        pageSize = properties.athena.rowLimit,
+        mapper = ::mapRow,
+        params = listOf(person.toString(), from.toString(), to.toString()),
+      )
+
+      val callDurationMs = (System.nanoTime() - callStart) / 1_000_000
+
+      callCount++
+
+      allLocations += result.items
+      cursor = result.nextToken
+
+      log.debug(
+        "Call #{} took {} ms, records={}, nextToken={}",
+        callCount,
+        callDurationMs,
+        result.items.size,
+        cursor,
+      )
+    } while (cursor != null)
+
+    val totalDurationMs = (System.nanoTime() - totalStart) / 1_000_000
+    val totalRecords = allLocations.size
+
+    log.debug(
+      "Completed pagination: totalCalls={}, totalRecords={}, totalTime={} ms",
+      callCount,
+      totalRecords,
+      totalDurationMs,
     )
 
     return PagedLocations(
-      locations = result.items,
-      nextToken = result.nextToken,
+      locations = allLocations,
+      nextToken = null,
     )
   }
-
   override fun findByPersonIdAndPositionId(personId: String, positionId: String): List<Location> {
     val personId = personId.toPersonId()
     val positionId = positionId.toLocationId()
@@ -53,7 +99,6 @@ class AthenaLocationRepository(
       FROM position
       WHERE position_gps_date > CAST(? AS TIMESTAMP)
       ORDER BY position_gps_date
-      LIMIT ${properties.athena.rowLimit}
     """.trimIndent()
 
     return runner.run(sql, properties.athena.mdssDatabase, skipHeaderRow = true, mapper = ::mapRow, params = listOf(lastWatermark))
@@ -68,8 +113,7 @@ class AthenaLocationRepository(
       WHERE person_id = CAST(? AS BIGINT)
         AND position_gps_date BETWEEN from_iso8601_timestamp(?)
                                 AND from_iso8601_timestamp(?)
-      ORDER BY position_gps_date DESC  
-      LIMIT ${properties.athena.rowLimit}                      
+      ORDER BY position_gps_date DESC                         
     """.trimIndent()
 
   private fun buildLocationIdSql(): String =
@@ -81,7 +125,6 @@ class AthenaLocationRepository(
       WHERE person_id = CAST(? AS BIGINT)
         AND position_id = CAST(? AS BIGINT)
       ORDER BY position_gps_date      
-      LIMIT ${properties.athena.rowLimit}
     """.trimIndent()
 
   private fun mapRow(cols: List<Datum>): Location {
