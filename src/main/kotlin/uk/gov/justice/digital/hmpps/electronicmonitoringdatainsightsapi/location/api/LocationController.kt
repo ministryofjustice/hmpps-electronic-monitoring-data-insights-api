@@ -4,13 +4,11 @@ import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
 import mu.KotlinLogging
 import org.springframework.http.ResponseEntity
-import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
-import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.HAS_VIEW_ROLE
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.location.model.Location
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.location.service.LocationService
 import java.time.Instant
@@ -19,7 +17,7 @@ import kotlin.time.ExperimentalTime
 private val log = KotlinLogging.logger {}
 
 @RestController
-@PreAuthorize(HAS_VIEW_ROLE)
+// @PreAuthorize(HAS_VIEW_ROLE)
 @RequestMapping("/people/{personId}/locations")
 @Tag(name = "Locations", description = "Endpoint to retrieve gsp coordinates for a person by personId")
 class LocationController(private val locationService: LocationService) {
