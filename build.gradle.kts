@@ -12,7 +12,7 @@ configurations {
 val springdocOpenapiVersion = "3.0.2"
 val hmppsKotlinSpringBootStarterVersion = "2.1.0"
 val kotlinLoggingVersion = "3.0.5"
-val athenaVersion = "2.42.30"
+val athenaVersion = "2.42.32"
 
 dependencies {
   implementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter:$hmppsKotlinSpringBootStarterVersion")
@@ -28,7 +28,7 @@ dependencies {
   implementation("org.jetbrains.exposed:exposed-java-time:1.2.0")
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core")
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor")
-  implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.10.0")
+  implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.11.0")
   implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.7.1-0.6.x-compat")
 
   implementation(platform("software.amazon.awssdk:bom:$athenaVersion"))
