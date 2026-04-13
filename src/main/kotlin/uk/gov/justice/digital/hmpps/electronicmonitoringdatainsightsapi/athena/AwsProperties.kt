@@ -10,6 +10,8 @@ data class AwsProperties(
   val athena: AthenaProperties = AthenaProperties(),
 
   val region: Region,
+
+  val endpointUrl: String? = null,
 ) {
-  override fun toString(): String = "region=$region, athena=$athena"
+  override fun toString(): String = "region=$region, athena=$athena, endpointUrl=$endpointUrl"
 }

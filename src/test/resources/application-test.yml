@@ -10,12 +10,13 @@ hmpps-auth:
 
 aws:
   region: eu-west-2
-
-athena:
-  defaultDatabase: "test_db"
-  fmsDatabase: "fms_test_db"
-  mdssDatabase: "mdss_test_db"
-  outputLocation: s3://test/output
-  workgroup: test_default
-  pollIntervalMs: 500
-  timeoutMs: 60000
+  endpoint-url: http://localhost:8091
+  athena:
+    role: testIAM
+    defaultDatabase: "test_db"
+    fmsDatabase: "fms_test_db"
+    mdssDatabase: "allied_mdss_dev"
+    outputLocation: test-output-bucket-id
+    workgroup: AthenaAdmin
+    pollIntervalMs: 500
+    timeoutMs: 60000

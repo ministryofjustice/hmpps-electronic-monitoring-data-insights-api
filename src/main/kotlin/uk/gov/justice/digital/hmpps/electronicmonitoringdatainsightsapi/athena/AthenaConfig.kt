@@ -6,6 +6,7 @@ import org.springframework.context.annotation.Configuration
 import software.amazon.awssdk.services.athena.AthenaClient
 import software.amazon.awssdk.services.sts.StsClient
 import software.amazon.awssdk.services.sts.auth.StsAssumeRoleCredentialsProvider
+import java.net.URI
 
 @Configuration
 @EnableConfigurationProperties(
@@ -18,6 +19,9 @@ class AthenaConfig(private val properties: AwsProperties) {
   fun stsClient(): StsClient {
     val clientBuilder = StsClient.builder()
       .region(properties.region)
+    if (properties.endpointUrl != null) {
+      clientBuilder.endpointOverride(URI(properties.endpointUrl))
+    }
 
     return clientBuilder.build()
   }
@@ -26,6 +30,10 @@ class AthenaConfig(private val properties: AwsProperties) {
   fun athenaClient(): AthenaClient {
     val clientBuilder = AthenaClient.builder()
       .region(properties.region)
+
+    if (properties.endpointUrl != null) {
+      clientBuilder.endpointOverride(URI(properties.endpointUrl))
+    }
 
     val roleArn = properties.athena.role?.trim()
 
@@ -39,7 +47,6 @@ class AthenaConfig(private val properties: AwsProperties) {
           .build(),
       )
     }
-
     return clientBuilder.build()
   }
 }

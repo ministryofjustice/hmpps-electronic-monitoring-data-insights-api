@@ -1,0 +1,247 @@
+{
+  "ResultSet": {
+    "ResultSetMetadata": {
+      "ColumnInfo": [
+        {
+          "CaseSensitive": false,
+          "CatalogName": "hive",
+          "Label": "position_id",
+          "Name": "position_id",
+          "Nullable": "UNKNOWN",
+          "Precision": 0,
+          "Scale": 0,
+          "SchemaName": "",
+          "TableName": "",
+          "Type": "bigint"
+        },
+        {
+          "CaseSensitive": false,
+          "CatalogName": "hive",
+          "Label": "position_latitude",
+          "Name": "position_latitude",
+          "Nullable": "UNKNOWN",
+          "Precision": 2147483647,
+          "Scale": 0,
+          "SchemaName": "",
+          "TableName": "",
+          "Type": "double"
+        },
+        {
+          "CaseSensitive": false,
+          "CatalogName": "hive",
+          "Label": "position_longitude",
+          "Name": "position_longitude",
+          "Nullable": "UNKNOWN",
+          "Precision": 2147483647,
+          "Scale": 0,
+          "SchemaName": "",
+          "TableName": "",
+          "Type": "double"
+        },
+        {
+          "CaseSensitive": false,
+          "CatalogName": "hive",
+          "Label": "position_precision",
+          "Name": "position_precision",
+          "Nullable": "UNKNOWN",
+          "Precision": 0,
+          "Scale": 0,
+          "SchemaName": "",
+          "TableName": "",
+          "Type": "bigint"
+        },
+        {
+          "CaseSensitive": false,
+          "CatalogName": "hive",
+          "Label": "position_speed",
+          "Name": "position_speed",
+          "Nullable": "UNKNOWN",
+          "Precision": 0,
+          "Scale": 0,
+          "SchemaName": "",
+          "TableName": "",
+          "Type": "bigint"
+        },
+        {
+          "CaseSensitive": false,
+          "CatalogName": "hive",
+          "Label": "position_direction",
+          "Name": "position_direction",
+          "Nullable": "UNKNOWN",
+          "Precision": 0,
+          "Scale": 0,
+          "SchemaName": "",
+          "TableName": "",
+          "Type": "bigint"
+        },
+        {
+          "CaseSensitive": false,
+          "CatalogName": "hive",
+          "Label": "position_gps_date",
+          "Name": "position_gps_date",
+          "Nullable": "UNKNOWN",
+          "Precision": 0,
+          "Scale": 0,
+          "SchemaName": "",
+          "TableName": "",
+          "Type": "timestamp"
+        },
+        {
+          "CaseSensitive": false,
+          "CatalogName": "hive",
+          "Label": "position_lbs",
+          "Name": "position_lbs",
+          "Nullable": "UNKNOWN",
+          "Precision": 0,
+          "Scale": 0,
+          "SchemaName": "",
+          "TableName": "",
+          "Type": "bigint"
+        }
+      ]
+    },
+    "Rows": [
+      {
+        "Data": [
+          {
+            "VarCharValue": "position_id"
+          },
+          {
+            "VarCharValue": "position_latitude"
+          },
+          {
+            "VarCharValue": "position_longitude"
+          },
+          {
+            "VarCharValue": "position_precision"
+          },
+          {
+            "VarCharValue": "position_speed"
+          },
+          {
+            "VarCharValue": "position_direction"
+          },
+          {
+            "VarCharValue": "position_gps_date"
+          },
+          {
+            "VarCharValue": "position_lbs"
+          }
+        ]
+      },
+      {
+        "Data": [
+          {
+            "VarCharValue": "1"
+          },
+          {
+            "VarCharValue": "51.574865"
+          },
+          {
+            "VarCharValue": "0.060977"
+          },
+          {
+            "VarCharValue": "100"
+          },
+          {
+            "VarCharValue": "1"
+          },
+          {
+            "VarCharValue": "52"
+          },
+          {
+            "VarCharValue": "2025-09-10 07:51:08.000"
+          },
+          {
+            "VarCharValue": "1"
+          }
+        ]
+      },
+      {
+        "Data": [
+          {
+            "VarCharValue": "2"
+          },
+          {
+            "VarCharValue": "51.574153"
+          },
+          {
+            "VarCharValue": "0.058536"
+          },
+          {
+            "VarCharValue": "400"
+          },
+          {
+            "VarCharValue": "10"
+          },
+          {
+            "VarCharValue": "27"
+          },
+          {
+            "VarCharValue": "2025-09-08 17:30:07.000"
+          },
+          {
+            "VarCharValue": "4"
+          }
+        ]
+      },
+      {
+        "Data": [
+          {
+            "VarCharValue": "3"
+          },
+          {
+            "VarCharValue": "51.573248244162706"
+          },
+          {
+            "VarCharValue": "0.05111371418603764"
+          },
+          {
+            "VarCharValue": "400"
+          },
+          {
+            "VarCharValue": "10"
+          },
+          {
+            "VarCharValue": "27"
+          },
+          {
+            "VarCharValue": "2025-09-08 17:30:08.000"
+          },
+          {
+            "VarCharValue": "5"
+          }
+        ]
+      },
+      {
+        "Data": [
+          {
+            "VarCharValue": "4"
+          },
+          {
+            "VarCharValue": "51.574622"
+          },
+          {
+            "VarCharValue": "0.048643"
+          },
+          {
+            "VarCharValue": "400"
+          },
+          {
+            "VarCharValue": "10"
+          },
+          {
+            "VarCharValue": "27"
+          },
+          {
+            "VarCharValue": "2025-09-08 17:30:09.000"
+          },
+          {
+            "VarCharValue": "6"
+          }
+        ]
+      }
+    ]
+  },
+  "UpdateCount": 0
+}
