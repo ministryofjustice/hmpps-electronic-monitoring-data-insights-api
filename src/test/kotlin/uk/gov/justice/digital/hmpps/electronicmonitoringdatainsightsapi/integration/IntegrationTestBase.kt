@@ -124,5 +124,4 @@ abstract class IntegrationTestBase {
   }
 
   protected fun String.loadJson(): String = IntegrationTestBase::class.java.getResource("resource/$this.json")!!.readText()
-
 }

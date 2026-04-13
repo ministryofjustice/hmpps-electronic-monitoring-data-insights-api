@@ -1,16 +1,13 @@
 package uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.integration.location
 
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
-import org.springframework.test.context.ActiveProfiles
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.integration.IntegrationTestBase
-import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.integration.wiremock.AwsApiExtension.Companion.awsMockServer
 
-//@ActiveProfiles("integration")
+// @ActiveProfiles("integration")
 class PersonLocationTest : IntegrationTestBase() {
 
+  //  @Disabled("until I can get the test to work")
   @Test
-//  @Disabled("until I can get the test to work")
   fun `Get person locations`() {
     stubQueryExecution(
       "123",
