@@ -1,0 +1,235 @@
+{
+  "ResultSet": {
+    "ResultSetMetadata": {
+      "ColumnInfo": [
+        {
+          "CaseSensitive": false,
+          "CatalogName": "hive",
+          "Label": "position_id",
+          "Name": "position_id",
+          "Nullable": "UNKNOWN",
+          "Precision": 0,
+          "Scale": 0,
+          "SchemaName": "",
+          "TableName": "",
+          "Type": "bigint"
+        },
+        {
+          "CaseSensitive": false,
+          "CatalogName": "hive",
+          "Label": "device_id",
+          "Name": "device_id",
+          "Nullable": "UNKNOWN",
+          "Precision": 0,
+          "Scale": 0,
+          "SchemaName": "",
+          "TableName": "",
+          "Type": "bigint"
+        },
+        {
+          "CaseSensitive": false,
+          "CatalogName": "hive",
+          "Label": "position_gps_date",
+          "Name": "position_gps_date",
+          "Nullable": "UNKNOWN",
+          "Precision": 0,
+          "Scale": 0,
+          "SchemaName": "",
+          "TableName": "",
+          "Type": "timestamp"
+        },
+        {
+          "CaseSensitive": false,
+          "CatalogName": "hive",
+          "Label": "position_speed",
+          "Name": "position_speed",
+          "Nullable": "UNKNOWN",
+          "Precision": 0,
+          "Scale": 0,
+          "SchemaName": "",
+          "TableName": "",
+          "Type": "bigint"
+        },
+        {
+          "CaseSensitive": false,
+          "CatalogName": "hive",
+          "Label": "position_satellite",
+          "Name": "position_satellite",
+          "Nullable": "UNKNOWN",
+          "Precision": 0,
+          "Scale": 0,
+          "SchemaName": "",
+          "TableName": "",
+          "Type": "bigint"
+        },
+        {
+          "CaseSensitive": false,
+          "CatalogName": "hive",
+          "Label": "position_direction",
+          "Name": "position_direction",
+          "Nullable": "UNKNOWN",
+          "Precision": 0,
+          "Scale": 0,
+          "SchemaName": "",
+          "TableName": "",
+          "Type": "bigint"
+        },
+        {
+          "CaseSensitive": false,
+          "CatalogName": "hive",
+          "Label": "position_precision",
+          "Name": "position_precision",
+          "Nullable": "UNKNOWN",
+          "Precision": 0,
+          "Scale": 0,
+          "SchemaName": "",
+          "TableName": "",
+          "Type": "bigint"
+        },
+        {
+          "CaseSensitive": false,
+          "CatalogName": "hive",
+          "Label": "position_lbs",
+          "Name": "position_lbs",
+          "Nullable": "UNKNOWN",
+          "Precision": 0,
+          "Scale": 0,
+          "SchemaName": "",
+          "TableName": "",
+          "Type": "bigint"
+        },
+        {
+          "CaseSensitive": false,
+          "CatalogName": "hive",
+          "Label": "position_hdop",
+          "Name": "position_hdop",
+          "Nullable": "UNKNOWN",
+          "Precision": 2147483647,
+          "Scale": 0,
+          "SchemaName": "",
+          "TableName": "",
+          "Type": "double"
+        },
+        {
+          "CaseSensitive": false,
+          "CatalogName": "hive",
+          "Label": "position_geometry",
+          "Name": "position_geometry",
+          "Nullable": "UNKNOWN",
+          "Precision": 2147483647,
+          "Scale": 0,
+          "SchemaName": "",
+          "TableName": "",
+          "Type": "varchar"
+        },
+        {
+          "CaseSensitive": false,
+          "CatalogName": "hive",
+          "Label": "position_latitude",
+          "Name": "position_latitude",
+          "Nullable": "UNKNOWN",
+          "Precision": 2147483647,
+          "Scale": 0,
+          "SchemaName": "",
+          "TableName": "",
+          "Type": "double"
+        },
+        {
+          "CaseSensitive": false,
+          "CatalogName": "hive",
+          "Label": "position_longitude",
+          "Name": "position_longitude",
+          "Nullable": "UNKNOWN",
+          "Precision": 2147483647,
+          "Scale": 0,
+          "SchemaName": "",
+          "TableName": "",
+          "Type": "double"
+        }
+      ]
+    },
+    "Rows": [
+      {
+        "Data": [
+          { "VarCharValue": "position_id" },
+          { "VarCharValue": "device_id" },
+          { "VarCharValue": "position_gps_date" },
+          { "VarCharValue": "position_speed" },
+          { "VarCharValue": "position_satellite" },
+          { "VarCharValue": "position_direction" },
+          { "VarCharValue": "position_precision" },
+          { "VarCharValue": "position_lbs" },
+          { "VarCharValue": "position_hdop" },
+          { "VarCharValue": "position_geometry" },
+          { "VarCharValue": "position_latitude" },
+          { "VarCharValue": "position_longitude" }
+        ]
+      },
+      {
+        "Data": [
+          { "VarCharValue": "1" },
+          { "VarCharValue": "1001" },
+          { "VarCharValue": "2025-09-08 17:30:07.000000" },
+          { "VarCharValue": "1" },
+          { "VarCharValue": "7" },
+          { "VarCharValue": "52" },
+          { "VarCharValue": "100" },
+          { "VarCharValue": "1" },
+          { "VarCharValue": "0.9" },
+          { "VarCharValue": "POINT(0.060977 51.574865)" },
+          { "VarCharValue": "51.574865" },
+          { "VarCharValue": "0.060977" }
+        ]
+      },
+      {
+        "Data": [
+          { "VarCharValue": "2" },
+          { "VarCharValue": "1001" },
+          { "VarCharValue": "2025-09-08 17:30:07.000000" },
+          { "VarCharValue": "10" },
+          { "VarCharValue": "6" },
+          { "VarCharValue": "27" },
+          { "VarCharValue": "400" },
+          { "VarCharValue": "4" },
+          { "VarCharValue": "1.2" },
+          { "VarCharValue": "POINT(0.058536 51.574153)" },
+          { "VarCharValue": "51.574153" },
+          { "VarCharValue": "0.058536" }
+        ]
+      },
+      {
+        "Data": [
+          { "VarCharValue": "3" },
+          { "VarCharValue": "1001" },
+          { "VarCharValue": "2025-09-08 17:30:08.000000" },
+          { "VarCharValue": "10" },
+          { "VarCharValue": "6" },
+          { "VarCharValue": "27" },
+          { "VarCharValue": "400" },
+          { "VarCharValue": "5" },
+          { "VarCharValue": "1.1" },
+          { "VarCharValue": "POINT(0.05111371418603764 51.573248244162706)" },
+          { "VarCharValue": "51.573248244162706" },
+          { "VarCharValue": "0.05111371418603764" }
+        ]
+      },
+      {
+        "Data": [
+          { "VarCharValue": "4" },
+          { "VarCharValue": "1001" },
+          { "VarCharValue": "2025-09-08 17:30:09.000000" },
+          { "VarCharValue": "10" },
+          { "VarCharValue": "6" },
+          { "VarCharValue": "27" },
+          { "VarCharValue": "400" },
+          { "VarCharValue": "6" },
+          { "VarCharValue": "1.0" },
+          { "VarCharValue": "POINT(0.048643 51.574622)" },
+          { "VarCharValue": "51.574622" },
+          { "VarCharValue": "0.048643" }
+        ]
+      }
+    ]
+  },
+  "UpdateCount": 0
+}

@@ -2,8 +2,10 @@ package uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.locatio
 
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
+import jakarta.validation.constraints.NotNull
 import mu.KotlinLogging
 import org.springframework.http.ResponseEntity
+import org.springframework.validation.annotation.Validated
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RequestMapping
@@ -25,10 +27,11 @@ class LocationController(private val locationService: LocationService) {
   @OptIn(ExperimentalTime::class)
   @Operation(summary = "Get location history", description = "Returns a paginated list of GPS coordinates for a personId within a specific timespan.")
   @GetMapping
+  @Validated
   fun getLocations(
     @PathVariable personId: String,
-    @RequestParam from: Instant,
-    @RequestParam to: Instant,
+    @RequestParam @NotNull from: Instant,
+    @RequestParam @NotNull to: Instant,
     @RequestParam(required = false) nextToken: String?,
   ): ResponseEntity<LocationResponse> {
     log.debug("Getting locations for personId: {}, from: {}, to: {}", personId, from, to)
