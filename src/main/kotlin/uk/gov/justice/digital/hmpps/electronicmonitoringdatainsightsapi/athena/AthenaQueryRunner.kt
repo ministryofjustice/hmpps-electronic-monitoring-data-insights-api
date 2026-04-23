@@ -79,6 +79,7 @@ class AthenaQueryRunner(
   }
 
   private fun startQuery(sql: String, database: String, params: List<String> = emptyList()): String {
+    log.debug("Starting query sql: {}, params: {} database: {}", sql, params, database)
     val req = StartQueryExecutionRequest.builder()
       .queryString(sql)
       .executionParameters(params)
@@ -94,10 +95,13 @@ class AthenaQueryRunner(
       )
       .build()
 
+    log.debug("Starting startQueryExecution: {}", req)
+
     return athena.startQueryExecution(req).queryExecutionId()
   }
 
   private fun waitForCompletion(executionId: String) {
+    log.debug("waitForCompletion for $executionId")
     val deadline = System.currentTimeMillis() + properties.athena.timeoutMs
     var sleepMs = properties.athena.pollIntervalMs
 

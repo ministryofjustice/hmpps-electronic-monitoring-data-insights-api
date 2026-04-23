@@ -1,0 +1,171 @@
+{
+  "ResultSet": {
+    "ResultSetMetadata": {
+      "ColumnInfo": [
+        {
+          "CaseSensitive": false,
+          "CatalogName": "hive",
+          "Label": "position_id",
+          "Name": "position_id",
+          "Nullable": "UNKNOWN",
+          "Precision": 0,
+          "Scale": 0,
+          "SchemaName": "",
+          "TableName": "",
+          "Type": "bigint"
+        },
+        {
+          "CaseSensitive": false,
+          "CatalogName": "hive",
+          "Label": "device_id",
+          "Name": "device_id",
+          "Nullable": "UNKNOWN",
+          "Precision": 0,
+          "Scale": 0,
+          "SchemaName": "",
+          "TableName": "",
+          "Type": "bigint"
+        },
+        {
+          "CaseSensitive": false,
+          "CatalogName": "hive",
+          "Label": "position_gps_date",
+          "Name": "position_gps_date",
+          "Nullable": "UNKNOWN",
+          "Precision": 0,
+          "Scale": 0,
+          "SchemaName": "",
+          "TableName": "",
+          "Type": "timestamp"
+        },
+        {
+          "CaseSensitive": false,
+          "CatalogName": "hive",
+          "Label": "position_speed",
+          "Name": "position_speed",
+          "Nullable": "UNKNOWN",
+          "Precision": 0,
+          "Scale": 0,
+          "SchemaName": "",
+          "TableName": "",
+          "Type": "bigint"
+        },
+        {
+          "CaseSensitive": false,
+          "CatalogName": "hive",
+          "Label": "position_satellite",
+          "Name": "position_satellite",
+          "Nullable": "UNKNOWN",
+          "Precision": 0,
+          "Scale": 0,
+          "SchemaName": "",
+          "TableName": "",
+          "Type": "bigint"
+        },
+        {
+          "CaseSensitive": false,
+          "CatalogName": "hive",
+          "Label": "position_direction",
+          "Name": "position_direction",
+          "Nullable": "UNKNOWN",
+          "Precision": 0,
+          "Scale": 0,
+          "SchemaName": "",
+          "TableName": "",
+          "Type": "bigint"
+        },
+        {
+          "CaseSensitive": false,
+          "CatalogName": "hive",
+          "Label": "position_precision",
+          "Name": "position_precision",
+          "Nullable": "UNKNOWN",
+          "Precision": 0,
+          "Scale": 0,
+          "SchemaName": "",
+          "TableName": "",
+          "Type": "bigint"
+        },
+        {
+          "CaseSensitive": false,
+          "CatalogName": "hive",
+          "Label": "position_lbs",
+          "Name": "position_lbs",
+          "Nullable": "UNKNOWN",
+          "Precision": 0,
+          "Scale": 0,
+          "SchemaName": "",
+          "TableName": "",
+          "Type": "bigint"
+        },
+        {
+          "CaseSensitive": false,
+          "CatalogName": "hive",
+          "Label": "position_hdop",
+          "Name": "position_hdop",
+          "Nullable": "UNKNOWN",
+          "Precision": 2147483647,
+          "Scale": 0,
+          "SchemaName": "",
+          "TableName": "",
+          "Type": "double"
+        },
+        {
+          "CaseSensitive": false,
+          "CatalogName": "hive",
+          "Label": "position_geometry",
+          "Name": "position_geometry",
+          "Nullable": "UNKNOWN",
+          "Precision": 2147483647,
+          "Scale": 0,
+          "SchemaName": "",
+          "TableName": "",
+          "Type": "varchar"
+        },
+        {
+          "CaseSensitive": false,
+          "CatalogName": "hive",
+          "Label": "position_latitude",
+          "Name": "position_latitude",
+          "Nullable": "UNKNOWN",
+          "Precision": 2147483647,
+          "Scale": 0,
+          "SchemaName": "",
+          "TableName": "",
+          "Type": "double"
+        },
+        {
+          "CaseSensitive": false,
+          "CatalogName": "hive",
+          "Label": "position_longitude",
+          "Name": "position_longitude",
+          "Nullable": "UNKNOWN",
+          "Precision": 2147483647,
+          "Scale": 0,
+          "SchemaName": "",
+          "TableName": "",
+          "Type": "double"
+        }
+      ]
+    },
+    "Rows": [
+      {
+        "Data": [
+          { "VarCharValue": "position_id" },
+          { "VarCharValue": "device_id" },
+          { "VarCharValue": "position_gps_date" },
+          { "VarCharValue": "position_speed" },
+          { "VarCharValue": "position_satellite" },
+          { "VarCharValue": "position_direction" },
+          { "VarCharValue": "position_precision" },
+          { "VarCharValue": "position_lbs" },
+          { "VarCharValue": "position_hdop" },
+          { "VarCharValue": "position_geometry" },
+          { "VarCharValue": "position_latitude" },
+          { "VarCharValue": "position_longitude" }
+        ]
+      }
+    ]
+  },
+  "UpdateCount": 0
+}
