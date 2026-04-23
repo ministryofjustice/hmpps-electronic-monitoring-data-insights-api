@@ -165,3 +165,21 @@ e.g.
 ```env
 ATHENA_GENERAL_IAM_ROLE=""
 ```
+
+### Building the API
+
+In order to build the API, the integration tests need localstack to be running:
+
+````aiignore
+docker compose pull && docker compose up localstack
+````
+
+then do a 
+````
+./gradlew ktlintformat      
+`````
+
+then 
+````
+./gradlew clean check
+````

@@ -1,0 +1,201 @@
+{
+  "ResultSet": {
+    "ResultSetMetadata": {
+      "ColumnInfo": [
+        {
+          "CaseSensitive": false,
+          "CatalogName": "hive",
+          "Label": "person_id",
+          "Name": "person_id",
+          "Nullable": "UNKNOWN",
+          "Precision": 0,
+          "Scale": 0,
+          "SchemaName": "",
+          "TableName": "",
+          "Type": "bigint"
+        },
+        {
+          "CaseSensitive": false,
+          "CatalogName": "hive",
+          "Label": "consumer_id",
+          "Name": "consumer_id",
+          "Nullable": "UNKNOWN",
+          "Precision": 2147483647,
+          "Scale": 0,
+          "SchemaName": "",
+          "TableName": "",
+          "Type": "varchar"
+        },
+        {
+          "CaseSensitive": false,
+          "CatalogName": "hive",
+          "Label": "person_name",
+          "Name": "person_name",
+          "Nullable": "UNKNOWN",
+          "Precision": 2147483647,
+          "Scale": 0,
+          "SchemaName": "",
+          "TableName": "",
+          "Type": "varchar"
+        },
+        {
+          "CaseSensitive": false,
+          "CatalogName": "hive",
+          "Label": "u_id_nomis",
+          "Name": "u_id_nomis",
+          "Nullable": "UNKNOWN",
+          "Precision": 2147483647,
+          "Scale": 0,
+          "SchemaName": "",
+          "TableName": "",
+          "Type": "varchar"
+        },
+        {
+          "CaseSensitive": false,
+          "CatalogName": "hive",
+          "Label": "u_id_pnc",
+          "Name": "u_id_pnc",
+          "Nullable": "UNKNOWN",
+          "Precision": 2147483647,
+          "Scale": 0,
+          "SchemaName": "",
+          "TableName": "",
+          "Type": "varchar"
+        },
+        {
+          "CaseSensitive": false,
+          "CatalogName": "hive",
+          "Label": "u_delius_id",
+          "Name": "u_delius_id",
+          "Nullable": "UNKNOWN",
+          "Precision": 2147483647,
+          "Scale": 0,
+          "SchemaName": "",
+          "TableName": "",
+          "Type": "varchar"
+        },
+        {
+          "CaseSensitive": false,
+          "CatalogName": "hive",
+          "Label": "u_home_office_reference",
+          "Name": "u_home_office_reference",
+          "Nullable": "UNKNOWN",
+          "Precision": 2147483647,
+          "Scale": 0,
+          "SchemaName": "",
+          "TableName": "",
+          "Type": "varchar"
+        },
+        {
+          "CaseSensitive": false,
+          "CatalogName": "hive",
+          "Label": "cepr",
+          "Name": "cepr",
+          "Nullable": "UNKNOWN",
+          "Precision": 2147483647,
+          "Scale": 0,
+          "SchemaName": "",
+          "TableName": "",
+          "Type": "varchar"
+        },
+        {
+          "CaseSensitive": false,
+          "CatalogName": "hive",
+          "Label": "u_prison_number",
+          "Name": "u_prison_number",
+          "Nullable": "UNKNOWN",
+          "Precision": 2147483647,
+          "Scale": 0,
+          "SchemaName": "",
+          "TableName": "",
+          "Type": "varchar"
+        },
+        {
+          "CaseSensitive": false,
+          "CatalogName": "hive",
+          "Label": "u_dob",
+          "Name": "u_dob",
+          "Nullable": "UNKNOWN",
+          "Precision": 2147483647,
+          "Scale": 0,
+          "SchemaName": "",
+          "TableName": "",
+          "Type": "date"
+        },
+        {
+          "CaseSensitive": false,
+          "CatalogName": "hive",
+          "Label": "zip",
+          "Name": "zip",
+          "Nullable": "UNKNOWN",
+          "Precision": 2147483647,
+          "Scale": 0,
+          "SchemaName": "",
+          "TableName": "",
+          "Type": "varchar"
+        },
+        {
+          "CaseSensitive": false,
+          "CatalogName": "hive",
+          "Label": "city",
+          "Name": "city",
+          "Nullable": "UNKNOWN",
+          "Precision": 2147483647,
+          "Scale": 0,
+          "SchemaName": "",
+          "TableName": "",
+          "Type": "varchar"
+        },
+        {
+          "CaseSensitive": false,
+          "CatalogName": "hive",
+          "Label": "street",
+          "Name": "street",
+          "Nullable": "UNKNOWN",
+          "Precision": 2147483647,
+          "Scale": 0,
+          "SchemaName": "",
+          "TableName": "",
+          "Type": "varchar"
+        }
+      ]
+    },
+    "Rows": [
+      {
+        "Data": [
+          { "VarCharValue": "person_id" },
+          { "VarCharValue": "consumer_id" },
+          { "VarCharValue": "person_name" },
+          { "VarCharValue": "u_id_nomis" },
+          { "VarCharValue": "u_id_pnc" },
+          { "VarCharValue": "u_delius_id" },
+          { "VarCharValue": "u_home_office_reference" },
+          { "VarCharValue": "cepr" },
+          { "VarCharValue": "u_prison_number" },
+          { "VarCharValue": "u_dob" },
+          { "VarCharValue": "zip" },
+          { "VarCharValue": "city" },
+          { "VarCharValue": "street" }
+        ]
+      },
+      {
+        "Data": [
+          { "VarCharValue": "123456" },
+          { "VarCharValue": "consumer-123" },
+          { "VarCharValue": "John Smith" },
+          { "VarCharValue": "A1234BC" },
+          { "VarCharValue": "2000/123456A" },
+          { "VarCharValue": "DEL12345" },
+          { "VarCharValue": "HOR123" },
+          { "VarCharValue": "CEPR001" },
+          { "VarCharValue": "PRISON123" },
+          { "VarCharValue": "1980-01-15" },
+          { "VarCharValue": "SW1A 1AA" },
+          { "VarCharValue": "London" },
+          { "VarCharValue": "1 Test Street" }
+        ]
+      }
+    ]
+  },
+  "UpdateCount": 0
+}
