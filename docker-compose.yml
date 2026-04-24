@@ -54,7 +54,7 @@ services:
       - postgres_data:/var/lib/postgresql/data
 
   localstack:
-    image: localstack/localstack:3.8
+    image: localstack/localstack:4.14
     container_name: local-stack-aws
     networks:
       - hmpps
