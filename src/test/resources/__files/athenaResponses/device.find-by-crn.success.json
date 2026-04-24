@@ -1,0 +1,257 @@
+{
+  "ResultSet": {
+    "ResultSetMetadata": {
+      "ColumnInfo": [
+        {
+          "CaseSensitive": false,
+          "CatalogName": "hive",
+          "Label": "device_id",
+          "Name": "device_id",
+          "Nullable": "UNKNOWN",
+          "Precision": 0,
+          "Scale": 0,
+          "SchemaName": "",
+          "TableName": "",
+          "Type": "integer"
+        },
+        {
+          "CaseSensitive": false,
+          "CatalogName": "hive",
+          "Label": "device_description",
+          "Name": "device_description",
+          "Nullable": "UNKNOWN",
+          "Precision": 2147483647,
+          "Scale": 0,
+          "SchemaName": "",
+          "TableName": "",
+          "Type": "varchar"
+        },
+        {
+          "CaseSensitive": false,
+          "CatalogName": "hive",
+          "Label": "device_model_id",
+          "Name": "device_model_id",
+          "Nullable": "UNKNOWN",
+          "Precision": 0,
+          "Scale": 0,
+          "SchemaName": "",
+          "TableName": "",
+          "Type": "integer"
+        },
+        {
+          "CaseSensitive": false,
+          "CatalogName": "hive",
+          "Label": "device_model_name",
+          "Name": "device_model_name",
+          "Nullable": "UNKNOWN",
+          "Precision": 2147483647,
+          "Scale": 0,
+          "SchemaName": "",
+          "TableName": "",
+          "Type": "varchar"
+        },
+        {
+          "CaseSensitive": false,
+          "CatalogName": "hive",
+          "Label": "device_serial_number",
+          "Name": "device_serial_number",
+          "Nullable": "UNKNOWN",
+          "Precision": 2147483647,
+          "Scale": 0,
+          "SchemaName": "",
+          "TableName": "",
+          "Type": "varchar"
+        },
+        {
+          "CaseSensitive": false,
+          "CatalogName": "hive",
+          "Label": "device_status",
+          "Name": "device_status",
+          "Nullable": "UNKNOWN",
+          "Precision": 2147483647,
+          "Scale": 0,
+          "SchemaName": "",
+          "TableName": "",
+          "Type": "varchar"
+        },
+        {
+          "CaseSensitive": false,
+          "CatalogName": "hive",
+          "Label": "firmware_id",
+          "Name": "firmware_id",
+          "Nullable": "UNKNOWN",
+          "Precision": 0,
+          "Scale": 0,
+          "SchemaName": "",
+          "TableName": "",
+          "Type": "integer"
+        },
+        {
+          "CaseSensitive": false,
+          "CatalogName": "hive",
+          "Label": "firmware_last_updated_date",
+          "Name": "firmware_last_updated_date",
+          "Nullable": "UNKNOWN",
+          "Precision": 0,
+          "Scale": 0,
+          "SchemaName": "",
+          "TableName": "",
+          "Type": "timestamp"
+        },
+        {
+          "CaseSensitive": false,
+          "CatalogName": "hive",
+          "Label": "firmware_version",
+          "Name": "firmware_version",
+          "Nullable": "UNKNOWN",
+          "Precision": 2147483647,
+          "Scale": 0,
+          "SchemaName": "",
+          "TableName": "",
+          "Type": "varchar"
+        },
+        {
+          "CaseSensitive": false,
+          "CatalogName": "hive",
+          "Label": "operator_name",
+          "Name": "operator_name",
+          "Nullable": "UNKNOWN",
+          "Precision": 2147483647,
+          "Scale": 0,
+          "SchemaName": "",
+          "TableName": "",
+          "Type": "varchar"
+        },
+        {
+          "CaseSensitive": false,
+          "CatalogName": "hive",
+          "Label": "simcard_telephone",
+          "Name": "simcard_telephone",
+          "Nullable": "UNKNOWN",
+          "Precision": 2147483647,
+          "Scale": 0,
+          "SchemaName": "",
+          "TableName": "",
+          "Type": "varchar"
+        },
+        {
+          "CaseSensitive": false,
+          "CatalogName": "hive",
+          "Label": "last_updated_at",
+          "Name": "last_updated_at",
+          "Nullable": "UNKNOWN",
+          "Precision": 0,
+          "Scale": 0,
+          "SchemaName": "",
+          "TableName": "",
+          "Type": "timestamp"
+        },
+        {
+          "CaseSensitive": false,
+          "CatalogName": "hive",
+          "Label": "person_id",
+          "Name": "person_id",
+          "Nullable": "UNKNOWN",
+          "Precision": 0,
+          "Scale": 0,
+          "SchemaName": "",
+          "TableName": "",
+          "Type": "integer"
+        },
+        {
+          "CaseSensitive": false,
+          "CatalogName": "hive",
+          "Label": "location_id",
+          "Name": "location_id",
+          "Nullable": "UNKNOWN",
+          "Precision": 0,
+          "Scale": 0,
+          "SchemaName": "",
+          "TableName": "",
+          "Type": "integer"
+        },
+        {
+          "CaseSensitive": false,
+          "CatalogName": "hive",
+          "Label": "deactivation_reason_name",
+          "Name": "deactivation_reason_name",
+          "Nullable": "UNKNOWN",
+          "Precision": 2147483647,
+          "Scale": 0,
+          "SchemaName": "",
+          "TableName": "",
+          "Type": "varchar"
+        },
+        {
+          "CaseSensitive": false,
+          "CatalogName": "hive",
+          "Label": "device_activation_date",
+          "Name": "device_activation_date",
+          "Nullable": "UNKNOWN",
+          "Precision": 0,
+          "Scale": 0,
+          "SchemaName": "",
+          "TableName": "",
+          "Type": "timestamp"
+        },
+        {
+          "CaseSensitive": false,
+          "CatalogName": "hive",
+          "Label": "device_deactivation_date",
+          "Name": "device_deactivation_date",
+          "Nullable": "UNKNOWN",
+          "Precision": 0,
+          "Scale": 0,
+          "SchemaName": "",
+          "TableName": "",
+          "Type": "timestamp"
+        }
+      ]
+    },
+    "Rows": [
+      {
+        "Data": [
+          { "VarCharValue": "device_id" },
+          { "VarCharValue": "device_description" },
+          { "VarCharValue": "device_model_id" },
+          { "VarCharValue": "device_model_name" },
+          { "VarCharValue": "device_serial_number" },
+          { "VarCharValue": "device_status" },
+          { "VarCharValue": "firmware_id" },
+          { "VarCharValue": "firmware_last_updated_date" },
+          { "VarCharValue": "firmware_version" },
+          { "VarCharValue": "operator_name" },
+          { "VarCharValue": "simcard_telephone" },
+          { "VarCharValue": "last_updated_at" },
+          { "VarCharValue": "person_id" },
+          { "VarCharValue": "location_id" },
+          { "VarCharValue": "deactivation_reason_name" },
+          { "VarCharValue": "device_activation_date" },
+          { "VarCharValue": "device_deactivation_date" }
+        ]
+      },
+      {
+        "Data": [
+          { "VarCharValue": "1001" },
+          { "VarCharValue": "GPS Tag" },
+          { "VarCharValue": "200" },
+          { "VarCharValue": "TrailMonitor X" },
+          { "VarCharValue": "SN123456789" },
+          { "VarCharValue": "ACTIVE" },
+          { "VarCharValue": "300" },
+          { "VarCharValue": "2025-09-01 10:15:30.000000" },
+          { "VarCharValue": "1.0.5" },
+          { "VarCharValue": "Vodafone" },
+          { "VarCharValue": "07123456789" },
+          { "VarCharValue": "2025-09-10 07:51:08.000000" },
+          { "VarCharValue": "123456" },
+          { "VarCharValue": "987" },
+          { "VarCharValue": "Battery failure" },
+          { "VarCharValue": "2025-08-20 09:00:00.000000" },
+          { "VarCharValue": "2025-09-15 18:30:00.000000" }
+        ]
+      }
+    ]
+  },
+  "UpdateCount": 0
+}
