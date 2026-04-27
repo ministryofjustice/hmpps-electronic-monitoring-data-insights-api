@@ -11,7 +11,7 @@ aws:
   athena:
     defaultDatabase: staged_mdss_dev_dbt
     mdssDatabase: staged_mdss_dev_dbt
-    fmsDatabase: serco_fms_dev
+    fmsDatabase: staged_mfs_dev_dbt
     outputLocation: s3://emds-dev-athena-query-results-20240917144028307600000004/output
     workgroup: 800964199911_default
     rowLimit: ${ROW_LIMIT:1000}
