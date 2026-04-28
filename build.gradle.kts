@@ -1,6 +1,6 @@
 plugins {
   val kotlinVersion = "2.3.21"
-  id("uk.gov.justice.hmpps.gradle-spring-boot") version "10.2.2"
+  id("uk.gov.justice.hmpps.gradle-spring-boot") version "10.2.3"
   kotlin("plugin.spring") version kotlinVersion
   kotlin("plugin.serialization") version kotlinVersion
 }
@@ -10,7 +10,7 @@ configurations {
 }
 
 val springdocOpenapiVersion = "3.0.3"
-val hmppsKotlinSpringBootStarterVersion = "2.1.0"
+val hmppsKotlinSpringBootStarterVersion = "2.1.1"
 val kotlinLoggingVersion = "3.0.5"
 val athenaVersion = "2.43.0"
 
@@ -40,7 +40,7 @@ dependencies {
   implementation(platform("software.amazon.awssdk:bom:$athenaVersion"))
   implementation("software.amazon.awssdk:athena")
 
-  implementation("org.postgresql:postgresql:42.7.10")
+  implementation("org.postgresql:postgresql:42.7.11")
 
   implementation("software.amazon.awssdk:s3:$athenaVersion")
   implementation("software.amazon.awssdk:athena:$athenaVersion")
@@ -49,10 +49,10 @@ dependencies {
   testImplementation("org.springframework.boot:spring-boot-webflux-test")
   testImplementation("org.springframework.boot:spring-boot-webmvc-test")
   testImplementation("org.springframework.boot:spring-boot-starter-webclient-test")
-  testImplementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter-test:2.1.0")
+  testImplementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter-test:2.1.1")
   testImplementation("org.wiremock:wiremock-standalone:3.13.2")
   testImplementation("com.ninja-squad:springmockk:5.0.1")
-  testImplementation("io.swagger.parser.v3:swagger-parser:2.1.40") {
+  testImplementation("io.swagger.parser.v3:swagger-parser:2.1.41") {
     exclude(group = "io.swagger.core.v3")
   }
   testImplementation("com.h2database:h2:2.4.240")
