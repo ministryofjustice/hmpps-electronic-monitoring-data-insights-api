@@ -12,9 +12,12 @@ generic-service:
   env:
     APPLICATIONINSIGHTS_CONFIGURATION_FILE: "applicationinsights.dev.json"
     HMPPS_AUTH_URL: "https://sign-in-preprod.hmpps.service.justice.gov.uk/auth"
-    ATHENA_OUTPUT_BUCKET: "s3://emds-test-athena-query-results-20240923095933297100000013"
     MFA_REQUIRED: "false"
-    ROW_LIMIT: "1000"
+    ROW_LIMIT: 1000
+    MDSS_DB: "staged_mdss_dev_dbt"
+    FMS_DB: "serco_fms_curated_dev_dbt"
+    ATHENA_OUTPUT_BUCKET: "s3://emds-dev-athena-query-results-20240917144028307600000004/output"
+    WORKGROUP: "800964199911_default"
 
 generic-prometheus-alerts:
   alertSeverity: hmpps-electronic-monitoring-data-insights-preprod
