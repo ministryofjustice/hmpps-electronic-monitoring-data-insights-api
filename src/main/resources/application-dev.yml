@@ -1,5 +1,5 @@
 hmpps-auth:
-  url: "http://localhost:8090/auth"
+  url: "https://sign-in-dev.hmpps.service.justice.gov.uk/auth"
 spring:
   datasource:
     url: jdbc:postgresql://localhost:5432/em_data_insights
@@ -11,7 +11,7 @@ aws:
   athena:
     defaultDatabase: staged_mdss_dev_dbt
     mdssDatabase: staged_mdss_dev_dbt
-    fmsDatabase: serco_fms_dev
+    fmsDatabase: serco_fms_curated_dev_dbt
     outputLocation: s3://emds-dev-athena-query-results-20240917144028307600000004/output
     workgroup: 800964199911_default
     rowLimit: ${ROW_LIMIT:1000}
