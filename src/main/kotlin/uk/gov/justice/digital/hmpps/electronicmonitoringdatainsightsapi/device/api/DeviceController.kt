@@ -3,15 +3,18 @@ package uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.device.
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
 import org.springframework.http.ResponseEntity
+import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.HAS_VIEW_ROLE
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.device.model.Device
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.device.service.DeviceService
 import kotlin.time.ExperimentalTime
 
 @RestController
+@PreAuthorize(HAS_VIEW_ROLE)
 @RequestMapping("/people/{crn}/device")
 @Tag(name = "Device", description = "Endpoint to retrieve EM device for a person")
 class DeviceController(private val deviceService: DeviceService) {

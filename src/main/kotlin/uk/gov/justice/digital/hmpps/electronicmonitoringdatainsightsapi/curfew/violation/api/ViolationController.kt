@@ -3,17 +3,20 @@ package uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.curfew.
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
 import org.springframework.http.ResponseEntity
+import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.HAS_VIEW_ROLE
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.curfew.violation.model.Violation
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.service.ViolationService
 import java.time.Instant
 import kotlin.time.ExperimentalTime
 
 @RestController
+@PreAuthorize(HAS_VIEW_ROLE)
 @RequestMapping("/people/{consumerId}/curfew/violations")
 @Tag(name = "Violations", description = "Endpoint to retrieve curfew violations for a person")
 class ViolationController(private val violationService: ViolationService) {
@@ -37,6 +40,7 @@ class ViolationController(private val violationService: ViolationService) {
   }
 
   @Operation(summary = "Get single violation", description = "Returns a specific violation point for a consumerId a and a violationId.")
+  @PreAuthorize(HAS_VIEW_ROLE)
   @GetMapping("/{violationId}") // Specific GetMapping is better
   fun getViolation(@PathVariable consumerId: String, @PathVariable violationId: String): ResponseEntity<Violation> {
     val violation = violationService.getViolationForConsumer(consumerId, violationId)
