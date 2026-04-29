@@ -41,22 +41,15 @@ aws:
   region: eu-west-2
 
   athena:
-    defaultDatabase: staged_mdss_dev_dbt
-    mdssDatabase: staged_mdss_dev_dbt
-    fmsDatabase: serco_fms_curated_dev_dbt
-    outputLocation: s3://emds-dev-athena-query-results-20240917144028307600000004/output
-    workgroup: 800964199911_default
+    defaultDatabase: ${DEFAULT_DB:staged_mdss_dev_dbt}
+    mdssDatabase: ${DEFAULT_DB:staged_mdss_dev_dbt}
+    fmsDatabase: ${FMS_DB:serco_fms_curated_dev_dbt}
+    outputLocation: ${ATHENA_OUTPUT_BUCKET:s3://emds-dev-athena-query-results-20240917144028307600000004/output}
+    workgroup: ${WORKGROUP:800964199911_default}
     rowLimit: ${ROW_LIMIT:1000}
     pollIntervalMs: 500
     timeoutMs: 60000
     role: ${ATHENA_GENERAL_IAM_ROLE:}
-  s3:
-    bucket-name: emdi-data-storage
-
-datastore:
-  fms-database: ${FMS_DATABASE:serco_servicenow_test}
-  mdss-database: ${MDSS_DATABASE:allied_mdss_test}
-  output-bucket-arn: ${ATHENA_OUTPUT_BUCKET}
 
 management:
   endpoints:
