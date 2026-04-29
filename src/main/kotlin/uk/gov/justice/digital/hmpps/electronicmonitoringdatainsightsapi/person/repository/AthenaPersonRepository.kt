@@ -22,7 +22,6 @@ class AthenaPersonRepository(
 
     val result = runner.fetchPaged(
       sql = built.sql,
-      database = properties.athena.fmsDatabase, // not ideal
       cursor = nextToken,
       pageSize = properties.athena.rowLimit,
       mapper = ::mapRow,
@@ -35,8 +34,6 @@ class AthenaPersonRepository(
     )
   }
 
-  private fun escapeSql(value: String): String = value.replace("'", "''")
-
   data class SqlAndParams(val sql: String, val params: List<String>)
 
   private fun buildPersonSearchSql(personsQueryCriteria: PeopleQueryCriteria): SqlAndParams {
@@ -46,39 +43,35 @@ class AthenaPersonRepository(
     fun addEq(column: String, raw: String?) {
       raw?.trim()?.takeIf { it.isNotEmpty() }?.let {
         where.append("  AND $column = CAST(? AS VARCHAR)\n")
-        params += it // no need to escape when using parameters
+        params += it
       }
     }
 
-    addEq("pdw.u_id_nomis", personsQueryCriteria.nomisId)
-    addEq("pdw.u_id_pnc", personsQueryCriteria.pncId)
-    addEq("pdw.u_delius_id", personsQueryCriteria.deliusId)
-    addEq("pdw.u_home_office_reference", personsQueryCriteria.horId)
-    addEq("pdw.cepr", personsQueryCriteria.ceprId)
-    addEq("pdw.u_prison_number", personsQueryCriteria.prisonId)
+    addEq("c.nomis_id", personsQueryCriteria.nomisId)
+    addEq("c.pnc_id", personsQueryCriteria.pncId)
+    addEq("c.delius_id", personsQueryCriteria.deliusId)
+
+    // These no longer appear in the caseload schema:
+    // personsQueryCriteria.horId
+    // personsQueryCriteria.ceprId
+    // personsQueryCriteria.prisonId
 
     val sql = """
     SELECT
-      p.person_id,
-      csm.sys_id AS consumer_id,
-      p.person_name,
-      pdw.u_id_nomis,
-      pdw.u_id_pnc,
-      pdw.u_delius_id,
-      pdw.u_home_office_reference,
-      pdw.cepr,
-      pdw.u_prison_number,
-      pdws.u_dob,
-      csm.zip,
-      csm.city,
-      csm.street   
-    FROM ${properties.athena.mdssDatabase}.person p
-    LEFT JOIN ${properties.athena.fmsDatabase}.x_serg2_ems_csm_profile_device_wearer pdw
-      ON p.person_name = pdw.u_id_device_wearer
-    LEFT JOIN ${properties.athena.fmsDatabase}.csm_consumer csm
-      ON pdw.consumer = csm.sys_id
-    LEFT JOIN ${properties.athena.fmsDatabase}.x_serg2_ems_csm_profile_sensitive pdws
-      ON csm.sys_id = pdws.consumer
+      c.mdss_person_id AS person_id,
+      c.unique_device_wearer_id AS consumer_id,
+      CONCAT_WS(' ', c.first_name, c.last_name) AS person_name,
+      c.nomis_id AS u_id_nomis,
+      c.pnc_id AS u_id_pnc,
+      c.delius_id AS u_delius_id,
+      CAST(NULL AS VARCHAR) AS u_home_office_reference,
+      CAST(NULL AS VARCHAR) AS cepr,
+      CAST(NULL AS VARCHAR) AS u_prison_number,
+      c.date_of_birth AS u_dob,
+      c.postcode AS zip,
+      c.city_or_town AS city,
+      c.house_number_and_street_name AS street
+    FROM ${properties.athena.mdssDatabase}.caseload c
     $where
     LIMIT ${properties.athena.rowLimit}
     """.trimIndent()
@@ -102,36 +95,28 @@ class AthenaPersonRepository(
     ?: throw IllegalArgumentException("The personId provided ($personId) must be a numeric personId")
 
   private fun buildPersonByIdSql(personId: String): SqlAndParams {
-    val safePersonId = escapeSql(personId.trim())
-
     val sql = """
     SELECT
-      p.person_id,
-      csm.sys_id AS consumer_id,
-      p.person_name,
-      pdw.u_id_nomis,
-      pdw.u_id_pnc,
-      pdw.u_delius_id,
-      pdw.u_home_office_reference,
-      pdw.cepr,
-      pdw.u_prison_number,
-      pdws.u_dob,
-      csm.zip,
-      csm.city,
-      csm.street, 
-      pdw.u_id_device_wearer
-    FROM ${properties.athena.mdssDatabase}.person p
-    LEFT JOIN ${properties.athena.fmsDatabase}.x_serg2_ems_csm_profile_device_wearer pdw
-      ON p.person_name = pdw.u_id_device_wearer
-    LEFT JOIN ${properties.athena.fmsDatabase}.csm_consumer csm
-      ON pdw.consumer = csm.sys_id
-    LEFT JOIN ${properties.athena.fmsDatabase}.x_serg2_ems_csm_profile_sensitive pdws
-      ON csm.sys_id = pdws.consumer
-    WHERE p.person_id = CAST(? AS BIGINT)
+      c.mdss_person_id AS person_id,
+      c.unique_device_wearer_id AS consumer_id,
+      CONCAT_WS(' ', c.first_name, c.last_name) AS person_name,
+      c.nomis_id AS u_id_nomis,
+      c.pnc_id AS u_id_pnc,
+      c.delius_id AS u_delius_id,
+      CAST(NULL AS VARCHAR) AS u_home_office_reference,
+      CAST(NULL AS VARCHAR) AS cepr,
+      CAST(NULL AS VARCHAR) AS u_prison_number,
+      c.date_of_birth AS u_dob,
+      c.postcode AS zip,
+      c.city_or_town AS city,
+      c.house_number_and_street_name AS street,
+      c.unique_device_wearer_id AS u_id_device_wearer
+    FROM ${properties.athena.mdssDatabase}.caseload c
+    WHERE c.mdss_person_id = CAST(? AS BIGINT)
     LIMIT 1
     """.trimIndent()
 
-    return SqlAndParams(sql, listOf(safePersonId))
+    return SqlAndParams(sql, listOf(personId.trim()))
   }
 
   private fun mapRow(cols: List<Datum>): Person {

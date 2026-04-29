@@ -14,10 +14,10 @@ generic-service:
     HMPPS_AUTH_URL: "https://sign-in-preprod.hmpps.service.justice.gov.uk/auth"
     MFA_REQUIRED: "false"
     ROW_LIMIT: 1000
-    MDSS_DB: "staged_mdss_dev_dbt"
+    MDSS_DB: "data_insights_preprod_dbt"
     FMS_DB: "serco_fms_curated_dev_dbt"
-    ATHENA_OUTPUT_BUCKET: "s3://emds-dev-athena-query-results-20240917144028307600000004/output"
-    WORKGROUP: "800964199911_default"
+    ATHENA_OUTPUT_BUCKET: "emds-preprod-athena-query-results-20241105110923178000000003"
+    WORKGROUP: "443370694497-default"
 
 generic-prometheus-alerts:
   alertSeverity: hmpps-electronic-monitoring-data-insights-preprod
