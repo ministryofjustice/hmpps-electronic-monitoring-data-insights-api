@@ -52,6 +52,7 @@ class PersonController(private val personService: PersonService) {
   }
 
   @OptIn(ExperimentalTime::class)
+  @PreAuthorize(HAS_VIEW_ROLE)
   @Operation(summary = "Get a person", description = "Returns a specific person for a personId.")
   @RequestMapping(method = [RequestMethod.GET], path = ["/{personId}" ], produces = [MediaType.APPLICATION_JSON_VALUE])
   fun getPerson(@PathVariable personId: String): ResponseEntity<Person> {
