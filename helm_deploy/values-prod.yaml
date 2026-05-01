@@ -11,6 +11,8 @@ generic-service:
 
   env:
     HMPPS_AUTH_URL: "https://sign-in.hmpps.service.justice.gov.uk/auth"
+    UI_SERVICE_BASE_URL: "https://electronic-monitoring-data-insights-ui.hmpps.service.justice.gov.uk"
+    SERVICE_BASE_URL: "https://electronic-monitoring-data-insights-api.hmpps.service.justice.gov.uk"
     MFA_REQUIRED: "false"
     ROW_LIMIT: 1000
     MDSS_DB: "staged_mdss_dev_dbt"

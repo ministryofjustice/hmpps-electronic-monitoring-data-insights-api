@@ -12,6 +12,8 @@ generic-service:
   env:
     APPLICATIONINSIGHTS_CONFIGURATION_FILE: "applicationinsights.dev.json"
     HMPPS_AUTH_URL: "https://sign-in-preprod.hmpps.service.justice.gov.uk/auth"
+    UI_SERVICE_BASE_URL: "https://electronic-monitoring-data-insights-ui-preprod.hmpps.service.justice.gov.uk"
+    SERVICE_BASE_URL: "https://electronic-monitoring-data-insights-api-preprod.hmpps.service.justice.gov.uk"
     MFA_REQUIRED: "false"
     ROW_LIMIT: 1000
     MDSS_DB: "staged_mdss_dev_dbt"

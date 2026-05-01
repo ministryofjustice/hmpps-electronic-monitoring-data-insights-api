@@ -4,6 +4,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.springframework.test.web.reactive.server.expectBody
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.integration.IntegrationTestBase
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.api.ExistsInEMDI
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.api.PersonResponse
 import java.time.LocalDate
 
@@ -73,5 +74,26 @@ class PersonSearchTest : IntegrationTestBase() {
       .headers(setAuthorisation())
       .exchange()
       .expectStatus().isBadRequest
+  }
+
+  @Test
+  fun `Exists endpoint returns the correct URL`() {
+    stubQueryExecution(
+      "123",
+      1,
+      "SUCCEEDED",
+      "athenaResponses/people.search.success.json",
+    )
+
+    val response = webTestClient.get()
+      .uri("/people/exists/X123456")
+      .headers(setAuthorisation())
+      .exchange()
+      .expectStatus().isOk
+      .expectBody<ExistsInEMDI>()
+      .returnResult()
+      .responseBody!!
+
+    assertThat(response.uri.toString()).isEqualTo("http://localhost:8081/person/X123456/locations")
   }
 }

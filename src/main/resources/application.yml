@@ -74,3 +74,7 @@ springdoc:
     enabled: true
   swagger-ui:
     enabled: true
+
+service:
+  base-url: ${SERVICE_BASE_URL}
+  ui-base-url: ${UI_SERVICE_BASE_URL}
