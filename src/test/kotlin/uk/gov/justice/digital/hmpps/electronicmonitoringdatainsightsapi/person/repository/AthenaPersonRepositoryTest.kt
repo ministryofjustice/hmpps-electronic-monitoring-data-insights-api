@@ -55,7 +55,7 @@ class AthenaPersonRepositoryTest {
     repository.findByPersonById(personId)
 
     // Assert (SQL now parameterised)
-    assertThat(sqlSlot.captured).contains("WHERE p.person_id = CAST(? AS BIGINT)")
+    assertThat(sqlSlot.captured).contains("WHERE c.mdss_person_id = CAST(? AS BIGINT)")
     assertThat(sqlSlot.captured).contains("LIMIT 1")
   }
 

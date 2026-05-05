@@ -9,8 +9,8 @@ spring:
 aws:
   region: eu-west-2
   athena:
-    defaultDatabase: staged_mdss_dev_dbt
-    mdssDatabase: staged_mdss_dev_dbt
+    defaultDatabase: data_insights_dev_dbt
+    mdssDatabase: data_insights_dev_dbt
     fmsDatabase: serco_fms_curated_dev_dbt
     outputLocation: s3://emds-dev-athena-query-results-20240917144028307600000004/output
     workgroup: 800964199911_default
