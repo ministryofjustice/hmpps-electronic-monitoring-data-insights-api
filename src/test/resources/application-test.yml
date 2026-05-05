@@ -20,3 +20,7 @@ aws:
     workgroup: AthenaAdmin
     pollIntervalMs: 500
     timeoutMs: 60000
+
+service:
+  base-url: http://localhost:8081
+  ui-base-url: http://localhost:8081

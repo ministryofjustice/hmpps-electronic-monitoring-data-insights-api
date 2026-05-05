@@ -15,15 +15,20 @@ import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.server.ResponseStatusException
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.HAS_VIEW_ROLE
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.config.ServiceProperties
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.model.PeopleQueryCriteria
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.model.Person
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.service.PersonService
+import java.net.URI
 import kotlin.time.ExperimentalTime
 
 @RestController
 @RequestMapping("/people", produces = ["application/json"])
 @Tag(name = "People", description = "Endpoints for person details")
-class PersonController(private val personService: PersonService) {
+class PersonController(
+  private val personService: PersonService,
+  private val serviceProperties: ServiceProperties,
+) {
 
   private val log = LoggerFactory.getLogger(this::class.java)
 
@@ -60,6 +65,28 @@ class PersonController(private val personService: PersonService) {
 
     return if (person != null) {
       ResponseEntity.ok(person)
+    } else {
+      ResponseEntity.notFound().build()
+    }
+  }
+
+  @PreAuthorize(HAS_VIEW_ROLE)
+  @Operation(tags = ["People"], summary = "Endpoint to establish whether a person exists in EMDI")
+  @RequestMapping(method = [RequestMethod.GET], path = ["/exists/{crn}" ], produces = [MediaType.APPLICATION_JSON_VALUE])
+  fun existsInEMDI(
+    @PathVariable @Parameter(description = "The crn of the person", required = true) crn: String,
+  ): ResponseEntity<ExistsInEMDI> {
+    val exists = personService
+      .searchPeople(PeopleQueryCriteria(deliusId = crn))
+      .persons
+      .isNotEmpty()
+
+    return if (exists) {
+      ResponseEntity.ok(
+        ExistsInEMDI(
+          URI("${serviceProperties.uiBaseUrl}/person/$crn/locations"),
+        ),
+      )
     } else {
       ResponseEntity.notFound().build()
     }

@@ -18,3 +18,7 @@ aws:
     pollIntervalMs: 500
     timeoutMs: 60000
     role: ${ATHENA_GENERAL_IAM_ROLE:}
+
+service:
+  base-url: http://localhost:8081
+  ui-base-url: http://localhost:8081
