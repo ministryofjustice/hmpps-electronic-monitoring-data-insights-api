@@ -41,8 +41,8 @@ aws:
   region: eu-west-2
 
   athena:
-    defaultDatabase: ${DEFAULT_DB:staged_mdss_dev_dbt}
-    mdssDatabase: ${DEFAULT_DB:staged_mdss_dev_dbt}
+    defaultDatabase: ${MDSS_DB:data_insights_dev_dbt}
+    mdssDatabase: ${MDSS_DB:data_insights_dev_dbt}
     fmsDatabase: ${FMS_DB:serco_fms_curated_dev_dbt}
     outputLocation: ${ATHENA_OUTPUT_BUCKET:s3://emds-dev-athena-query-results-20240917144028307600000004/output}
     workgroup: ${WORKGROUP:800964199911_default}
