@@ -3,7 +3,7 @@ package uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
-import org.slf4j.LoggerFactory
+import mu.KotlinLogging
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.server.ResponseStatusException
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.HAS_VIEW_ROLE
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.service.CurrentUserService
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.config.ServiceProperties
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.model.PeopleQueryCriteria
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.model.Person
@@ -22,15 +23,16 @@ import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.s
 import java.net.URI
 import kotlin.time.ExperimentalTime
 
+private val log = KotlinLogging.logger {}
+
 @RestController
 @RequestMapping("/people", produces = ["application/json"])
 @Tag(name = "People", description = "Endpoints for person details")
 class PersonController(
   private val personService: PersonService,
   private val serviceProperties: ServiceProperties,
+  private val currentUserService: CurrentUserService,
 ) {
-
-  private val log = LoggerFactory.getLogger(this::class.java)
 
   @PreAuthorize(HAS_VIEW_ROLE)
   @Operation(tags = ["People"], summary = "Search for people")
@@ -76,6 +78,11 @@ class PersonController(
   fun existsInEMDI(
     @PathVariable @Parameter(description = "The crn of the person", required = true) crn: String,
   ): ResponseEntity<ExistsInEMDI> {
+    val username = currentUserService.username()
+    log.info("Checking user {} has access to this crn {}", username, crn)
+    // TODO use probation integration service here to see if the user can access this CRN
+    log.info("User {} has access to this crn {}", username, crn)
+
     val exists = personService
       .searchPeople(PeopleQueryCriteria(deliusId = crn))
       .persons
