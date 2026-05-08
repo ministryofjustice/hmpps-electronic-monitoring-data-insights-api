@@ -4,7 +4,7 @@ import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.javatime.datetime
 
 object Locations : Table("location") {
-  val id = integer("position_id").uniqueIndex()
+  val id = long("position_id").uniqueIndex()
   val deviceId = integer("device_id").nullable()
   val gpsDate = datetime("gps_date").nullable()
   val speed = integer("speed").nullable()

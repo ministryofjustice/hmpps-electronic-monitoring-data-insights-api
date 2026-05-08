@@ -133,12 +133,15 @@ class AthenaLocationRepository(
     // Helper to handle required numeric fields with clear context
     fun requiredInt(i: Int, fieldName: String): Int = v(i)?.toIntOrNull() ?: throw DataIntegrityException("$fieldName is missing or invalid at index $i")
 
+    fun requiredLong(i: Int, fieldName: String): Long = v(i)?.toLongOrNull()
+      ?: throw DataIntegrityException("$fieldName is missing or invalid at index $i")
+
     fun ts(i: Int): Instant? = v(i)
       ?.takeIf { it.isNotBlank() }
       ?.let { LocalDateTime.parse(it, DateTimeConstants.ATHENA_TIMESTAMP).toInstant(ZoneOffset.UTC) }
 
     return Location(
-      positionId = requiredInt(COL_POSITION_ID, "position_id"),
+      positionId = requiredLong(COL_POSITION_ID, "position_id"),
       deviceId = requiredInt(COL_DEVICE_ID, "device_id"),
       gpsDate = ts(COL_GPS_DATE),
       speed = v(COL_POSITION_SPEED)?.toIntOrNull(),
