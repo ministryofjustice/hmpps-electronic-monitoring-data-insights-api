@@ -18,7 +18,7 @@ generic-service:
     ROW_LIMIT: 1000
     MDSS_DB: "data_insights_preprod_dbt"
     FMS_DB: "serco_fms_curated_dev_dbt"
-    ATHENA_OUTPUT_BUCKET: "emds-preprod-athena-query-results-20241105110923178000000003"
+    ATHENA_OUTPUT_BUCKET: "emds-preprod-athena-query-results-20241105110923178000000003/output"
     WORKGROUP: "443370694497-default"
 
 generic-prometheus-alerts:
