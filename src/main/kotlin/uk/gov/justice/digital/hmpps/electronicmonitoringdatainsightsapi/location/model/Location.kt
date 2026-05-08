@@ -6,7 +6,7 @@ import kotlin.time.ExperimentalTime
 data class Location
 @OptIn(ExperimentalTime::class)
 constructor(
-  val positionId: Int,
+  val positionId: Long,
   val deviceId: Int?,
   val gpsDate: Instant? = null,
   val speed: Int? = null,
