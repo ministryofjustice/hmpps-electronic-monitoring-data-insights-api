@@ -1,6 +1,6 @@
 plugins {
   val kotlinVersion = "2.3.21"
-  id("uk.gov.justice.hmpps.gradle-spring-boot") version "10.2.3"
+  id("uk.gov.justice.hmpps.gradle-spring-boot") version "10.3.1"
   kotlin("plugin.spring") version kotlinVersion
   kotlin("plugin.serialization") version kotlinVersion
 }
@@ -12,7 +12,7 @@ configurations {
 val springdocOpenapiVersion = "3.0.3"
 val hmppsKotlinSpringBootStarterVersion = "2.2.0"
 val kotlinLoggingVersion = "3.0.5"
-val athenaVersion = "2.44.3"
+val athenaVersion = "2.44.7"
 
 dependencies {
   implementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter:$hmppsKotlinSpringBootStarterVersion")
@@ -21,15 +21,15 @@ dependencies {
   implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:$springdocOpenapiVersion")
   implementation("io.github.microutils:kotlin-logging:$kotlinLoggingVersion")
 
-  implementation("org.jetbrains.exposed:exposed-core:1.2.0")
-  implementation("org.jetbrains.exposed:exposed-json:1.2.0")
-  implementation("org.jetbrains.exposed:exposed-dao:1.2.0")
-  implementation("org.jetbrains.exposed:exposed-jdbc:1.2.0")
-  implementation("org.jetbrains.exposed:exposed-java-time:1.2.0")
+  implementation("org.jetbrains.exposed:exposed-core:1.3.0")
+  implementation("org.jetbrains.exposed:exposed-json:1.3.0")
+  implementation("org.jetbrains.exposed:exposed-dao:1.3.0")
+  implementation("org.jetbrains.exposed:exposed-jdbc:1.3.0")
+  implementation("org.jetbrains.exposed:exposed-java-time:1.3.0")
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core")
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor")
   implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.11.0")
-  implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.7.1-0.6.x-compat")
+  implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.8.0-0.6.x-compat")
 
   implementation(platform("software.amazon.awssdk:bom:$athenaVersion"))
   implementation("software.amazon.awssdk:athena")
@@ -52,7 +52,7 @@ dependencies {
   testImplementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter-test:2.2.0")
   testImplementation("org.wiremock:wiremock-standalone:3.13.2")
   testImplementation("com.ninja-squad:springmockk:5.0.1")
-  testImplementation("io.swagger.parser.v3:swagger-parser:2.1.41") {
+  testImplementation("io.swagger.parser.v3:swagger-parser:2.1.42") {
     exclude(group = "io.swagger.core.v3")
   }
   testImplementation("com.h2database:h2:2.4.240")
