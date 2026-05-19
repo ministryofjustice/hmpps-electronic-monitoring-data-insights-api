@@ -58,8 +58,21 @@ class LocationController(
       provider != null
     ) {
       log.info("Using hardcoded dev locations")
-      return ResponseEntity.ok(provider.getLocations())
+
+      val filteredLocations = provider.getLocations().locations.filter { location ->
+        location.gpsDate?.let { gps ->
+          !gps.isBefore(from) && !gps.isAfter(to)
+        } ?: false
+      }
+
+      return ResponseEntity.ok(
+        LocationResponse(
+          locations = filteredLocations,
+          nextToken = null,
+        ),
+      )
     }
+
     log.debug("Getting locations for personId: {}, from: {}, to: {}", personId, from, to)
     val pagedLocations = locationService.getLocationsForPerson(personId, from, to, nextToken)
     log.debug("Found {} locations", pagedLocations.locations.size)
