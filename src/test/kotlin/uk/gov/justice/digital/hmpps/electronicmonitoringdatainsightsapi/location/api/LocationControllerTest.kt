@@ -56,8 +56,6 @@ class LocationControllerTest {
       locationService.getLocationsForPerson(personId, from, to, nextToken),
     ).thenReturn(pagedResult)
 
-    whenever(environment.activeProfiles).thenReturn(arrayOf("test"))
-
     // Act
     val result = locationController.getLocations(
       personId = personId,
