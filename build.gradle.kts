@@ -45,6 +45,9 @@ dependencies {
   implementation("software.amazon.awssdk:s3:$athenaVersion")
   implementation("software.amazon.awssdk:athena:$athenaVersion")
 
+  implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
+  implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
+
   testImplementation("org.springframework.boot:spring-boot-webservices-test")
   testImplementation("org.springframework.boot:spring-boot-webflux-test")
   testImplementation("org.springframework.boot:spring-boot-webmvc-test")
