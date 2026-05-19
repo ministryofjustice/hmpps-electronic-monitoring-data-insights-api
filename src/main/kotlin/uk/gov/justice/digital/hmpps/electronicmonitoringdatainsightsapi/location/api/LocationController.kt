@@ -48,11 +48,16 @@ class LocationController(
     @RequestParam @NotNull to: Instant,
     @RequestParam(required = false) nextToken: String?,
   ): ResponseEntity<LocationResponse> {
-    log.info("Active profile: ${environment.activeProfiles.joinToString(",")}")
+    val activeProfiles = environment.activeProfiles
+
+    log.info(
+      "Active profile: {}",
+      activeProfiles.takeIf { it.isNotEmpty() }?.joinToString(",") ?: "none",
+    )
 
     if (
-      environment.activeProfiles != null &&
-      environment.activeProfiles.contains("dev") &&
+      activeProfiles != null &&
+      activeProfiles.contains("dev") &&
       personId == DEV_PERSON_ID &&
       devLocationProvider != null
     ) {

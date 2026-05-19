@@ -13,8 +13,7 @@ class DevLocationProvider(
   @Value("classpath:dev_positions.json")
   private val devPositionsFile: Resource,
 ) {
-  fun getLocations(): LocationResponse =
-    devPositionsFile.inputStream.use {
-      objectMapper.readValue(it, LocationResponse::class.java)
-    }
+  fun getLocations(): LocationResponse = devPositionsFile.inputStream.use {
+    objectMapper.readValue(it, LocationResponse::class.java)
+  }
 }
