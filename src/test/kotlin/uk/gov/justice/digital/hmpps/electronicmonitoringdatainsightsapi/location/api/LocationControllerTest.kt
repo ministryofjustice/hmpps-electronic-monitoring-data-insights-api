@@ -1,14 +1,14 @@
 package uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.location.api
 
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
-import org.mockito.InjectMocks
 import org.mockito.Mock
 import org.mockito.junit.jupiter.MockitoExtension
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
-import org.springframework.core.env.Environment
+import org.springframework.beans.factory.ObjectProvider
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.location.model.Location
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.location.model.PagedLocations
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.location.service.LocationService
@@ -21,13 +21,18 @@ class LocationControllerTest {
   private lateinit var locationService: LocationService
 
   @Mock
-  private lateinit var environment: Environment
+  lateinit var devLocationProvider: ObjectProvider<DevLocationProvider>
 
-  @Mock
-  private lateinit var devLocationProvider: DevLocationProvider
-
-  @InjectMocks
   private lateinit var locationController: LocationController
+
+  @BeforeEach
+  fun setUp() {
+    locationController = LocationController(
+      locationService = locationService,
+      devLocationProvider = devLocationProvider,
+      devLocationStubEnabled = false,
+    )
+  }
 
   @Test
   fun `getLocationsForPerson should return 200 and paginated locations`() {
@@ -50,8 +55,6 @@ class LocationControllerTest {
     whenever(
       locationService.getLocationsForPerson(personId, from, to, nextToken),
     ).thenReturn(pagedResult)
-
-    whenever(environment.activeProfiles).thenReturn(arrayOf("test"))
 
     // Act
     val result = locationController.getLocations(

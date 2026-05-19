@@ -4,7 +4,8 @@ import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.validation.constraints.NotNull
 import mu.KotlinLogging
-import org.springframework.core.env.Environment
+import org.springframework.beans.factory.ObjectProvider
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.validation.annotation.Validated
@@ -26,8 +27,9 @@ private val log = KotlinLogging.logger {}
 @Tag(name = "Locations", description = "Endpoint to retrieve gsp coordinates for a person by personId")
 class LocationController(
   private val locationService: LocationService,
-  private val environment: Environment,
-  private val devLocationProvider: DevLocationProvider?,
+  private val devLocationProvider: ObjectProvider<DevLocationProvider>,
+  @Value("\${dev.location.stub.enabled:false}")
+  private val devLocationStubEnabled: Boolean,
 ) {
 
   companion object {
@@ -48,23 +50,16 @@ class LocationController(
     @RequestParam @NotNull to: Instant,
     @RequestParam(required = false) nextToken: String?,
   ): ResponseEntity<LocationResponse> {
-    val activeProfiles = environment.activeProfiles
-
-    log.info(
-      "Active profile: {}",
-      activeProfiles.takeIf { it.isNotEmpty() }?.joinToString(",") ?: "none",
-    )
+    val provider = devLocationProvider.ifAvailable
 
     if (
-      activeProfiles != null &&
-      activeProfiles.contains("dev") &&
+      devLocationStubEnabled &&
       personId == DEV_PERSON_ID &&
-      devLocationProvider != null
+      provider != null
     ) {
       log.info("Using hardcoded dev locations")
-      return ResponseEntity.ok(devLocationProvider.getLocations())
+      return ResponseEntity.ok(provider.getLocations())
     }
-
     log.debug("Getting locations for personId: {}, from: {}, to: {}", personId, from, to)
     val pagedLocations = locationService.getLocationsForPerson(personId, from, to, nextToken)
     log.debug("Found {} locations", pagedLocations.locations.size)
