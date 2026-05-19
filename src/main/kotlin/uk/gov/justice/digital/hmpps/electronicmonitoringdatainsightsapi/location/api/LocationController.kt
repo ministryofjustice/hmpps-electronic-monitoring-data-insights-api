@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.validation.constraints.NotNull
 import mu.KotlinLogging
+import org.springframework.core.env.Environment
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.validation.annotation.Validated
@@ -23,10 +24,21 @@ private val log = KotlinLogging.logger {}
 @RestController
 @RequestMapping("/people/{personId}/locations")
 @Tag(name = "Locations", description = "Endpoint to retrieve gsp coordinates for a person by personId")
-class LocationController(private val locationService: LocationService) {
+class LocationController(
+  private val locationService: LocationService,
+  private val environment: Environment,
+  private val devLocationProvider: DevLocationProvider?,
+) {
+
+  companion object {
+    private const val DEV_PERSON_ID = "777777"
+  }
 
   @OptIn(ExperimentalTime::class)
-  @Operation(summary = "Get location history", description = "Returns a paginated list of GPS coordinates for a personId within a specific timespan.")
+  @Operation(
+    summary = "Get location history",
+    description = "Returns a paginated list of GPS coordinates for a personId within a specific timespan.",
+  )
   @GetMapping
   @PreAuthorize(HAS_VIEW_ROLE)
   @Validated
@@ -36,6 +48,23 @@ class LocationController(private val locationService: LocationService) {
     @RequestParam @NotNull to: Instant,
     @RequestParam(required = false) nextToken: String?,
   ): ResponseEntity<LocationResponse> {
+    val activeProfiles = environment.activeProfiles
+
+    log.info(
+      "Active profile: {}",
+      activeProfiles.takeIf { it.isNotEmpty() }?.joinToString(",") ?: "none",
+    )
+
+    if (
+      activeProfiles != null &&
+      activeProfiles.contains("dev") &&
+      personId == DEV_PERSON_ID &&
+      devLocationProvider != null
+    ) {
+      log.info("Using hardcoded dev locations")
+      return ResponseEntity.ok(devLocationProvider.getLocations())
+    }
+
     log.debug("Getting locations for personId: {}, from: {}, to: {}", personId, from, to)
     val pagedLocations = locationService.getLocationsForPerson(personId, from, to, nextToken)
     log.debug("Found {} locations", pagedLocations.locations.size)
@@ -47,7 +76,10 @@ class LocationController(private val locationService: LocationService) {
     )
   }
 
-  @Operation(summary = "Get single location", description = "Returns a specific position for a personId and a positionId.")
+  @Operation(
+    summary = "Get single location",
+    description = "Returns a specific position for a personId and a positionId.",
+  )
   @PreAuthorize(HAS_VIEW_ROLE)
   @GetMapping("/{positionId}") // Specific GetMapping is better
   fun getLocation(@PathVariable personId: String, @PathVariable positionId: String): ResponseEntity<List<Location>> {

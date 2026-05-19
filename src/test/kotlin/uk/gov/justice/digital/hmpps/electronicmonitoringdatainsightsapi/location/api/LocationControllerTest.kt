@@ -8,6 +8,7 @@ import org.mockito.Mock
 import org.mockito.junit.jupiter.MockitoExtension
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
+import org.springframework.core.env.Environment
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.location.model.Location
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.location.model.PagedLocations
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.location.service.LocationService
@@ -18,6 +19,12 @@ class LocationControllerTest {
 
   @Mock
   private lateinit var locationService: LocationService
+
+  @Mock
+  private lateinit var environment: Environment
+
+  @Mock
+  private lateinit var devLocationProvider: DevLocationProvider
 
   @InjectMocks
   private lateinit var locationController: LocationController
@@ -43,6 +50,8 @@ class LocationControllerTest {
     whenever(
       locationService.getLocationsForPerson(personId, from, to, nextToken),
     ).thenReturn(pagedResult)
+
+    whenever(environment.activeProfiles).thenReturn(arrayOf("test"))
 
     // Act
     val result = locationController.getLocations(
