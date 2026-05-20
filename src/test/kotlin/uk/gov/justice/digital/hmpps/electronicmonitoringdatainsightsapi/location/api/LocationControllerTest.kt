@@ -30,7 +30,7 @@ class LocationControllerTest {
     locationController = LocationController(
       locationService = locationService,
       devLocationProvider = devLocationProvider,
-      devLocationStubEnabled = false,
+      devStubEnabled = false,
     )
   }
 

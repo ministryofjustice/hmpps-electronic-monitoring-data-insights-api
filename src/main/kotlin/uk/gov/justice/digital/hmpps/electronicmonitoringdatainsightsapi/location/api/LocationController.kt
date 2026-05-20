@@ -28,8 +28,8 @@ private val log = KotlinLogging.logger {}
 class LocationController(
   private val locationService: LocationService,
   private val devLocationProvider: ObjectProvider<DevLocationProvider>,
-  @Value("\${dev.location.stub.enabled:false}")
-  private val devLocationStubEnabled: Boolean,
+  @Value("\${dev.stub.enabled:false}")
+  private val devStubEnabled: Boolean,
 ) {
 
   companion object {
@@ -53,7 +53,7 @@ class LocationController(
     val provider = devLocationProvider.ifAvailable
 
     if (
-      devLocationStubEnabled &&
+      devStubEnabled &&
       personId == DEV_PERSON_ID &&
       provider != null
     ) {

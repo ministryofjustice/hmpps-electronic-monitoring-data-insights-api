@@ -4,6 +4,8 @@ import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
 import mu.KotlinLogging
+import org.springframework.beans.factory.ObjectProvider
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
@@ -32,7 +34,14 @@ class PersonController(
   private val personService: PersonService,
   private val serviceProperties: ServiceProperties,
   private val currentUserService: CurrentUserService,
+  private val devPersonProvider: ObjectProvider<DevPersonProvider>,
+  @Value("\${dev.stub.enabled:false}")
+  private val devStubEnabled: Boolean,
 ) {
+
+  companion object {
+    private const val DEV_CRN = "X777777"
+  }
 
   @PreAuthorize(HAS_VIEW_ROLE)
   @Operation(tags = ["People"], summary = "Search for people")
@@ -48,6 +57,25 @@ class PersonController(
         "Query parameters are invalid: $peopleQueryCriteria",
       )
     }
+
+    val provider = devPersonProvider.ifAvailable
+
+    if (
+      devStubEnabled &&
+      peopleQueryCriteria.deliusId == DEV_CRN &&
+      provider != null
+    ) {
+      log.info("Using hardcoded dev person")
+
+      val people = provider.getPeople()
+      return ResponseEntity.ok(
+        PersonResponse(
+          persons = people.persons,
+          nextToken = null,
+        ),
+      )
+    }
+
     val pagedPeople = personService.searchPeople(peopleQueryCriteria, nextToken)
 
     return ResponseEntity.ok(
@@ -61,7 +89,7 @@ class PersonController(
   @OptIn(ExperimentalTime::class)
   @PreAuthorize(HAS_VIEW_ROLE)
   @Operation(summary = "Get a person", description = "Returns a specific person for a personId.")
-  @RequestMapping(method = [RequestMethod.GET], path = ["/{personId}" ], produces = [MediaType.APPLICATION_JSON_VALUE])
+  @RequestMapping(method = [RequestMethod.GET], path = ["/{personId}"], produces = [MediaType.APPLICATION_JSON_VALUE])
   fun getPerson(@PathVariable personId: String): ResponseEntity<Person> {
     val person = personService.getPersonById(personId)
 
@@ -74,7 +102,7 @@ class PersonController(
 
   @PreAuthorize(HAS_VIEW_ROLE)
   @Operation(tags = ["People"], summary = "Endpoint to establish whether a person exists in EMDI")
-  @RequestMapping(method = [RequestMethod.GET], path = ["/exists/{crn}" ], produces = [MediaType.APPLICATION_JSON_VALUE])
+  @RequestMapping(method = [RequestMethod.GET], path = ["/exists/{crn}"], produces = [MediaType.APPLICATION_JSON_VALUE])
   fun existsInEMDI(
     @PathVariable @Parameter(description = "The crn of the person", required = true) crn: String,
   ): ResponseEntity<ExistsInEMDI> {

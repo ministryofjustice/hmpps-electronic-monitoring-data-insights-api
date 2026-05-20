@@ -1,14 +1,15 @@
 package uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.api
 
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
-import org.mockito.InjectMocks
 import org.mockito.Mock
 import org.mockito.junit.jupiter.MockitoExtension
 import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
+import org.springframework.beans.factory.ObjectProvider
 import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.service.CurrentUserService
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.config.ServiceProperties
@@ -27,10 +28,23 @@ class PersonControllerTest {
   private lateinit var serviceProperties: ServiceProperties
 
   @Mock
+  lateinit var devPersonProvider: ObjectProvider<DevPersonProvider>
+
+  @Mock
   private lateinit var currentUserService: CurrentUserService
 
-  @InjectMocks
   private lateinit var controller: PersonController
+
+  @BeforeEach
+  fun setUp() {
+    controller = PersonController(
+      personService = personService,
+      devPersonProvider = devPersonProvider,
+      currentUserService = currentUserService,
+      serviceProperties = serviceProperties,
+      devStubEnabled = false,
+    )
+  }
 
   @Test
   fun `getPerson should return 200 and person when they exist`() {
