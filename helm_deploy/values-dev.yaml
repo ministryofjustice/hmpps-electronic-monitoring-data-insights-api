@@ -20,7 +20,7 @@ generic-service:
     FMS_DB: "serco_fms_curated_dev_dbt"
     ATHENA_OUTPUT_BUCKET: "s3://emds-dev-athena-query-results-20240917144028307600000004/output"
     WORKGROUP: "800964199911_default"
-    DEV_LOCATION_STUB_ENABLED: "true"
+    DEV_STUB_ENABLED: "true"
 
 
 generic-prometheus-alerts:
