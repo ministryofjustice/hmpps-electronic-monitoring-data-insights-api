@@ -69,4 +69,11 @@ tasks {
   withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
     compilerOptions.jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_25
   }
+
+  test {
+    environment("AWS_ACCESS_KEY_ID", "test")
+    environment("AWS_SECRET_ACCESS_KEY", "test")
+    environment("AWS_SESSION_TOKEN", "test")
+    environment("AWS_REGION", "eu-west-2")
+  }
 }
