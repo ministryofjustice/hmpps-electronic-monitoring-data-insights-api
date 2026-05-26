@@ -23,6 +23,7 @@ import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.m
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.model.Person
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.service.PersonService
 import java.net.URI
+import kotlin.collections.contains
 import kotlin.time.ExperimentalTime
 
 private val log = KotlinLogging.logger {}
@@ -102,7 +103,11 @@ class PersonController(
 
   @PreAuthorize(HAS_VIEW_ROLE)
   @Operation(tags = ["People"], summary = "Endpoint to establish whether a person exists in EMDI")
-  @RequestMapping(method = [RequestMethod.GET], path = ["/exists/{crn}"], produces = [MediaType.APPLICATION_JSON_VALUE])
+  @RequestMapping(
+    method = [RequestMethod.GET],
+    path = ["/exists/{crn}"],
+    produces = [MediaType.APPLICATION_JSON_VALUE],
+  )
   fun existsInEMDI(
     @PathVariable @Parameter(description = "The crn of the person", required = true) crn: String,
   ): ResponseEntity<ExistsInEMDI> {
@@ -111,10 +116,21 @@ class PersonController(
     // TODO use probation integration service here to see if the user can access this CRN
     log.info("User {} has access to this crn {}", username, crn)
 
-    val exists = personService
-      .searchPeople(PeopleQueryCriteria(deliusId = crn))
-      .persons
-      .isNotEmpty()
+    val provider = devPersonProvider.ifAvailable
+
+    val exists = if (
+      devStubEnabled &&
+      crn in DEV_CRNS &&
+      provider != null
+    ) {
+      log.info("Using hardcoded dev person in existsInEMDI endpoint")
+      true
+    } else {
+      personService
+        .searchPeople(PeopleQueryCriteria(deliusId = crn))
+        .persons
+        .isNotEmpty()
+    }
 
     return if (exists) {
       ResponseEntity.ok(
