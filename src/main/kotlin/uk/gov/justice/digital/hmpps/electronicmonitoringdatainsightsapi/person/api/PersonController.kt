@@ -40,7 +40,7 @@ class PersonController(
 ) {
 
   companion object {
-    private const val DEV_CRN = "X777777"
+    private val DEV_CRNS = setOf("X777777", "X991426", "X990645", "Y004041")
   }
 
   @PreAuthorize(HAS_VIEW_ROLE)
@@ -62,7 +62,7 @@ class PersonController(
 
     if (
       devStubEnabled &&
-      peopleQueryCriteria.deliusId == DEV_CRN &&
+      peopleQueryCriteria.deliusId in DEV_CRNS &&
       provider != null
     ) {
       log.info("Using hardcoded dev person")
