@@ -10,7 +10,7 @@ data class PeopleQueryCriteria(
   val ceprId: String? = null,
   val prisonId: String? = null,
 ) {
-  @AssertTrue
+  @AssertTrue(message = "At least one of the following must be provided: nomisId, pncId, deliusId, horId, ceprId, prisonId")
   fun isValid(): Boolean = !(
     nomisId.isNullOrBlank() &&
       pncId.isNullOrBlank() &&
