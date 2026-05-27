@@ -3,10 +3,10 @@ package uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
+import jakarta.validation.Valid
 import mu.KotlinLogging
 import org.springframework.beans.factory.ObjectProvider
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
@@ -15,7 +15,6 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestMethod
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
-import org.springframework.web.server.ResponseStatusException
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.HAS_VIEW_ROLE
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.service.CurrentUserService
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.config.ServiceProperties
@@ -49,16 +48,10 @@ class PersonController(
   @RequestMapping(method = [RequestMethod.GET], produces = [MediaType.APPLICATION_JSON_VALUE])
   fun searchPeople(
     @Parameter(description = "The search criteria for the query", required = true)
+    @Valid
     peopleQueryCriteria: PeopleQueryCriteria,
     @RequestParam(required = false) nextToken: String?,
   ): ResponseEntity<PersonResponse> {
-    if (!peopleQueryCriteria.isValid()) {
-      throw ResponseStatusException(
-        HttpStatus.BAD_REQUEST,
-        "Query parameters are invalid: $peopleQueryCriteria",
-      )
-    }
-
     val provider = devPersonProvider.ifAvailable
 
     if (
