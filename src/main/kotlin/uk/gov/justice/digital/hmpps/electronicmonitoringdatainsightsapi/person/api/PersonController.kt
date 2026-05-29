@@ -40,7 +40,7 @@ class PersonController(
 ) {
 
   companion object {
-    private val DEV_CRNS = setOf("X777777", "X991426", "X990645", "Y004041")
+    private val DEV_CRNS = setOf("X777777", "X969367", "X991426", "X990645", "Y004041")
   }
 
   @PreAuthorize(HAS_VIEW_ROLE)
