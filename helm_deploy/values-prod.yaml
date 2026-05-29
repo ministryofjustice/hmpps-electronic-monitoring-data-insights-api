@@ -13,10 +13,10 @@ generic-service:
     SERVICE_BASE_URL: "https://electronic-monitoring-data-insights-api.hmpps.service.justice.gov.uk"
     MFA_REQUIRED: "false"
     ROW_LIMIT: 1000
-    MDSS_DB: "staged_mdss_dev_dbt"
+    MDSS_DB: "data_insights"
     FMS_DB: "serco_fms_curated_dev_dbt"
-    ATHENA_OUTPUT_BUCKET: "s3://emds-dev-athena-query-results-20240917144028307600000004/output"
-    WORKGROUP: "800964199911_default"
+    ATHENA_OUTPUT_BUCKET: "s3://emds-prod-athena-query-results-20240918073115959600000002/output"
+    WORKGROUP: "976799291502-default"
 
 generic-prometheus-alerts:
   alertSeverity: hmpps-electronic-monitoring-data-insights-prod
