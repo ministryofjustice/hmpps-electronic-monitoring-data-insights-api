@@ -68,8 +68,8 @@ class AthenaLocationRepositoryTest {
     assertThat(result).isInstanceOf(PagedLocations::class.java)
     assertThat(result.locations).hasSize(1)
     assertThat(result.nextToken).isEqualTo(null)
-    assertThat(sqlSlot.captured).contains("person_id = CAST(? AS BIGINT)")
-    assertThat(sqlSlot.captured).contains("BETWEEN from_iso8601_timestamp(?)")
+    assertThat(sqlSlot.captured).contains("CAST(? AS BIGINT) AS person_id")
+    assertThat(sqlSlot.captured).contains("from_iso8601_timestamp(?) AS start_window")
   }
 
   @Test
