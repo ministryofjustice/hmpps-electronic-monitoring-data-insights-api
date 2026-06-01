@@ -6,6 +6,7 @@ import software.amazon.awssdk.services.athena.model.Datum
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.athena.AthenaQueryRunner
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.athena.AwsProperties
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.exception.DataIntegrityException
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.jpa.Constants
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.util.DateTimeConstants
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.validation.toLocationId
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.validation.toPersonId
@@ -116,7 +117,7 @@ class AthenaLocationRepository(
       SELECT c.order_start_date, c.order_end_date
       FROM caseload c
       JOIN params p ON c.mdss_person_id = p.person_id
-      WHERE c.enforceable_condition = 'location_monitoring'
+      WHERE c.enforceable_condition = '${Constants.LOCATION_MONITORING}'
       ORDER BY c.grouped_date DESC
       LIMIT 1
     )
