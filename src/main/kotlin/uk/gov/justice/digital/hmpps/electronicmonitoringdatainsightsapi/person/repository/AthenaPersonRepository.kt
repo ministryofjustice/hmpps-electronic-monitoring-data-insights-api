@@ -54,7 +54,6 @@ class AthenaPersonRepository(
       )
     }
 
-
     val sql = """
     SELECT
       c.mdss_person_id AS person_id,
