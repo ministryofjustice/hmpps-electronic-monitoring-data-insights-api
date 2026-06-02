@@ -23,6 +23,7 @@ class AthenaPersonRepository(
 
     val result = runner.fetchPaged(
       sql = built.sql,
+      database = properties.athena.defaultDatabase,
       cursor = nextToken,
       pageSize = properties.athena.rowLimit,
       mapper = ::mapRow,
