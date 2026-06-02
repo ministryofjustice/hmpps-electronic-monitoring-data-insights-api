@@ -45,7 +45,7 @@ class AthenaPersonRepository(
     builder.addEq("c.delius_id", personsQueryCriteria.deliusId)
     builder.addIn(
       "c.enforceable_condition",
-      listOf(Constants.LOCATION_MONITORING),
+      Constants.ENFORCEABLE_CONDITIONS,
     )
 
     val sql = """

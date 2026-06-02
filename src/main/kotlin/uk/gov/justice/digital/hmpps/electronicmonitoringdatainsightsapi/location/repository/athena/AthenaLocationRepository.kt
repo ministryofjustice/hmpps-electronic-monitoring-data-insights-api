@@ -117,7 +117,7 @@ class AthenaLocationRepository(
       SELECT c.order_start_date, c.order_end_date
       FROM caseload c
       JOIN params p ON c.mdss_person_id = p.person_id
-      WHERE c.enforceable_condition = '${Constants.LOCATION_MONITORING}'
+      WHERE c.enforceable_condition IN (${Constants.ENFORCEABLE_CONDITIONS_SQL})
       ORDER BY c.grouped_date DESC
       LIMIT 1
     )
