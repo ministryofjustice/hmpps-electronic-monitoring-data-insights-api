@@ -6,6 +6,7 @@ import software.amazon.awssdk.services.athena.model.Datum
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.athena.AthenaQueryRunner
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.athena.AwsProperties
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.exception.DataIntegrityException
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.jpa.Constants
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.util.DateTimeConstants
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.validation.toLocationId
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.validation.toPersonId
@@ -107,30 +108,28 @@ class AthenaLocationRepository(
   private fun buildTimeSpanSql(): String =
     """
     WITH params AS (
-  SELECT
-    CAST(? AS BIGINT) AS person_id,
-    from_iso8601_timestamp(?) AS start_window,
-    from_iso8601_timestamp(?) AS end_window
-),
-matching_order AS (
-  SELECT c.order_start_date, c.order_end_date
-  FROM caseload c
-  JOIN params p ON c.mdss_person_id = p.person_id
-  WHERE c.enforceable_condition = 'location_monitoring'
-    AND p.start_window >= c.order_start_date
-    AND p.end_window <= c.order_end_date
-  ORDER BY c.grouped_date DESC
-  LIMIT 1
-)
-SELECT pos.position_id, pos.device_id, pos.position_gps_date,
-       pos.position_speed, pos.position_satellite, pos.position_direction,
-       pos.position_precision, pos.position_lbs, pos.position_hdop,
-       pos.position_geometry, pos.position_latitude, pos.position_longitude
-FROM position pos
-JOIN params p ON pos.person_id = p.person_id
-CROSS JOIN matching_order mo
-WHERE pos.position_gps_date BETWEEN p.start_window AND p.end_window
-ORDER BY pos.position_gps_date;
+      SELECT
+        CAST(? AS BIGINT) AS person_id,
+        from_iso8601_timestamp(?) AS start_window,
+        from_iso8601_timestamp(?) AS end_window
+    ),
+    latest_order AS (
+      SELECT c.order_start_date, c.order_end_date
+      FROM caseload c
+      JOIN params p ON c.mdss_person_id = p.person_id
+      WHERE c.enforceable_condition IN (${Constants.ENFORCEABLE_CONDITIONS_SQL})
+      ORDER BY c.grouped_date DESC
+      LIMIT 1
+    )
+    SELECT pos.position_id, pos.device_id, pos.position_gps_date,
+           pos.position_speed, pos.position_satellite, pos.position_direction, pos.position_precision, pos.position_lbs, pos.position_hdop,
+           pos.position_geometry, pos.position_latitude, pos.position_longitude
+    FROM position pos
+    JOIN params p ON pos.person_id = p.person_id
+    CROSS JOIN latest_order lo
+    WHERE pos.position_gps_date BETWEEN lo.order_start_date AND lo.order_end_date
+      AND pos.position_gps_date BETWEEN p.start_window AND p.end_window
+    ORDER BY pos.position_gps_date
     """.trimIndent()
 
   private fun buildLocationIdSql(): String =

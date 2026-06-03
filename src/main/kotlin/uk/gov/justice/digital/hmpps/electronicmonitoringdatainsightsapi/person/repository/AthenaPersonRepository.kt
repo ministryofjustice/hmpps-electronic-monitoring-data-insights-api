@@ -5,6 +5,7 @@ import software.amazon.awssdk.services.athena.model.Datum
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.athena.AthenaQueryRunner
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.athena.AwsProperties
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.exception.DataIntegrityException
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.jpa.Constants
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.model.PagedPeople
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.model.PeopleQueryCriteria
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.model.Person
@@ -37,24 +38,15 @@ class AthenaPersonRepository(
   data class SqlAndParams(val sql: String, val params: List<String>)
 
   private fun buildPersonSearchSql(personsQueryCriteria: PeopleQueryCriteria): SqlAndParams {
-    val where = StringBuilder("WHERE 1=1\n")
-    val params = mutableListOf<String>()
+    val builder = WhereBuilder()
 
-    fun addEq(column: String, raw: String?) {
-      raw?.trim()?.takeIf { it.isNotEmpty() }?.let {
-        where.append("  AND $column = CAST(? AS VARCHAR)\n")
-        params += it
-      }
-    }
-
-    addEq("c.nomis_id", personsQueryCriteria.nomisId)
-    addEq("c.pnc_id", personsQueryCriteria.pncId)
-    addEq("c.delius_id", personsQueryCriteria.deliusId)
-
-    // These no longer appear in the caseload schema:
-    // personsQueryCriteria.horId
-    // personsQueryCriteria.ceprId
-    // personsQueryCriteria.prisonId
+    builder.addEq("c.nomis_id", personsQueryCriteria.nomisId)
+    builder.addEq("c.pnc_id", personsQueryCriteria.pncId)
+    builder.addEq("c.delius_id", personsQueryCriteria.deliusId)
+    builder.addIn(
+      "c.enforceable_condition",
+      Constants.ENFORCEABLE_CONDITIONS,
+    )
 
     val sql = """
     SELECT
@@ -72,11 +64,39 @@ class AthenaPersonRepository(
       c.city_or_town AS city,
       c.house_number_and_street_name AS street
     FROM ${properties.athena.mdssDatabase}.caseload c
-    $where
+    ${builder.where}
     LIMIT ${properties.athena.rowLimit}
     """.trimIndent()
 
-    return SqlAndParams(sql, params)
+    return SqlAndParams(sql, builder.params)
+  }
+
+  private class WhereBuilder {
+    val where = StringBuilder("WHERE 1=1\n")
+    val params = mutableListOf<String>()
+
+    fun addEq(column: String, raw: String?) {
+      raw?.trim()
+        ?.takeIf(String::isNotEmpty)
+        ?.let {
+          where.append("  AND $column = CAST(? AS VARCHAR)\n")
+          params += it
+        }
+    }
+
+    fun addIn(column: String, values: List<String>?) {
+      val cleanedValues = values
+        ?.map(String::trim)
+        ?.filter(String::isNotEmpty)
+        .orEmpty()
+
+      if (cleanedValues.isEmpty()) return
+
+      val placeholders = cleanedValues.joinToString(", ") { "CAST(? AS VARCHAR)" }
+
+      where.append("  AND $column IN ($placeholders)\n")
+      params += cleanedValues
+    }
   }
 
   override fun findByPersonById(personId: String): Person? {
