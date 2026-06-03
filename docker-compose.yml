@@ -24,6 +24,7 @@ services:
       - DB_NAME=${DB_NAME}
       - AWS_PROFILE=modernisation-platform-data-eng-800964199911
       - AWS_REGION=eu-west-2
+      - RESPONSIBLE_ORGANISATIONS=
 
   hmpps-auth:
     image: ghcr.io/ministryofjustice/hmpps-auth:latest

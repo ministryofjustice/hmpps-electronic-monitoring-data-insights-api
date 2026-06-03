@@ -23,6 +23,7 @@ class AthenaPersonRepository(
 
     val result = runner.fetchPaged(
       sql = built.sql,
+      database = properties.athena.defaultDatabase,
       cursor = nextToken,
       pageSize = properties.athena.rowLimit,
       mapper = ::mapRow,
@@ -47,6 +48,12 @@ class AthenaPersonRepository(
       "c.enforceable_condition",
       Constants.ENFORCEABLE_CONDITIONS,
     )
+    if (properties.athena.responsibleOrganisations.isNotEmpty()) {
+      builder.addIn(
+        "c.responsible_organisation",
+        properties.athena.responsibleOrganisations,
+      )
+    }
 
     val sql = """
     SELECT

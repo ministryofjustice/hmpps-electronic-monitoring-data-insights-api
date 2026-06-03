@@ -12,8 +12,11 @@ import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.athena.A
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.athena.AthenaQueryRunner
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.athena.AwsProperties
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.exception.DataIntegrityException
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.model.PaginatedResult
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.model.PeopleQueryCriteria
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.model.Person
 import kotlin.String
+import kotlin.collections.emptyList
 
 class AthenaPersonRepositoryTest {
 
@@ -115,6 +118,54 @@ class AthenaPersonRepositoryTest {
     assertThrows<DataIntegrityException> {
       repository.findByPersonById("some-personId")
     }
+  }
+
+  @Test
+  fun `search should add responsible organisation filter when configured`() {
+    val sqlSlot = slot<String>()
+    val paramsSlot = slot<List<String>>()
+
+    val propertiesWithResponsibleOrganisations = properties.copy(
+      athena = properties.athena.copy(
+        responsibleOrganisations = listOf(
+          "Probation London Community/Suspended Sentence",
+          "Probation London Licences",
+        ),
+      ),
+    )
+
+    val repository = AthenaPersonRepository(runner, propertiesWithResponsibleOrganisations)
+
+    val nomisId = "A1234BC"
+
+    every {
+      runner.fetchPaged<Person>(
+        sql = capture(sqlSlot),
+        database = eq(propertiesWithResponsibleOrganisations.athena.defaultDatabase),
+        cursor = isNull(),
+        params = capture(paramsSlot),
+        pageSize = eq(propertiesWithResponsibleOrganisations.athena.rowLimit),
+        mapper = any(),
+      )
+    } returns PaginatedResult(emptyList(), null)
+
+    repository.searchPeople(
+      PeopleQueryCriteria(
+        nomisId = nomisId,
+        pncId = null,
+        deliusId = null,
+      ),
+      nextToken = null,
+    )
+
+    assertThat(sqlSlot.captured)
+      .contains("AND c.responsible_organisation IN (CAST(? AS VARCHAR), CAST(? AS VARCHAR))")
+
+    assertThat(paramsSlot.captured).contains(
+      nomisId,
+      "Probation London Community/Suspended Sentence",
+      "Probation London Licences",
+    )
   }
 
   private fun datum(value: String?): Datum = Datum.builder().varCharValue(value).build()

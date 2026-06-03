@@ -10,6 +10,7 @@ data class AthenaProperties(
   val pollIntervalMs: Long = 500,
   val timeoutMs: Long = 60000,
   val role: String? = null,
+  val responsibleOrganisations: List<String> = emptyList(),
 ) {
-  override fun toString(): String = "defaultDatabase=$defaultDatabase, mdssDatabase=$mdssDatabase, fmsDatabase=$fmsDatabase, outputLocation=$outputLocation, workgroup=$workgroup, rowLimit=$rowLimit, pollIntervalMs=$pollIntervalMs, timeoutMs=$timeoutMs, role=$role"
+  override fun toString(): String = "defaultDatabase=$defaultDatabase, mdssDatabase=$mdssDatabase, fmsDatabase=$fmsDatabase, outputLocation=$outputLocation, workgroup=$workgroup, rowLimit=$rowLimit, pollIntervalMs=$pollIntervalMs, timeoutMs=$timeoutMs, role=$role, responsibleOrganisations=$responsibleOrganisations"
 }
