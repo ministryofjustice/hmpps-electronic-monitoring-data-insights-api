@@ -34,6 +34,17 @@ class AthenaQueryRunner(
     return fetchAllResults(executionId, skipHeaderRow, mapper)
   }
 
+  fun execute(
+    sql: String,
+    database: String = properties.athena.defaultDatabase,
+    params: List<String> = emptyList(),
+  ): String {
+    val executionId = startQuery(sql, database, params)
+    log.debug("Started Athena statement with executionId: $executionId")
+    waitForCompletion(executionId)
+    return executionId
+  }
+
   /**
    * If [cursor] is null, starts a new query.
    * If [cursor] is present, fetches the next batch for the existing query.
