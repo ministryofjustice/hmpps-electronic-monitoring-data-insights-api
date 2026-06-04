@@ -171,6 +171,25 @@ class AthenaQueryRunnerTest {
     assertThat(capturedRequest.executionParameters()).containsExactlyElementsOf(params)
   }
 
+  @Test
+  fun `execute should start query and wait for completion without fetching results`() {
+    val sql = "INSERT INTO test_table SELECT * FROM source_table"
+    val executionId = "exec-write-123"
+
+    every { athenaClient.startQueryExecution(any<StartQueryExecutionRequest>()) } returns
+      StartQueryExecutionResponse.builder().queryExecutionId(executionId).build()
+
+    every { athenaClient.getQueryExecution(any<GetQueryExecutionRequest>()) } returns
+      buildExecutionResponse(QueryExecutionState.SUCCEEDED)
+
+    val result = runner.execute(sql)
+
+    assertThat(result).isEqualTo(executionId)
+    verify(exactly = 1) { athenaClient.startQueryExecution(any<StartQueryExecutionRequest>()) }
+    verify(exactly = 1) { athenaClient.getQueryExecution(any<GetQueryExecutionRequest>()) }
+    verify(exactly = 0) { athenaClient.getQueryResults(any<GetQueryResultsRequest>()) }
+  }
+
   private fun buildExecutionResponse(state: QueryExecutionState) = GetQueryExecutionResponse.builder()
     .queryExecution(
       QueryExecution.builder()
