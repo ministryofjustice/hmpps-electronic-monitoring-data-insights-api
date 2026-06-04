@@ -91,9 +91,8 @@ class AthenaQueryRunner(
 
   private fun startQuery(sql: String, database: String, params: List<String> = emptyList()): String {
     log.debug("Starting query sql: {}, params: {} database: {}", sql, params, database)
-    val req = StartQueryExecutionRequest.builder()
+    val reqBuilder = StartQueryExecutionRequest.builder()
       .queryString(sql)
-      .executionParameters(params)
       .queryExecutionContext(
         QueryExecutionContext.builder()
           .database(database)
@@ -104,7 +103,12 @@ class AthenaQueryRunner(
           .outputLocation(properties.athena.outputLocation)
           .build(),
       )
-      .build()
+
+    if (params.isNotEmpty()) {
+      reqBuilder.executionParameters(params)
+    }
+
+    val req = reqBuilder.build()
 
     log.debug("Starting startQueryExecution: {}", req)
 
