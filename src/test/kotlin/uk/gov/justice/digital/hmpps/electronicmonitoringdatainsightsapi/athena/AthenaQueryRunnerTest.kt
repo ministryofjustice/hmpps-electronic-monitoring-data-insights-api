@@ -172,6 +172,24 @@ class AthenaQueryRunnerTest {
   }
 
   @Test
+  fun `execute should omit execution parameters when none are provided`() {
+    val sql = "INSERT INTO test_table SELECT * FROM source_table"
+    val executionId = "exec-no-params-123"
+    val requestSlot = slot<StartQueryExecutionRequest>()
+
+    every { athenaClient.startQueryExecution(capture(requestSlot)) } returns
+      StartQueryExecutionResponse.builder().queryExecutionId(executionId).build()
+
+    every { athenaClient.getQueryExecution(any<GetQueryExecutionRequest>()) } returns
+      buildExecutionResponse(QueryExecutionState.SUCCEEDED)
+
+    runner.execute(sql)
+
+    assertThat(requestSlot.captured.queryString()).isEqualTo(sql)
+    assertThat(requestSlot.captured.executionParameters()).isEmpty()
+  }
+
+  @Test
   fun `execute should start query and wait for completion without fetching results`() {
     val sql = "INSERT INTO test_table SELECT * FROM source_table"
     val executionId = "exec-write-123"
