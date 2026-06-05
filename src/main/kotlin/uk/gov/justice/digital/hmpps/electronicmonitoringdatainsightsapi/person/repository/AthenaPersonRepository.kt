@@ -194,10 +194,12 @@ class AthenaPersonRepository(
       c.__datetime_added AS __datetime_added
     FROM ${properties.athena.mdssDatabase}.caseload c
     WHERE c.delius_id = CAST(? AS VARCHAR)
+      OR c.nomis_id = CAST(? AS VARCHAR)
     LIMIT ${properties.athena.rowLimit}
     """.trimIndent()
 
-    return SqlAndParams(sql, listOf(deliusId.trim()))
+    val trimmedDeliusId = deliusId.trim()
+    return SqlAndParams(sql, listOf(trimmedDeliusId, trimmedDeliusId))
   }
 
   private fun mapRow(cols: List<Datum>): Person {

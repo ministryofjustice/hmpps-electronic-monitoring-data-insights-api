@@ -219,8 +219,9 @@ class AthenaPersonRepositoryTest {
 
     assertThat(sqlSlot.captured).contains("FROM allied_mdss_test.caseload c")
     assertThat(sqlSlot.captured).contains("WHERE c.delius_id = CAST(? AS VARCHAR)")
+    assertThat(sqlSlot.captured).contains("OR c.nomis_id = CAST(? AS VARCHAR)")
     assertThat(sqlSlot.captured).contains("c.__datetime_added AS __datetime_added")
-    assertThat(paramsSlot.captured).containsExactly("E643189")
+    assertThat(paramsSlot.captured).containsExactly("E643189", "E643189")
     assertThat(result).containsExactly(
       RawCaseload(
         groupedDate = "2026-01-01",
