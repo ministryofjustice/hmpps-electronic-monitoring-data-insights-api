@@ -9,6 +9,7 @@ import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.j
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.model.PagedPeople
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.model.PeopleQueryCriteria
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.model.Person
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.model.RawCaseload
 import java.time.LocalDate
 import kotlin.String
 
@@ -146,6 +147,59 @@ class AthenaPersonRepository(
     return SqlAndParams(sql, listOf(personId.trim()))
   }
 
+  override fun findRawCaseloadByDeliusId(deliusId: String): List<RawCaseload> {
+    val deliusId = validateDeliusId(deliusId)
+    val built = buildRawCaseloadByDeliusIdSql(deliusId)
+
+    return runner.run(
+      sql = built.sql,
+      database = properties.athena.mdssDatabase,
+      skipHeaderRow = true,
+      mapper = ::mapRawCaseloadRow,
+      params = built.params,
+    )
+  }
+
+  private fun validateDeliusId(deliusId: String): String = deliusId.takeIf { it.isNotBlank() }
+    ?: throw IllegalArgumentException("The deliusId provided ($deliusId) must not be blank")
+
+  private fun buildRawCaseloadByDeliusIdSql(deliusId: String): SqlAndParams {
+    val sql = """
+    SELECT
+      c.grouped_date AS grouped_date,
+      c.unique_device_wearer_id AS unique_device_wearer_id,
+      c.first_name AS first_name,
+      c.last_name AS last_name,
+      c.date_of_birth AS date_of_birth,
+      c.house_number_and_street_name AS house_number_and_street_name,
+      c.city_or_town AS city_or_town,
+      c.county AS county,
+      c.country AS country,
+      c.postcode AS postcode,
+      c.nomis_id AS nomis_id,
+      c.pnc_id AS pnc_id,
+      c.delius_id AS delius_id,
+      c.mdss_person_id AS mdss_person_id,
+      c.order_id AS order_id,
+      c.order_start_date AS order_start_date,
+      c.order_commencement_date AS order_commencement_date,
+      c.order_end_date AS order_end_date,
+      c.order_type AS order_type,
+      c.order_type_description AS order_type_description,
+      c.order_type_detail AS order_type_detail,
+      c.responsible_organisation AS responsible_organisation,
+      c.responsible_officer_name AS responsible_officer_name,
+      c.is_monitored AS is_monitored,
+      c.enforceable_condition AS enforceable_condition,
+      c.__datetime_added AS __datetime_added
+    FROM ${properties.athena.mdssDatabase}.caseload c
+    WHERE c.delius_id = CAST(? AS VARCHAR)
+    LIMIT ${properties.athena.rowLimit}
+    """.trimIndent()
+
+    return SqlAndParams(sql, listOf(deliusId.trim()))
+  }
+
   private fun mapRow(cols: List<Datum>): Person {
     fun v(i: Int): String? = cols.getOrNull(i)?.varCharValue()
 
@@ -173,6 +227,39 @@ class AthenaPersonRepository(
     )
   }
 
+  private fun mapRawCaseloadRow(cols: List<Datum>): RawCaseload {
+    fun v(i: Int): String? = cols.getOrNull(i)?.varCharValue()
+
+    return RawCaseload(
+      groupedDate = v(COL_RAW_GROUPED_DATE),
+      uniqueDeviceWearerId = v(COL_RAW_UNIQUE_DEVICE_WEARER_ID),
+      firstName = v(COL_RAW_FIRST_NAME),
+      lastName = v(COL_RAW_LAST_NAME),
+      dateOfBirth = v(COL_RAW_DATE_OF_BIRTH),
+      houseNumberAndStreetName = v(COL_RAW_HOUSE_NUMBER_AND_STREET_NAME),
+      cityOrTown = v(COL_RAW_CITY_OR_TOWN),
+      county = v(COL_RAW_COUNTY),
+      country = v(COL_RAW_COUNTRY),
+      postcode = v(COL_RAW_POSTCODE),
+      nomisId = v(COL_RAW_NOMIS_ID),
+      pncId = v(COL_RAW_PNC_ID),
+      deliusId = v(COL_RAW_DELIUS_ID),
+      mdssPersonId = v(COL_RAW_MDSS_PERSON_ID),
+      orderId = v(COL_RAW_ORDER_ID),
+      orderStartDate = v(COL_RAW_ORDER_START_DATE),
+      orderCommencementDate = v(COL_RAW_ORDER_COMMENCEMENT_DATE),
+      orderEndDate = v(COL_RAW_ORDER_END_DATE),
+      orderType = v(COL_RAW_ORDER_TYPE),
+      orderTypeDescription = v(COL_RAW_ORDER_TYPE_DESCRIPTION),
+      orderTypeDetail = v(COL_RAW_ORDER_TYPE_DETAIL),
+      responsibleOrganisation = v(COL_RAW_RESPONSIBLE_ORGANISATION),
+      responsibleOfficerName = v(COL_RAW_RESPONSIBLE_OFFICER_NAME),
+      isMonitored = v(COL_RAW_IS_MONITORED),
+      enforceableCondition = v(COL_RAW_ENFORCEABLE_CONDITION),
+      datetimeAdded = v(COL_RAW_DATETIME_ADDED),
+    )
+  }
+
   companion object {
     private const val COL_PERSON_ID = 0
     private const val COL_CONSUMER_ID = 1
@@ -187,5 +274,31 @@ class AthenaPersonRepository(
     private const val COL_ZIP = 10
     private const val COL_CITY = 11
     private const val COL_STREET = 12
+    private const val COL_RAW_GROUPED_DATE = 0
+    private const val COL_RAW_UNIQUE_DEVICE_WEARER_ID = 1
+    private const val COL_RAW_FIRST_NAME = 2
+    private const val COL_RAW_LAST_NAME = 3
+    private const val COL_RAW_DATE_OF_BIRTH = 4
+    private const val COL_RAW_HOUSE_NUMBER_AND_STREET_NAME = 5
+    private const val COL_RAW_CITY_OR_TOWN = 6
+    private const val COL_RAW_COUNTY = 7
+    private const val COL_RAW_COUNTRY = 8
+    private const val COL_RAW_POSTCODE = 9
+    private const val COL_RAW_NOMIS_ID = 10
+    private const val COL_RAW_PNC_ID = 11
+    private const val COL_RAW_DELIUS_ID = 12
+    private const val COL_RAW_MDSS_PERSON_ID = 13
+    private const val COL_RAW_ORDER_ID = 14
+    private const val COL_RAW_ORDER_START_DATE = 15
+    private const val COL_RAW_ORDER_COMMENCEMENT_DATE = 16
+    private const val COL_RAW_ORDER_END_DATE = 17
+    private const val COL_RAW_ORDER_TYPE = 18
+    private const val COL_RAW_ORDER_TYPE_DESCRIPTION = 19
+    private const val COL_RAW_ORDER_TYPE_DETAIL = 20
+    private const val COL_RAW_RESPONSIBLE_ORGANISATION = 21
+    private const val COL_RAW_RESPONSIBLE_OFFICER_NAME = 22
+    private const val COL_RAW_IS_MONITORED = 23
+    private const val COL_RAW_ENFORCEABLE_CONDITION = 24
+    private const val COL_RAW_DATETIME_ADDED = 25
   }
 }

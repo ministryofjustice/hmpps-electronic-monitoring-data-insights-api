@@ -95,6 +95,21 @@ class PersonController(
   }
 
   @PreAuthorize(HAS_VIEW_ROLE)
+  @Operation(
+    tags = ["People"],
+    summary = "Get raw caseload data",
+    description = "Returns raw caseload rows for a Delius ID.",
+  )
+  @RequestMapping(
+    method = [RequestMethod.GET],
+    path = ["/raw-caseload/{deliusId}"],
+    produces = [MediaType.APPLICATION_JSON_VALUE],
+  )
+  fun getRawCaseload(@PathVariable deliusId: String) = ResponseEntity.ok(
+    personService.getRawCaseloadByDeliusId(deliusId),
+  )
+
+  @PreAuthorize(HAS_VIEW_ROLE)
   @Operation(tags = ["People"], summary = "Endpoint to establish whether a person exists in EMDI")
   @RequestMapping(
     method = [RequestMethod.GET],

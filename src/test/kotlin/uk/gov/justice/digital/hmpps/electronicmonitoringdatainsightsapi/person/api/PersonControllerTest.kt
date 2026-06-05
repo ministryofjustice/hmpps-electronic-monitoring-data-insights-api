@@ -16,6 +16,7 @@ import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.config.S
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.model.PagedPeople
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.model.PeopleQueryCriteria
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.model.Person
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.model.RawCaseload
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.service.PersonService
 
 @ExtendWith(MockitoExtension::class)
@@ -73,6 +74,26 @@ class PersonControllerTest {
     assertThat(result.statusCode.value()).isEqualTo(404)
 
     verify(personService, times(1)).getPersonById(personId)
+  }
+
+  @Test
+  fun `getRawCaseload should return raw caseload rows for delius id`() {
+    val deliusId = "E643189"
+    val rawCaseload = listOf(
+      RawCaseload(
+        groupedDate = "2026-01-01",
+        uniqueDeviceWearerId = "wearer-1",
+        deliusId = deliusId,
+      ),
+    )
+
+    whenever(personService.getRawCaseloadByDeliusId(deliusId)).thenReturn(rawCaseload)
+
+    val result = controller.getRawCaseload(deliusId)
+
+    assertThat(result.statusCode).isEqualTo(HttpStatus.OK)
+    assertThat(result.body).isEqualTo(rawCaseload)
+    verify(personService, times(1)).getRawCaseloadByDeliusId(deliusId)
   }
 
   @Test
