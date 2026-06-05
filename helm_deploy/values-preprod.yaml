@@ -20,9 +20,6 @@ generic-service:
     FMS_DB: "serco_fms_curated_dev_dbt"
     ATHENA_OUTPUT_BUCKET: "s3://emds-preprod-athena-query-results-20241105110923178000000003/output"
     WORKGROUP: "443370694497-default"
-    RESPONSIBLE_ORGANISATIONS:
-      - "Probation London Community/Suspended Sentence"
-      - "Probation London Licences"
 
 generic-prometheus-alerts:
   alertSeverity: hmpps-electronic-monitoring-data-insights-preprod
