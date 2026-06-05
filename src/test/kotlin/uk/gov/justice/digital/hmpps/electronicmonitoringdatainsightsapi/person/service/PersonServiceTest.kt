@@ -6,6 +6,7 @@ import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.model.Person
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.model.RawCaseload
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.repository.PersonRepository
 
 class PersonServiceTest {
@@ -29,5 +30,18 @@ class PersonServiceTest {
     assertThat(result?.personId).isEqualTo("123456")
 
     verify(exactly = 1) { personRepository.findByPersonById(personId) }
+  }
+
+  @Test
+  fun `getRawCaseloadByDeliusId should call repository and return the result`() {
+    val deliusId = "E643189"
+    val rawCaseload = listOf(RawCaseload(deliusId = deliusId))
+
+    every { personRepository.findRawCaseloadByDeliusId(deliusId) } returns rawCaseload
+
+    val result = personService.getRawCaseloadByDeliusId(deliusId)
+
+    assertThat(result).isEqualTo(rawCaseload)
+    verify(exactly = 1) { personRepository.findRawCaseloadByDeliusId(deliusId) }
   }
 }

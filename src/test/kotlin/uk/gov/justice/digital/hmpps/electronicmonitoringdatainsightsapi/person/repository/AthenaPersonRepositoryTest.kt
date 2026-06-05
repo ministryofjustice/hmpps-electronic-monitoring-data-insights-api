@@ -15,6 +15,7 @@ import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.e
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.model.PaginatedResult
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.model.PeopleQueryCriteria
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.model.Person
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.model.RawCaseload
 import kotlin.String
 import kotlin.collections.emptyList
 
@@ -165,6 +166,90 @@ class AthenaPersonRepositoryTest {
       nomisId,
       "Probation London Community/Suspended Sentence",
       "Probation London Licences",
+    )
+  }
+
+  @Test
+  fun `findRawCaseloadByDeliusId should query caseload table and map raw rows`() {
+    val sqlSlot = slot<String>()
+    val paramsSlot = slot<List<String>>()
+    val rawRow = listOf(
+      datum("2026-01-01"),
+      datum("wearer-1"),
+      datum("Sigmund"),
+      datum("Freud"),
+      datum("1856-05-06"),
+      datum("20 Maresfield Gardens"),
+      datum("London"),
+      datum("Greater London"),
+      datum("England"),
+      datum("NW3 5SX"),
+      datum("A1234BC"),
+      datum("PNC123"),
+      datum("E643189"),
+      datum("41593"),
+      datum("ORDER1"),
+      datum("2026-01-02"),
+      datum("2026-01-03"),
+      datum("2026-12-31"),
+      datum("Community order"),
+      datum("Community order description"),
+      datum("Community order detail"),
+      datum("Probation London Licences"),
+      datum("Officer Name"),
+      datum("true"),
+      datum("Location Monitoring (Fitted Device)"),
+      datum("2026-01-04 12:00:00.000"),
+    )
+
+    every {
+      runner.run<RawCaseload>(
+        sql = capture(sqlSlot),
+        database = eq(properties.athena.mdssDatabase),
+        skipHeaderRow = eq(true),
+        mapper = any(),
+        params = capture(paramsSlot),
+      )
+    } answers {
+      val mapper = it.invocation.args[3] as (List<Datum>) -> RawCaseload
+      listOf(mapper(rawRow))
+    }
+
+    val result = repository.findRawCaseloadByDeliusId("E643189")
+
+    assertThat(sqlSlot.captured).contains("FROM allied_mdss_test.caseload c")
+    assertThat(sqlSlot.captured).contains("WHERE c.delius_id = CAST(? AS VARCHAR)")
+    assertThat(sqlSlot.captured).contains("c.__datetime_added AS __datetime_added")
+    assertThat(paramsSlot.captured).containsExactly("E643189")
+    assertThat(result).containsExactly(
+      RawCaseload(
+        groupedDate = "2026-01-01",
+        uniqueDeviceWearerId = "wearer-1",
+        firstName = "Sigmund",
+        lastName = "Freud",
+        dateOfBirth = "1856-05-06",
+        houseNumberAndStreetName = "20 Maresfield Gardens",
+        cityOrTown = "London",
+        county = "Greater London",
+        country = "England",
+        postcode = "NW3 5SX",
+        nomisId = "A1234BC",
+        pncId = "PNC123",
+        deliusId = "E643189",
+        mdssPersonId = "41593",
+        orderId = "ORDER1",
+        orderStartDate = "2026-01-02",
+        orderCommencementDate = "2026-01-03",
+        orderEndDate = "2026-12-31",
+        orderType = "Community order",
+        orderTypeDescription = "Community order description",
+        orderTypeDetail = "Community order detail",
+        responsibleOrganisation = "Probation London Licences",
+        responsibleOfficerName = "Officer Name",
+        isMonitored = "true",
+        enforceableCondition = "Location Monitoring (Fitted Device)",
+        datetimeAdded = "2026-01-04 12:00:00.000",
+      ),
     )
   }
 
