@@ -19,6 +19,20 @@ import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
 
 @RestControllerAdvice
 class ElectronicMonitoringDataInsightsApiExceptionHandler {
+
+  @ExceptionHandler(IllegalArgumentException::class)
+  fun handleIllegalArgumentException(e: IllegalArgumentException): ResponseEntity<ErrorResponse> = ResponseEntity
+    .status(BAD_REQUEST)
+    .body(
+      ErrorResponse(
+        status = BAD_REQUEST,
+        userMessage = "IllegalArgumentException failure: ${e.message}",
+        developerMessage = e.message,
+      ),
+    ).also {
+      log.info("IllegalArgumentException exception: {}", e.message)
+    }
+
   @ExceptionHandler(ValidationException::class)
   fun handleValidationException(e: ValidationException): ResponseEntity<ErrorResponse> = ResponseEntity
     .status(BAD_REQUEST)
