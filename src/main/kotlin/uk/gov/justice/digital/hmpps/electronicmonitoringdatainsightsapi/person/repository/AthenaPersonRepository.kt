@@ -195,11 +195,12 @@ class AthenaPersonRepository(
     FROM ${properties.athena.mdssDatabase}.caseload c
     WHERE c.delius_id = CAST(? AS VARCHAR)
       OR c.nomis_id = CAST(? AS VARCHAR)
+      OR c.pnc_id = CAST(? AS VARCHAR)
     LIMIT ${properties.athena.rowLimit}
     """.trimIndent()
 
     val trimmedDeliusId = deliusId.trim()
-    return SqlAndParams(sql, listOf(trimmedDeliusId, trimmedDeliusId))
+    return SqlAndParams(sql, listOf(trimmedDeliusId, trimmedDeliusId, trimmedDeliusId))
   }
 
   private fun mapRow(cols: List<Datum>): Person {
