@@ -7,6 +7,7 @@ import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.Mock
 import org.mockito.junit.jupiter.MockitoExtension
 import org.mockito.kotlin.times
+import org.mockito.kotlin.verifyNoInteractions
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import org.springframework.beans.factory.ObjectProvider
@@ -50,6 +51,7 @@ class PersonControllerTest {
       serviceProperties = serviceProperties,
       probationSearchApiClient = probationSearchApiClient,
       devStubEnabled = false,
+      probationSearchEnabled = false,
     )
   }
 
@@ -107,6 +109,34 @@ class PersonControllerTest {
     val crn = "X123456"
     val mockPeople = PagedPeople(listOf(Person(personId = "123456")), null)
 
+    whenever(
+      personService.searchPeople(
+        personsQueryCriteria = PeopleQueryCriteria(deliusId = crn),
+      ),
+    ).thenReturn(mockPeople)
+
+    val result = controller.existsInEMDI(crn)
+
+    assertThat(result.statusCode).isEqualTo(HttpStatus.OK)
+    assertThat(result.body).isNotNull()
+    assertThat(result.body!!.uri.toString()).contains(crn)
+    verifyNoInteractions(probationSearchApiClient)
+  }
+
+  @Test
+  fun `exists endpoint should use probation search ids when enabled`() {
+    val crn = "X123456"
+    val mockPeople = PagedPeople(listOf(Person(personId = "123456")), null)
+    val controller = PersonController(
+      personService = personService,
+      devPersonProvider = devPersonProvider,
+      currentUserService = currentUserService,
+      serviceProperties = serviceProperties,
+      probationSearchApiClient = probationSearchApiClient,
+      devStubEnabled = false,
+      probationSearchEnabled = true,
+    )
+
     whenever(probationSearchApiClient.searchByCrn(crn)).thenReturn(
       listOf(OtherIds(crn = crn, pncNumber = "2012/0052494Q", nomsNumber = "G5555TT")),
     )
@@ -134,9 +164,6 @@ class PersonControllerTest {
     val crn = "X123456"
     val mockPeople = PagedPeople(emptyList(), null)
 
-    whenever(probationSearchApiClient.searchByCrn(crn)).thenReturn(
-      listOf(OtherIds(crn = crn)),
-    )
     whenever(
       personService.searchPeople(
         personsQueryCriteria = PeopleQueryCriteria(deliusId = crn),

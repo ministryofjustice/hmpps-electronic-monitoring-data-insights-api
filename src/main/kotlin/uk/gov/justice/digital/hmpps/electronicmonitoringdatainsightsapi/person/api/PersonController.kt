@@ -39,6 +39,8 @@ class PersonController(
   private val probationSearchApiClient: ProbationSearchApiClient,
   @Value("\${dev.stub.enabled:false}")
   private val devStubEnabled: Boolean,
+  @Value("\${probation.search.enabled:false}")
+  private val probationSearchEnabled: Boolean,
 ) {
 
   companion object {
@@ -121,6 +123,11 @@ class PersonController(
   fun existsInEMDI(
     @PathVariable @Parameter(description = "The crn of the person", required = true) crn: String,
   ): ResponseEntity<ExistsInEMDI> {
+    val username = currentUserService.username()
+    log.info("Checking user {} has access to this crn {}", username, crn)
+    // TODO use probation integration service here to see if the user can access this CRN
+    log.info("User {} has access to this crn {}", username, crn)
+
     val provider = devPersonProvider.ifAvailable
 
     val exists = if (
@@ -151,6 +158,10 @@ class PersonController(
   }
 
   private fun findPerson(crn: String): PeopleQueryCriteria {
+    if (!probationSearchEnabled) {
+      return PeopleQueryCriteria(deliusId = crn)
+    }
+
     val probationSearchOtherIds = probationSearchApiClient.searchByCrn(crn)
     log.info(
       "Probation Search returned ids for CRN {}: {}",

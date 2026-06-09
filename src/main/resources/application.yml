@@ -87,6 +87,10 @@ service:
   base-url: ${SERVICE_BASE_URL}
   ui-base-url: ${UI_SERVICE_BASE_URL}
 
+probation:
+  search:
+    enabled: ${PROBATION_SEARCH_ENABLED:false}
+
 apis:
   probation-search-api:
     url: ${PROBATION_SEARCH_API_URL}
