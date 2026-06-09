@@ -175,7 +175,8 @@
           { "VarCharValue": "u_dob" },
           { "VarCharValue": "zip" },
           { "VarCharValue": "city" },
-          { "VarCharValue": "street" }
+          { "VarCharValue": "street" },
+          { "VarCharValue": "order_id" }
         ]
       },
       {
@@ -192,7 +193,8 @@
           { "VarCharValue": "1980-01-15" },
           { "VarCharValue": "SW1A 1AA" },
           { "VarCharValue": "London" },
-          { "VarCharValue": "1 Test Street" }
+          { "VarCharValue": "1 Test Street" },
+          {"VarCharValue": "ORDER123"}
         ]
       }
     ]

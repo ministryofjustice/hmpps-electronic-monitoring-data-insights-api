@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.repository
 
+import mu.KotlinLogging
 import org.springframework.stereotype.Repository
 import software.amazon.awssdk.services.athena.model.Datum
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.athena.AthenaQueryRunner
@@ -13,6 +14,8 @@ import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.m
 import java.time.LocalDate
 import kotlin.String
 
+private val log = KotlinLogging.logger {}
+
 @Repository
 class AthenaPersonRepository(
   private val runner: AthenaQueryRunner,
@@ -21,14 +24,29 @@ class AthenaPersonRepository(
 
   override fun searchPeople(personsQueryCriteria: PeopleQueryCriteria, nextToken: String?): PagedPeople {
     val built = buildPersonSearchSql(personsQueryCriteria)
+    val distinctOrderIds = mutableSetOf<String>()
 
     val result = runner.fetchPaged(
       sql = built.sql,
       database = properties.athena.defaultDatabase,
       cursor = nextToken,
       pageSize = properties.athena.rowLimit,
-      mapper = ::mapRow,
+      mapper = { cols ->
+        cols.getOrNull(COL_ORDER_ID)
+          ?.varCharValue()
+          ?.trim()
+          ?.takeIf(String::isNotEmpty)
+          ?.let(distinctOrderIds::add)
+
+        mapRow(cols)
+      },
       params = built.params,
+    )
+
+    log.info(
+      "Athena person search returned {} people with {} distinct orderIds",
+      result.items.size,
+      distinctOrderIds.size,
     )
 
     return PagedPeople(
@@ -70,7 +88,8 @@ class AthenaPersonRepository(
       c.date_of_birth AS u_dob,
       c.postcode AS zip,
       c.city_or_town AS city,
-      c.house_number_and_street_name AS street
+      c.house_number_and_street_name AS street,
+      c.order_id AS order_id
     FROM ${properties.athena.mdssDatabase}.caseload c
     ${builder.where}
     LIMIT ${properties.athena.rowLimit}
@@ -187,7 +206,7 @@ class AthenaPersonRepository(
       c.postcode AS zip,
       c.city_or_town AS city,
       c.house_number_and_street_name AS street,
-      c.unique_device_wearer_id AS u_id_device_wearer
+      c.order_id AS order_id
     FROM ${properties.athena.mdssDatabase}.caseload c
     WHERE c.mdss_person_id = CAST(? AS BIGINT)
     LIMIT 1
@@ -276,6 +295,7 @@ class AthenaPersonRepository(
       zip = v(COL_ZIP),
       city = v(COL_CITY),
       street = v(COL_STREET),
+      orderId = v(COL_ORDER_ID),
     )
   }
 
@@ -327,6 +347,7 @@ class AthenaPersonRepository(
     private const val COL_ZIP = 10
     private const val COL_CITY = 11
     private const val COL_STREET = 12
+    private const val COL_ORDER_ID = 13
     private const val COL_RAW_GROUPED_DATE = 0
     private const val COL_RAW_UNIQUE_DEVICE_WEARER_ID = 1
     private const val COL_RAW_FIRST_NAME = 2

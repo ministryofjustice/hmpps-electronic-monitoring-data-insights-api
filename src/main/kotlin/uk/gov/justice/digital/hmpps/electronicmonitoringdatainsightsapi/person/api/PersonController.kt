@@ -151,7 +151,13 @@ class PersonController(
   }
 
   private fun findPerson(crn: String): PeopleQueryCriteria {
-    val otherIds = probationSearchApiClient.searchByCrn(crn).firstOrNull()
+    val probationSearchOtherIds = probationSearchApiClient.searchByCrn(crn)
+    log.info(
+      "Probation Search returned ids for CRN {}: {}",
+      crn,
+      probationSearchOtherIds.joinToString { "crn=${it.crn}, pncNumber=${it.pncNumber}, nomsNumber=${it.nomsNumber}" },
+    )
+    val otherIds = probationSearchOtherIds.firstOrNull()
 
     return PeopleQueryCriteria(
       deliusId = crn,

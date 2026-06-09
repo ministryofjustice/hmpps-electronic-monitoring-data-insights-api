@@ -80,6 +80,7 @@ class AthenaPersonRepositoryTest {
       datum("LON 1243"), // 9: zip
       datum("City"), // 10: city
       datum("Street"), // 11: street
+      datum("ORDER123"), // 12: order_id
     )
 
     every { runner.run<Person>(any(), any(), any(), any(), any()) } answers {
@@ -99,6 +100,7 @@ class AthenaPersonRepositoryTest {
     assertThat(person.horId).isEqualTo("C6263919")
     assertThat(person.ceprId).isEqualTo("0987654321")
     assertThat(person.prisonId).isEqualTo("X69847")
+    assertThat(person.orderId).isEqualTo("ORDER123")
   }
 
   @Test
