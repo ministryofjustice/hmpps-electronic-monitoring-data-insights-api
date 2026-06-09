@@ -170,6 +170,82 @@ class AthenaPersonRepositoryTest {
   }
 
   @Test
+  fun `search should OR populated person identifiers`() {
+    val sqlSlot = slot<String>()
+    val paramsSlot = slot<List<String>>()
+
+    every {
+      runner.fetchPaged<Person>(
+        sql = capture(sqlSlot),
+        database = eq(properties.athena.defaultDatabase),
+        cursor = isNull(),
+        params = capture(paramsSlot),
+        pageSize = eq(properties.athena.rowLimit),
+        mapper = any(),
+      )
+    } returns PaginatedResult(emptyList(), null)
+
+    repository.searchPeople(
+      PeopleQueryCriteria(
+        nomisId = "A1234BC",
+        pncId = "2016/0305863C",
+        deliusId = "X123456",
+      ),
+      nextToken = null,
+    )
+
+    assertThat(sqlSlot.captured)
+      .contains(
+        "AND (c.nomis_id = CAST(? AS VARCHAR) OR c.pnc_id = CAST(? AS VARCHAR) OR c.pnc_id = CAST(? AS VARCHAR) OR c.pnc_id = CAST(? AS VARCHAR) OR c.pnc_id = CAST(? AS VARCHAR) OR c.delius_id = CAST(? AS VARCHAR))",
+      )
+
+    assertThat(paramsSlot.captured).startsWith(
+      "A1234BC",
+      "2016/0305863C",
+      "20160305863C",
+      "16/0305863C",
+      "160305863C",
+      "X123456",
+    )
+  }
+
+  @Test
+  fun `search should include four variations for two digit PNC years`() {
+    val sqlSlot = slot<String>()
+    val paramsSlot = slot<List<String>>()
+
+    every {
+      runner.fetchPaged<Person>(
+        sql = capture(sqlSlot),
+        database = eq(properties.athena.defaultDatabase),
+        cursor = isNull(),
+        params = capture(paramsSlot),
+        pageSize = eq(properties.athena.rowLimit),
+        mapper = any(),
+      )
+    } returns PaginatedResult(emptyList(), null)
+
+    repository.searchPeople(
+      PeopleQueryCriteria(
+        pncId = "95/0202300L",
+      ),
+      nextToken = null,
+    )
+
+    assertThat(sqlSlot.captured)
+      .contains(
+        "AND (c.pnc_id = CAST(? AS VARCHAR) OR c.pnc_id = CAST(? AS VARCHAR) OR c.pnc_id = CAST(? AS VARCHAR) OR c.pnc_id = CAST(? AS VARCHAR))",
+      )
+
+    assertThat(paramsSlot.captured).startsWith(
+      "95/0202300L",
+      "950202300L",
+      "1995/0202300L",
+      "19950202300L",
+    )
+  }
+
+  @Test
   fun `findRawCaseloadByDeliusId should query caseload table and map raw rows`() {
     val sqlSlot = slot<String>()
     val paramsSlot = slot<List<String>>()

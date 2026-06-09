@@ -42,9 +42,9 @@ class AthenaPersonRepository(
   private fun buildPersonSearchSql(personsQueryCriteria: PeopleQueryCriteria): SqlAndParams {
     val builder = WhereBuilder()
 
-    builder.addEq("c.nomis_id", personsQueryCriteria.nomisId)
-    builder.addEq("c.pnc_id", personsQueryCriteria.pncId)
-    builder.addEq("c.delius_id", personsQueryCriteria.deliusId)
+    builder.addAnyEq(
+      *identifierCriteria(personsQueryCriteria).toTypedArray(),
+    )
     builder.addIn(
       "c.enforceable_condition",
       Constants.ENFORCEABLE_CONDITIONS,
@@ -79,6 +79,39 @@ class AthenaPersonRepository(
     return SqlAndParams(sql, builder.params)
   }
 
+  private fun identifierCriteria(personsQueryCriteria: PeopleQueryCriteria): List<Pair<String, String?>> = listOf(
+    listOf("c.nomis_id" to personsQueryCriteria.nomisId),
+    pncIdVariations(personsQueryCriteria.pncId).map { "c.pnc_id" to it },
+    listOf("c.delius_id" to personsQueryCriteria.deliusId),
+  ).flatten()
+
+  private fun pncIdVariations(pncId: String?): List<String> {
+    val trimmedPncId = pncId
+      ?.trim()
+      ?.takeIf(String::isNotEmpty)
+      ?: return emptyList()
+
+    val match = PNC_ID_WITH_SLASH_REGEX.matchEntire(trimmedPncId)
+      ?: return listOf(trimmedPncId)
+
+    val year = match.groupValues[1]
+    val numberAndSuffix = match.groupValues[2]
+    val alternateYear = if (year.length == 2) {
+      centuryPrefix(year) + year
+    } else {
+      year.takeLast(2)
+    }
+
+    return listOf(
+      "$year/$numberAndSuffix",
+      "$year$numberAndSuffix",
+      "$alternateYear/$numberAndSuffix",
+      "$alternateYear$numberAndSuffix",
+    ).distinct()
+  }
+
+  private fun centuryPrefix(twoDigitYear: String): String = if (twoDigitYear.toInt() >= 50) "19" else "20"
+
   private class WhereBuilder {
     val where = StringBuilder("WHERE 1=1\n")
     val params = mutableListOf<String>()
@@ -90,6 +123,22 @@ class AthenaPersonRepository(
           where.append("  AND $column = CAST(? AS VARCHAR)\n")
           params += it
         }
+    }
+
+    fun addAnyEq(vararg criteria: Pair<String, String?>) {
+      val cleanedCriteria = criteria
+        .mapNotNull { (column, raw) ->
+          raw?.trim()
+            ?.takeIf(String::isNotEmpty)
+            ?.let { column to it }
+        }
+
+      if (cleanedCriteria.isEmpty()) return
+
+      val conditions = cleanedCriteria.joinToString(" OR ") { (column) -> "$column = CAST(? AS VARCHAR)" }
+
+      where.append("  AND ($conditions)\n")
+      params += cleanedCriteria.map { (_, value) -> value }
     }
 
     fun addIn(column: String, values: List<String>?) {
@@ -264,6 +313,7 @@ class AthenaPersonRepository(
   }
 
   companion object {
+    private val PNC_ID_WITH_SLASH_REGEX = Regex("""^(\d{2}|\d{4})/([0-9]+[A-Za-z]?)$""")
     private const val COL_PERSON_ID = 0
     private const val COL_CONSUMER_ID = 1
     private const val COL_PERSON_NAME = 2

@@ -18,6 +18,13 @@ spring:
         provider:
           hmpps-auth:
             token-uri: ${hmpps-auth.url}/oauth/token
+        registration:
+          probation-search-api:
+            provider: hmpps-auth
+            client-id: ${probation-search-api.client.id}
+            client-secret: ${probation-search-api.client.secret}
+            authorization-grant-type: client_credentials
+            scope: read
   http:
     codecs:
       max-in-memory-size: 10MB
@@ -79,3 +86,7 @@ springdoc:
 service:
   base-url: ${SERVICE_BASE_URL}
   ui-base-url: ${UI_SERVICE_BASE_URL}
+
+apis:
+  probation-search-api:
+    url: ${PROBATION_SEARCH_API_URL}

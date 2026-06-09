@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestMethod
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.client.probationsearch.ProbationSearchApiClient
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.HAS_VIEW_ROLE
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.service.CurrentUserService
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.config.ServiceProperties
@@ -35,6 +36,7 @@ class PersonController(
   private val serviceProperties: ServiceProperties,
   private val currentUserService: CurrentUserService,
   private val devPersonProvider: ObjectProvider<DevPersonProvider>,
+  private val probationSearchApiClient: ProbationSearchApiClient,
   @Value("\${dev.stub.enabled:false}")
   private val devStubEnabled: Boolean,
 ) {
@@ -119,11 +121,6 @@ class PersonController(
   fun existsInEMDI(
     @PathVariable @Parameter(description = "The crn of the person", required = true) crn: String,
   ): ResponseEntity<ExistsInEMDI> {
-    val username = currentUserService.username()
-    log.info("Checking user {} has access to this crn {}", username, crn)
-    // TODO use probation integration service here to see if the user can access this CRN
-    log.info("User {} has access to this crn {}", username, crn)
-
     val provider = devPersonProvider.ifAvailable
 
     val exists = if (
@@ -134,8 +131,10 @@ class PersonController(
       log.info("Using hardcoded dev person in existsInEMDI endpoint")
       true
     } else {
+      val peopleQueryCriteria = findPerson(crn)
+
       personService
-        .searchPeople(PeopleQueryCriteria(deliusId = crn))
+        .searchPeople(peopleQueryCriteria)
         .persons
         .isNotEmpty()
     }
@@ -149,5 +148,15 @@ class PersonController(
     } else {
       ResponseEntity.notFound().build()
     }
+  }
+
+  private fun findPerson(crn: String): PeopleQueryCriteria {
+    val otherIds = probationSearchApiClient.searchByCrn(crn).firstOrNull()
+
+    return PeopleQueryCriteria(
+      deliusId = crn,
+      pncId = otherIds?.pncNumber,
+      nomisId = otherIds?.nomsNumber,
+    )
   }
 }

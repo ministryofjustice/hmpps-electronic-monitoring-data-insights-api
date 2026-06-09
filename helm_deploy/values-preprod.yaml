@@ -12,6 +12,7 @@ generic-service:
   env:
     APPLICATIONINSIGHTS_CONFIGURATION_FILE: "applicationinsights.dev.json"
     HMPPS_AUTH_URL: "https://sign-in-preprod.hmpps.service.justice.gov.uk/auth"
+    PROBATION_SEARCH_API_URL: "https://probation-offender-search-preprod.hmpps.service.justice.gov.uk"
     UI_SERVICE_BASE_URL: "https://electronic-monitoring-data-insights-ui-preprod.hmpps.service.justice.gov.uk"
     SERVICE_BASE_URL: "https://electronic-monitoring-data-insights-api-preprod.hmpps.service.justice.gov.uk"
     MFA_REQUIRED: "false"
