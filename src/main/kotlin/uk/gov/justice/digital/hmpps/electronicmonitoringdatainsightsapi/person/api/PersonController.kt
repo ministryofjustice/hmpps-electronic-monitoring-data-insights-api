@@ -149,7 +149,7 @@ class PersonController(
     return if (exists) {
       ResponseEntity.ok(
         ExistsInEMDI(
-          URI("${serviceProperties.uiBaseUrl}/people/$crn"),
+          URI("${serviceProperties.uiBaseUrl}/people/$crn/locations"),
         ),
       )
     } else {

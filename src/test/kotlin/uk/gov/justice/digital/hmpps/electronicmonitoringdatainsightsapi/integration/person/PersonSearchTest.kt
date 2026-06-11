@@ -96,6 +96,6 @@ class PersonSearchTest : IntegrationTestBase() {
       .returnResult()
       .responseBody!!
 
-    assertThat(response.uri.toString()).isEqualTo("http://localhost:8081/people/X123456")
+    assertThat(response.uri.toString()).isEqualTo("http://localhost:8081/people/X123456/locations")
   }
 }
