@@ -19,4 +19,5 @@ constructor(
   val zip: String? = null,
   val city: String? = null,
   val street: String? = null,
+  val orderId: String? = null,
 )

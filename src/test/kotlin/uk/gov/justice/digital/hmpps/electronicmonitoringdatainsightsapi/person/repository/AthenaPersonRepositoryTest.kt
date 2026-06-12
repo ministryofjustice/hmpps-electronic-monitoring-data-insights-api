@@ -80,6 +80,7 @@ class AthenaPersonRepositoryTest {
       datum("LON 1243"), // 9: zip
       datum("City"), // 10: city
       datum("Street"), // 11: street
+      datum("ORDER123"), // 12: order_id
     )
 
     every { runner.run<Person>(any(), any(), any(), any(), any()) } answers {
@@ -99,6 +100,7 @@ class AthenaPersonRepositoryTest {
     assertThat(person.horId).isEqualTo("C6263919")
     assertThat(person.ceprId).isEqualTo("0987654321")
     assertThat(person.prisonId).isEqualTo("X69847")
+    assertThat(person.orderId).isEqualTo("ORDER123")
   }
 
   @Test
@@ -166,6 +168,118 @@ class AthenaPersonRepositoryTest {
       nomisId,
       "Probation London Community/Suspended Sentence",
       "Probation London Licences",
+    )
+  }
+
+  @Test
+  fun `search should OR populated person identifiers`() {
+    val sqlSlot = slot<String>()
+    val paramsSlot = slot<List<String>>()
+
+    every {
+      runner.fetchPaged<Person>(
+        sql = capture(sqlSlot),
+        database = eq(properties.athena.defaultDatabase),
+        cursor = isNull(),
+        params = capture(paramsSlot),
+        pageSize = eq(properties.athena.rowLimit),
+        mapper = any(),
+      )
+    } returns PaginatedResult(emptyList(), null)
+
+    repository.searchPeople(
+      PeopleQueryCriteria(
+        nomisId = "A1234BC",
+        pncId = "2016/0305863C",
+        deliusId = "X123456",
+      ),
+      nextToken = null,
+    )
+
+    assertThat(sqlSlot.captured)
+      .contains(
+        "AND (c.nomis_id = CAST(? AS VARCHAR) OR c.pnc_id = CAST(? AS VARCHAR) OR c.pnc_id = CAST(? AS VARCHAR) OR c.pnc_id = CAST(? AS VARCHAR) OR c.pnc_id = CAST(? AS VARCHAR) OR c.pnc_id = CAST(? AS VARCHAR) OR c.pnc_id = CAST(? AS VARCHAR) OR c.delius_id = CAST(? AS VARCHAR))",
+      )
+
+    assertThat(paramsSlot.captured).startsWith(
+      "A1234BC",
+      "2016/0305863C",
+      "20160305863C",
+      "16/0305863C",
+      "160305863C",
+      "2016/305863C",
+      "16/305863C",
+      "X123456",
+    )
+  }
+
+  @Test
+  fun `search should include four variations for two digit PNC years`() {
+    val sqlSlot = slot<String>()
+    val paramsSlot = slot<List<String>>()
+
+    every {
+      runner.fetchPaged<Person>(
+        sql = capture(sqlSlot),
+        database = eq(properties.athena.defaultDatabase),
+        cursor = isNull(),
+        params = capture(paramsSlot),
+        pageSize = eq(properties.athena.rowLimit),
+        mapper = any(),
+      )
+    } returns PaginatedResult(emptyList(), null)
+
+    repository.searchPeople(
+      PeopleQueryCriteria(
+        pncId = "95/0202300L",
+      ),
+      nextToken = null,
+    )
+
+    assertThat(sqlSlot.captured)
+      .contains(
+        "AND (c.pnc_id = CAST(? AS VARCHAR) OR c.pnc_id = CAST(? AS VARCHAR) OR c.pnc_id = CAST(? AS VARCHAR) OR c.pnc_id = CAST(? AS VARCHAR) OR c.pnc_id = CAST(? AS VARCHAR) OR c.pnc_id = CAST(? AS VARCHAR))",
+      )
+
+    assertThat(paramsSlot.captured).startsWith(
+      "95/0202300L",
+      "950202300L",
+      "1995/0202300L",
+      "19950202300L",
+      "95/202300L",
+      "1995/202300L",
+    )
+  }
+
+  @Test
+  fun `search should include leading zero trimmed PNC variations for four digit years`() {
+    val paramsSlot = slot<List<String>>()
+
+    every {
+      runner.fetchPaged<Person>(
+        sql = any(),
+        database = eq(properties.athena.defaultDatabase),
+        cursor = isNull(),
+        params = capture(paramsSlot),
+        pageSize = eq(properties.athena.rowLimit),
+        mapper = any(),
+      )
+    } returns PaginatedResult(emptyList(), null)
+
+    repository.searchPeople(
+      PeopleQueryCriteria(
+        pncId = "2018/0063295X",
+      ),
+      nextToken = null,
+    )
+
+    assertThat(paramsSlot.captured).startsWith(
+      "2018/0063295X",
+      "20180063295X",
+      "18/0063295X",
+      "180063295X",
+      "2018/63295X",
+      "18/63295X",
     )
   }
 

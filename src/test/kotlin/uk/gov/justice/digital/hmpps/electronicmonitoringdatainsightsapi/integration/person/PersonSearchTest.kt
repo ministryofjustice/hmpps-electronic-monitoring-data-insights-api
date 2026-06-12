@@ -45,6 +45,7 @@ class PersonSearchTest : IntegrationTestBase() {
     assertThat(person.zip).isEqualTo("SW1A 1AA")
     assertThat(person.city).isEqualTo("London")
     assertThat(person.street).isEqualTo("1 Test Street")
+    assertThat(person.orderId).isEqualTo("ORDER123")
   }
 
   @Test
@@ -78,6 +79,7 @@ class PersonSearchTest : IntegrationTestBase() {
 
   @Test
   fun `Exists endpoint returns the correct URL`() {
+    stubProbationSearchByCrn("X123456", pncNumber = "2000/123456A", nomsNumber = "A1234BC")
     stubQueryExecution(
       "123",
       1,

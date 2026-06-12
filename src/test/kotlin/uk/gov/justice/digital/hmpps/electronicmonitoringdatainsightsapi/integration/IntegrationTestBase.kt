@@ -53,6 +53,11 @@ abstract class IntegrationTestBase {
     hmppsAuth.stubHealthPing(status)
   }
 
+  protected fun stubProbationSearchByCrn(crn: String, pncNumber: String? = null, nomsNumber: String? = null) {
+    hmppsAuth.stubGrantToken()
+    hmppsAuth.stubProbationSearchByCrn(crn, pncNumber, nomsNumber)
+  }
+
   protected fun stubQueryExecution(
     queryExecutionId: String,
     retryCount: Int,
