@@ -115,6 +115,7 @@ class AthenaPersonRepository(
 
     val year = match.groupValues[1]
     val numberAndSuffix = match.groupValues[2]
+    val trimmedNumberAndSuffix = trimLeadingZeroesFromPncNumber(numberAndSuffix)
     val alternateYear = if (year.length == 2) {
       centuryPrefix(year) + year
     } else {
@@ -126,7 +127,15 @@ class AthenaPersonRepository(
       "$year$numberAndSuffix",
       "$alternateYear/$numberAndSuffix",
       "$alternateYear$numberAndSuffix",
+      "$year/$trimmedNumberAndSuffix",
+      "$alternateYear/$trimmedNumberAndSuffix",
     ).distinct()
+  }
+
+  private fun trimLeadingZeroesFromPncNumber(numberAndSuffix: String): String {
+    val number = numberAndSuffix.takeWhile(Char::isDigit)
+    val suffix = numberAndSuffix.drop(number.length)
+    return number.trimStart('0').ifEmpty { "0" } + suffix
   }
 
   private fun centuryPrefix(twoDigitYear: String): String = if (twoDigitYear.toInt() >= 50) "19" else "20"

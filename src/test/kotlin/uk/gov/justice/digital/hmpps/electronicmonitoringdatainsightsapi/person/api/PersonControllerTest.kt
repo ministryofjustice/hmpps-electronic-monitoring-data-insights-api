@@ -105,6 +105,65 @@ class PersonControllerTest {
   }
 
   @Test
+  fun `searchPeople should enrich missing ids when requested`() {
+    val crn = "X123456"
+    val controller = PersonController(
+      personService = personService,
+      devPersonProvider = devPersonProvider,
+      currentUserService = currentUserService,
+      serviceProperties = serviceProperties,
+      probationSearchApiClient = probationSearchApiClient,
+      devStubEnabled = false,
+      probationSearchEnabled = true,
+    )
+    val pagedPeople = PagedPeople(listOf(Person(personId = "123456")), null)
+
+    whenever(probationSearchApiClient.searchByCrn(crn)).thenReturn(
+      listOf(OtherIds(crn = crn, pncNumber = "2012/0052494Q", nomsNumber = "G5555TT")),
+    )
+    whenever(
+      personService.searchPeople(
+        personsQueryCriteria = PeopleQueryCriteria(
+          deliusId = crn,
+          pncId = "EXISTING-PNC",
+          nomisId = "G5555TT",
+        ),
+      ),
+    ).thenReturn(pagedPeople)
+
+    val result = controller.searchPeople(
+      peopleQueryCriteria = PeopleQueryCriteria(
+        deliusId = crn,
+        pncId = "EXISTING-PNC",
+        enrichIds = true,
+      ),
+      nextToken = "next-token",
+    )
+
+    assertThat(result.statusCode).isEqualTo(HttpStatus.OK)
+    assertThat(result.body).isEqualTo(PersonResponse(pagedPeople.persons, pagedPeople.nextToken))
+    verify(probationSearchApiClient, times(1)).searchByCrn(crn)
+  }
+
+  @Test
+  fun `searchPeople should not enrich ids when not requested`() {
+    val criteria = PeopleQueryCriteria(deliusId = "X123456", enrichIds = false)
+    val pagedPeople = PagedPeople(emptyList(), null)
+
+    whenever(
+      personService.searchPeople(
+        personsQueryCriteria = criteria,
+        nextToken = null,
+      ),
+    ).thenReturn(pagedPeople)
+
+    val result = controller.searchPeople(criteria, null)
+
+    assertThat(result.statusCode).isEqualTo(HttpStatus.OK)
+    verifyNoInteractions(probationSearchApiClient)
+  }
+
+  @Test
   fun `exists endpoint should return 200 and person when they exist`() {
     val crn = "X123456"
     val mockPeople = PagedPeople(listOf(Person(personId = "123456")), null)

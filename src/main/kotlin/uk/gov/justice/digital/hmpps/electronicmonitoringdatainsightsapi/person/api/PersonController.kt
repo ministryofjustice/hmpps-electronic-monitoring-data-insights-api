@@ -74,7 +74,7 @@ class PersonController(
       )
     }
 
-    val pagedPeople = personService.searchPeople(peopleQueryCriteria, nextToken)
+    val pagedPeople = personService.searchPeople(enrichPeopleQueryCriteria(peopleQueryCriteria))
 
     return ResponseEntity.ok(
       PersonResponse(
@@ -155,6 +155,23 @@ class PersonController(
     } else {
       ResponseEntity.notFound().build()
     }
+  }
+
+  private fun enrichPeopleQueryCriteria(peopleQueryCriteria: PeopleQueryCriteria): PeopleQueryCriteria {
+    val deliusId = peopleQueryCriteria.deliusId
+      ?.trim()
+      ?.takeIf(String::isNotEmpty)
+
+    if (!peopleQueryCriteria.enrichIds || deliusId == null) {
+      return peopleQueryCriteria
+    }
+
+    val enrichedPeopleQueryCriteria = findPerson(deliusId)
+
+    return peopleQueryCriteria.copy(
+      nomisId = peopleQueryCriteria.nomisId ?: enrichedPeopleQueryCriteria.nomisId,
+      pncId = peopleQueryCriteria.pncId ?: enrichedPeopleQueryCriteria.pncId,
+    )
   }
 
   private fun findPerson(crn: String): PeopleQueryCriteria {

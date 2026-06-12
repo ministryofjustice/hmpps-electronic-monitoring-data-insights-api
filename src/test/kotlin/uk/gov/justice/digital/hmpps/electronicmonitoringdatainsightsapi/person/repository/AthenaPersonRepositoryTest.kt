@@ -198,7 +198,7 @@ class AthenaPersonRepositoryTest {
 
     assertThat(sqlSlot.captured)
       .contains(
-        "AND (c.nomis_id = CAST(? AS VARCHAR) OR c.pnc_id = CAST(? AS VARCHAR) OR c.pnc_id = CAST(? AS VARCHAR) OR c.pnc_id = CAST(? AS VARCHAR) OR c.pnc_id = CAST(? AS VARCHAR) OR c.delius_id = CAST(? AS VARCHAR))",
+        "AND (c.nomis_id = CAST(? AS VARCHAR) OR c.pnc_id = CAST(? AS VARCHAR) OR c.pnc_id = CAST(? AS VARCHAR) OR c.pnc_id = CAST(? AS VARCHAR) OR c.pnc_id = CAST(? AS VARCHAR) OR c.pnc_id = CAST(? AS VARCHAR) OR c.pnc_id = CAST(? AS VARCHAR) OR c.delius_id = CAST(? AS VARCHAR))",
       )
 
     assertThat(paramsSlot.captured).startsWith(
@@ -207,6 +207,8 @@ class AthenaPersonRepositoryTest {
       "20160305863C",
       "16/0305863C",
       "160305863C",
+      "2016/305863C",
+      "16/305863C",
       "X123456",
     )
   }
@@ -236,7 +238,7 @@ class AthenaPersonRepositoryTest {
 
     assertThat(sqlSlot.captured)
       .contains(
-        "AND (c.pnc_id = CAST(? AS VARCHAR) OR c.pnc_id = CAST(? AS VARCHAR) OR c.pnc_id = CAST(? AS VARCHAR) OR c.pnc_id = CAST(? AS VARCHAR))",
+        "AND (c.pnc_id = CAST(? AS VARCHAR) OR c.pnc_id = CAST(? AS VARCHAR) OR c.pnc_id = CAST(? AS VARCHAR) OR c.pnc_id = CAST(? AS VARCHAR) OR c.pnc_id = CAST(? AS VARCHAR) OR c.pnc_id = CAST(? AS VARCHAR))",
       )
 
     assertThat(paramsSlot.captured).startsWith(
@@ -244,6 +246,40 @@ class AthenaPersonRepositoryTest {
       "950202300L",
       "1995/0202300L",
       "19950202300L",
+      "95/202300L",
+      "1995/202300L",
+    )
+  }
+
+  @Test
+  fun `search should include leading zero trimmed PNC variations for four digit years`() {
+    val paramsSlot = slot<List<String>>()
+
+    every {
+      runner.fetchPaged<Person>(
+        sql = any(),
+        database = eq(properties.athena.defaultDatabase),
+        cursor = isNull(),
+        params = capture(paramsSlot),
+        pageSize = eq(properties.athena.rowLimit),
+        mapper = any(),
+      )
+    } returns PaginatedResult(emptyList(), null)
+
+    repository.searchPeople(
+      PeopleQueryCriteria(
+        pncId = "2018/0063295X",
+      ),
+      nextToken = null,
+    )
+
+    assertThat(paramsSlot.captured).startsWith(
+      "2018/0063295X",
+      "20180063295X",
+      "18/0063295X",
+      "180063295X",
+      "2018/63295X",
+      "18/63295X",
     )
   }
 
