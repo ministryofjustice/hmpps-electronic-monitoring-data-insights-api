@@ -29,6 +29,9 @@ generic-service:
   namespace_secrets:
     hmpps-electronic-monitoring-data-insights-api-application-insights:
       APPLICATIONINSIGHTS_CONNECTION_STRING: "APPLICATIONINSIGHTS_CONNECTION_STRING"
+    hmpps-electronic-monitoring-data-insights-api-client-creds:
+      PROBATION_SEARCH_API_CLIENT_ID: "PROBATION_SEARCH_API_CLIENT_ID"
+      PROBATION_SEARCH_API_CLIENT_SECRET: "PROBATION_SEARCH_API_CLIENT_SECRET"
     rds-postgresql-instance-output:
       DB_NAME: "database_name"
       DB_USER: "database_username"
