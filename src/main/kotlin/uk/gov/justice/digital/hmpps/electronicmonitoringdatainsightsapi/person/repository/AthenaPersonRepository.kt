@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.repository
 
+import mu.KotlinLogging
 import org.springframework.stereotype.Repository
 import software.amazon.awssdk.services.athena.model.Datum
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.athena.AthenaQueryRunner
@@ -13,6 +14,8 @@ import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.m
 import java.time.LocalDate
 import kotlin.String
 
+private val log = KotlinLogging.logger {}
+
 @Repository
 class AthenaPersonRepository(
   private val runner: AthenaQueryRunner,
@@ -21,14 +24,29 @@ class AthenaPersonRepository(
 
   override fun searchPeople(personsQueryCriteria: PeopleQueryCriteria, nextToken: String?): PagedPeople {
     val built = buildPersonSearchSql(personsQueryCriteria)
+    val distinctOrderIds = mutableSetOf<String>()
 
     val result = runner.fetchPaged(
       sql = built.sql,
       database = properties.athena.defaultDatabase,
       cursor = nextToken,
       pageSize = properties.athena.rowLimit,
-      mapper = ::mapRow,
+      mapper = { cols ->
+        cols.getOrNull(COL_ORDER_ID)
+          ?.varCharValue()
+          ?.trim()
+          ?.takeIf(String::isNotEmpty)
+          ?.let(distinctOrderIds::add)
+
+        mapRow(cols)
+      },
       params = built.params,
+    )
+
+    log.info(
+      "Athena person search returned {} people with {} distinct orderIds",
+      result.items.size,
+      distinctOrderIds.size,
     )
 
     return PagedPeople(
@@ -42,9 +60,9 @@ class AthenaPersonRepository(
   private fun buildPersonSearchSql(personsQueryCriteria: PeopleQueryCriteria): SqlAndParams {
     val builder = WhereBuilder()
 
-    builder.addEq("c.nomis_id", personsQueryCriteria.nomisId)
-    builder.addEq("c.pnc_id", personsQueryCriteria.pncId)
-    builder.addEq("c.delius_id", personsQueryCriteria.deliusId)
+    builder.addAnyEq(
+      *identifierCriteria(personsQueryCriteria).toTypedArray(),
+    )
     builder.addIn(
       "c.enforceable_condition",
       Constants.ENFORCEABLE_CONDITIONS,
@@ -70,7 +88,8 @@ class AthenaPersonRepository(
       c.date_of_birth AS u_dob,
       c.postcode AS zip,
       c.city_or_town AS city,
-      c.house_number_and_street_name AS street
+      c.house_number_and_street_name AS street,
+      c.order_id AS order_id
     FROM ${properties.athena.mdssDatabase}.caseload c
     ${builder.where}
     LIMIT ${properties.athena.rowLimit}
@@ -78,6 +97,48 @@ class AthenaPersonRepository(
 
     return SqlAndParams(sql, builder.params)
   }
+
+  private fun identifierCriteria(personsQueryCriteria: PeopleQueryCriteria): List<Pair<String, String?>> = listOf(
+    listOf("c.nomis_id" to personsQueryCriteria.nomisId),
+    pncIdVariations(personsQueryCriteria.pncId).map { "c.pnc_id" to it },
+    listOf("c.delius_id" to personsQueryCriteria.deliusId),
+  ).flatten()
+
+  private fun pncIdVariations(pncId: String?): List<String> {
+    val trimmedPncId = pncId
+      ?.trim()
+      ?.takeIf(String::isNotEmpty)
+      ?: return emptyList()
+
+    val match = PNC_ID_WITH_SLASH_REGEX.matchEntire(trimmedPncId)
+      ?: return listOf(trimmedPncId)
+
+    val year = match.groupValues[1]
+    val numberAndSuffix = match.groupValues[2]
+    val trimmedNumberAndSuffix = trimLeadingZeroesFromPncNumber(numberAndSuffix)
+    val alternateYear = if (year.length == 2) {
+      centuryPrefix(year) + year
+    } else {
+      year.takeLast(2)
+    }
+
+    return listOf(
+      "$year/$numberAndSuffix",
+      "$year$numberAndSuffix",
+      "$alternateYear/$numberAndSuffix",
+      "$alternateYear$numberAndSuffix",
+      "$year/$trimmedNumberAndSuffix",
+      "$alternateYear/$trimmedNumberAndSuffix",
+    ).distinct()
+  }
+
+  private fun trimLeadingZeroesFromPncNumber(numberAndSuffix: String): String {
+    val number = numberAndSuffix.takeWhile(Char::isDigit)
+    val suffix = numberAndSuffix.drop(number.length)
+    return number.trimStart('0').ifEmpty { "0" } + suffix
+  }
+
+  private fun centuryPrefix(twoDigitYear: String): String = if (twoDigitYear.toInt() >= 50) "19" else "20"
 
   private class WhereBuilder {
     val where = StringBuilder("WHERE 1=1\n")
@@ -90,6 +151,22 @@ class AthenaPersonRepository(
           where.append("  AND $column = CAST(? AS VARCHAR)\n")
           params += it
         }
+    }
+
+    fun addAnyEq(vararg criteria: Pair<String, String?>) {
+      val cleanedCriteria = criteria
+        .mapNotNull { (column, raw) ->
+          raw?.trim()
+            ?.takeIf(String::isNotEmpty)
+            ?.let { column to it }
+        }
+
+      if (cleanedCriteria.isEmpty()) return
+
+      val conditions = cleanedCriteria.joinToString(" OR ") { (column) -> "$column = CAST(? AS VARCHAR)" }
+
+      where.append("  AND ($conditions)\n")
+      params += cleanedCriteria.map { (_, value) -> value }
     }
 
     fun addIn(column: String, values: List<String>?) {
@@ -138,7 +215,7 @@ class AthenaPersonRepository(
       c.postcode AS zip,
       c.city_or_town AS city,
       c.house_number_and_street_name AS street,
-      c.unique_device_wearer_id AS u_id_device_wearer
+      c.order_id AS order_id
     FROM ${properties.athena.mdssDatabase}.caseload c
     WHERE c.mdss_person_id = CAST(? AS BIGINT)
     LIMIT 1
@@ -227,6 +304,7 @@ class AthenaPersonRepository(
       zip = v(COL_ZIP),
       city = v(COL_CITY),
       street = v(COL_STREET),
+      orderId = v(COL_ORDER_ID),
     )
   }
 
@@ -264,6 +342,7 @@ class AthenaPersonRepository(
   }
 
   companion object {
+    private val PNC_ID_WITH_SLASH_REGEX = Regex("""^(\d{2}|\d{4})/([0-9]+[A-Za-z]?)$""")
     private const val COL_PERSON_ID = 0
     private const val COL_CONSUMER_ID = 1
     private const val COL_PERSON_NAME = 2
@@ -277,6 +356,7 @@ class AthenaPersonRepository(
     private const val COL_ZIP = 10
     private const val COL_CITY = 11
     private const val COL_STREET = 12
+    private const val COL_ORDER_ID = 13
     private const val COL_RAW_GROUPED_DATE = 0
     private const val COL_RAW_UNIQUE_DEVICE_WEARER_ID = 1
     private const val COL_RAW_FIRST_NAME = 2

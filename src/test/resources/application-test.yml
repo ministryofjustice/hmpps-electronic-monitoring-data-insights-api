@@ -8,6 +8,11 @@ management.endpoint:
 hmpps-auth:
   url: "http://localhost:8090/auth"
 
+probation-search-api:
+  client:
+    id: probation-search-api-client
+    secret: client-secret
+
 aws:
   region: eu-west-2
   endpoint-url: http://localhost:8091
@@ -24,3 +29,7 @@ aws:
 service:
   base-url: http://localhost:8081
   ui-base-url: http://localhost:8081
+
+apis:
+  probation-search-api:
+    url: http://localhost:8090

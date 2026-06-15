@@ -8,9 +8,12 @@ import org.mockito.Mock
 import org.mockito.junit.jupiter.MockitoExtension
 import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
+import org.mockito.kotlin.verifyNoInteractions
 import org.mockito.kotlin.whenever
 import org.springframework.beans.factory.ObjectProvider
 import org.springframework.http.HttpStatus
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.client.probationsearch.OtherIds
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.client.probationsearch.ProbationSearchApiClient
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.service.CurrentUserService
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.config.ServiceProperties
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.model.PagedPeople
@@ -34,6 +37,9 @@ class PersonControllerTest {
   @Mock
   private lateinit var currentUserService: CurrentUserService
 
+  @Mock
+  private lateinit var probationSearchApiClient: ProbationSearchApiClient
+
   private lateinit var controller: PersonController
 
   @BeforeEach
@@ -43,7 +49,9 @@ class PersonControllerTest {
       devPersonProvider = devPersonProvider,
       currentUserService = currentUserService,
       serviceProperties = serviceProperties,
+      probationSearchApiClient = probationSearchApiClient,
       devStubEnabled = false,
+      probationSearchEnabled = false,
     )
   }
 
@@ -97,6 +105,65 @@ class PersonControllerTest {
   }
 
   @Test
+  fun `searchPeople should enrich missing ids when requested`() {
+    val crn = "X123456"
+    val controller = PersonController(
+      personService = personService,
+      devPersonProvider = devPersonProvider,
+      currentUserService = currentUserService,
+      serviceProperties = serviceProperties,
+      probationSearchApiClient = probationSearchApiClient,
+      devStubEnabled = false,
+      probationSearchEnabled = true,
+    )
+    val pagedPeople = PagedPeople(listOf(Person(personId = "123456")), null)
+
+    whenever(probationSearchApiClient.searchByCrn(crn)).thenReturn(
+      listOf(OtherIds(crn = crn, pncNumber = "2012/0052494Q", nomsNumber = "G5555TT")),
+    )
+    whenever(
+      personService.searchPeople(
+        personsQueryCriteria = PeopleQueryCriteria(
+          deliusId = crn,
+          pncId = "EXISTING-PNC",
+          nomisId = "G5555TT",
+        ),
+      ),
+    ).thenReturn(pagedPeople)
+
+    val result = controller.searchPeople(
+      peopleQueryCriteria = PeopleQueryCriteria(
+        deliusId = crn,
+        pncId = "EXISTING-PNC",
+        enrichIds = true,
+      ),
+      nextToken = "next-token",
+    )
+
+    assertThat(result.statusCode).isEqualTo(HttpStatus.OK)
+    assertThat(result.body).isEqualTo(PersonResponse(pagedPeople.persons, pagedPeople.nextToken))
+    verify(probationSearchApiClient, times(1)).searchByCrn(crn)
+  }
+
+  @Test
+  fun `searchPeople should not enrich ids when not requested`() {
+    val criteria = PeopleQueryCriteria(deliusId = "X123456", enrichIds = false)
+    val pagedPeople = PagedPeople(emptyList(), null)
+
+    whenever(
+      personService.searchPeople(
+        personsQueryCriteria = criteria,
+        nextToken = null,
+      ),
+    ).thenReturn(pagedPeople)
+
+    val result = controller.searchPeople(criteria, null)
+
+    assertThat(result.statusCode).isEqualTo(HttpStatus.OK)
+    verifyNoInteractions(probationSearchApiClient)
+  }
+
+  @Test
   fun `exists endpoint should return 200 and person when they exist`() {
     val crn = "X123456"
     val mockPeople = PagedPeople(listOf(Person(personId = "123456")), null)
@@ -112,6 +179,42 @@ class PersonControllerTest {
     assertThat(result.statusCode).isEqualTo(HttpStatus.OK)
     assertThat(result.body).isNotNull()
     assertThat(result.body!!.uri.toString()).contains(crn)
+    verifyNoInteractions(probationSearchApiClient)
+  }
+
+  @Test
+  fun `exists endpoint should use probation search ids when enabled`() {
+    val crn = "X123456"
+    val mockPeople = PagedPeople(listOf(Person(personId = "123456")), null)
+    val controller = PersonController(
+      personService = personService,
+      devPersonProvider = devPersonProvider,
+      currentUserService = currentUserService,
+      serviceProperties = serviceProperties,
+      probationSearchApiClient = probationSearchApiClient,
+      devStubEnabled = false,
+      probationSearchEnabled = true,
+    )
+
+    whenever(probationSearchApiClient.searchByCrn(crn)).thenReturn(
+      listOf(OtherIds(crn = crn, pncNumber = "2012/0052494Q", nomsNumber = "G5555TT")),
+    )
+    whenever(
+      personService.searchPeople(
+        personsQueryCriteria = PeopleQueryCriteria(
+          deliusId = crn,
+          pncId = "2012/0052494Q",
+          nomisId = "G5555TT",
+        ),
+      ),
+    ).thenReturn(mockPeople)
+
+    val result = controller.existsInEMDI(crn)
+
+    assertThat(result.statusCode).isEqualTo(HttpStatus.OK)
+    assertThat(result.body).isNotNull()
+    assertThat(result.body!!.uri.toString()).contains(crn)
+    verify(probationSearchApiClient, times(1)).searchByCrn(crn)
   }
 
   @Test

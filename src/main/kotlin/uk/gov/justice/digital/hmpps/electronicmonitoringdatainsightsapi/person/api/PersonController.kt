@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestMethod
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.client.probationsearch.ProbationSearchApiClient
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.HAS_VIEW_ROLE
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.service.CurrentUserService
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.config.ServiceProperties
@@ -35,8 +36,11 @@ class PersonController(
   private val serviceProperties: ServiceProperties,
   private val currentUserService: CurrentUserService,
   private val devPersonProvider: ObjectProvider<DevPersonProvider>,
+  private val probationSearchApiClient: ProbationSearchApiClient,
   @Value("\${dev.stub.enabled:false}")
   private val devStubEnabled: Boolean,
+  @Value("\${probation.search.enabled:false}")
+  private val probationSearchEnabled: Boolean,
 ) {
 
   companion object {
@@ -70,7 +74,7 @@ class PersonController(
       )
     }
 
-    val pagedPeople = personService.searchPeople(peopleQueryCriteria, nextToken)
+    val pagedPeople = personService.searchPeople(enrichPeopleQueryCriteria(peopleQueryCriteria))
 
     return ResponseEntity.ok(
       PersonResponse(
@@ -134,8 +138,10 @@ class PersonController(
       log.info("Using hardcoded dev person in existsInEMDI endpoint")
       true
     } else {
+      val peopleQueryCriteria = findPerson(crn)
+
       personService
-        .searchPeople(PeopleQueryCriteria(deliusId = crn))
+        .searchPeople(peopleQueryCriteria)
         .persons
         .isNotEmpty()
     }
@@ -143,11 +149,48 @@ class PersonController(
     return if (exists) {
       ResponseEntity.ok(
         ExistsInEMDI(
-          URI("${serviceProperties.uiBaseUrl}/people/$crn"),
+          URI("${serviceProperties.uiBaseUrl}/people/$crn/locations"),
         ),
       )
     } else {
       ResponseEntity.notFound().build()
     }
+  }
+
+  private fun enrichPeopleQueryCriteria(peopleQueryCriteria: PeopleQueryCriteria): PeopleQueryCriteria {
+    val deliusId = peopleQueryCriteria.deliusId
+      ?.trim()
+      ?.takeIf(String::isNotEmpty)
+
+    if (!peopleQueryCriteria.enrichIds || deliusId == null) {
+      return peopleQueryCriteria
+    }
+
+    val enrichedPeopleQueryCriteria = findPerson(deliusId)
+
+    return peopleQueryCriteria.copy(
+      nomisId = peopleQueryCriteria.nomisId ?: enrichedPeopleQueryCriteria.nomisId,
+      pncId = peopleQueryCriteria.pncId ?: enrichedPeopleQueryCriteria.pncId,
+    )
+  }
+
+  private fun findPerson(crn: String): PeopleQueryCriteria {
+    if (!probationSearchEnabled) {
+      return PeopleQueryCriteria(deliusId = crn)
+    }
+
+    val probationSearchOtherIds = probationSearchApiClient.searchByCrn(crn)
+    log.info(
+      "Probation Search returned ids for CRN {}: {}",
+      crn,
+      probationSearchOtherIds.joinToString { "crn=${it.crn}, pncNumber=${it.pncNumber}, nomsNumber=${it.nomsNumber}" },
+    )
+    val otherIds = probationSearchOtherIds.firstOrNull()
+
+    return PeopleQueryCriteria(
+      deliusId = crn,
+      pncId = otherIds?.pncNumber,
+      nomisId = otherIds?.nomsNumber,
+    )
   }
 }
