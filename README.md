@@ -183,3 +183,34 @@ then
 ````
 ./gradlew clean check
 ````
+
+### Running performance tests
+
+The project has a Gatling smoke test for the `existsInEMDI` endpoint using CRN `X777777`.
+
+Before running the scripts for the first time, make them executable:
+
+```bash
+chmod +x ./scripts/run-local.sh ./scripts/run-local-gatling.sh
+```
+
+Start the API locally with the `dev` profile:
+
+```bash
+./scripts/run-local.sh
+```
+
+Then, in another terminal, run the Gatling smoke test:
+
+```bash
+./scripts/run-local-gatling.sh
+```
+
+The Gatling script fetches a dev HMPPS Auth token using `./scripts/getEMDIDEVToken.sh` and runs the test against
+`http://localhost:8080` by default. To run against another service URL, override `BASE_URL`:
+
+```bash
+BASE_URL=<url_of_service> ./scripts/run-local-gatling.sh
+```
+
+After running the test, the Gatling report is written to `build/reports/gatling/`. Open the latest simulation folder's `index.html` to view the results.
