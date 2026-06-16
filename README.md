@@ -188,18 +188,29 @@ then
 
 The project has a Gatling smoke test for the `existsInEMDI` endpoint using CRN `X777777`.
 
-Run it with an existing token:
+Before running the scripts for the first time, make them executable:
 
 ```bash
-BASE_URL=<url_of_service> AUTH_TOKEN='<jwt_token>' ./gradlew gatlingRun-uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.ExistsInEmdiSimulation
+chmod +x ./scripts/run-local.sh ./scripts/run-local-gatling.sh
 ```
 
-Or let Gatling fetch a client credentials token:
+Start the API locally with the `dev` profile:
 
 ```bash
-BASE_URL=<url_of_service> AUTH_URL=<auth_url/auth/oauth/token> CLIENT_ID=<client_id> CLIENT_SECRET='<client_secret>' ./gradlew gatlingRun-uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.ExistsInEmdiSimulation
+./scripts/run-local.sh
 ```
 
-For local dev with the `dev` profile and stub data enabled, use `BASE_URL=http://localhost:8080`.
+Then, in another terminal, run the Gatling smoke test:
+
+```bash
+./scripts/run-local-gatling.sh
+```
+
+The Gatling script fetches a dev HMPPS Auth token using `./scripts/getEMDIDEVToken.sh` and runs the test against
+`http://localhost:8080` by default. To run against another service URL, override `BASE_URL`:
+
+```bash
+BASE_URL=<url_of_service> ./scripts/run-local-gatling.sh
+```
 
 After running the test, the Gatling report is written to `build/reports/gatling/`. Open the latest simulation folder's `index.html` to view the results.

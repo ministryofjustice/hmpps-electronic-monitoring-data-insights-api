@@ -20,11 +20,11 @@ class ExistsInEmdiSimulation : Simulation() {
 
   private val smokeTest = scenario("exists-in-emdi-smoke-test")
     .exec(getToken)
-    .exec(existsInEmdi)
+    .repeat(20).on(exec(existsInEmdi))
 
   init {
     setUp(
-      smokeTest.injectOpen(atOnceUsers(1)),
+      smokeTest.injectOpen(atOnceUsers(20)),
     ).protocols(httpProtocol)
   }
 }
