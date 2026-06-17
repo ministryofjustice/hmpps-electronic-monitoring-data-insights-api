@@ -13,7 +13,7 @@ configurations {
 val springdocOpenapiVersion = "3.0.3"
 val hmppsKotlinSpringBootStarterVersion = "2.5.0"
 val kotlinLoggingVersion = "3.0.5"
-val athenaVersion = "2.46.11"
+val athenaVersion = "2.46.12"
 
 dependencies {
   implementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter:$hmppsKotlinSpringBootStarterVersion")
