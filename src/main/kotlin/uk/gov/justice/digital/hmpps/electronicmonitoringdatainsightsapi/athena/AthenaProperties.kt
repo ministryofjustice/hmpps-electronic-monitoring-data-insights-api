@@ -8,7 +8,7 @@ data class AthenaProperties(
   val workgroup: String? = null,
   val rowLimit: Int = 1000,
   val pollIntervalMs: Long = 500,
-  val timeoutMs: Long = 60000,
+  val timeoutMs: Long = 120000,
   val role: String? = null,
   val responsibleOrganisations: List<String> = emptyList(),
 ) {
