@@ -10,9 +10,11 @@ import io.gatling.javaapi.http.HttpDsl.status
 
 class ExistsInEmdiSimulation : Simulation() {
 
+  private val crn: String = "X777777"
+
   private val existsInEmdi = exec(
-    http("Exists in EMDI")
-      .get("/people/exists/X777777")
+    http("Exists in EMDI - CRN $crn")
+      .get("/people/exists/$crn")
       .headers(authorisationHeader)
       .check(status().shouldBe(200))
       .check(jsonPath("$.uri").exists()),
