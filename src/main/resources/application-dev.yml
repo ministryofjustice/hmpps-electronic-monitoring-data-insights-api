@@ -16,7 +16,7 @@ aws:
     workgroup: 800964199911_default
     rowLimit: ${ROW_LIMIT:1000}
     pollIntervalMs: 500
-    timeoutMs: 60000
+    timeoutMs: ${ATHENA_TIMEOUT_MS:120000}
     role: ${ATHENA_GENERAL_IAM_ROLE:}
     responsibleOrganisations: ${RESPONSIBLE_ORGANISATIONS:}
 
