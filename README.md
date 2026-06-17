@@ -191,7 +191,7 @@ The project has a Gatling smoke test for the `existsInEMDI` endpoint using CRN `
 Before running the scripts for the first time, make them executable:
 
 ```bash
-chmod +x ./scripts/run-local.sh ./scripts/run-local-gatling.sh
+chmod +x ./scripts/run-local.sh ./scripts/run-local-gatling-smoke-test.sh
 ```
 
 Start the API locally with the `dev` profile:
@@ -203,14 +203,30 @@ Start the API locally with the `dev` profile:
 Then, in another terminal, run the Gatling smoke test:
 
 ```bash
-./scripts/run-local-gatling.sh
+./scripts/run-local-gatling-smoke-test.sh
 ```
 
 The Gatling script fetches a dev HMPPS Auth token using `./scripts/getEMDIDEVToken.sh` and runs the test against
 `http://localhost:8080` by default. To run against another service URL, override `BASE_URL`:
 
 ```bash
-BASE_URL=<url_of_service> ./scripts/run-local-gatling.sh
+BASE_URL=<url_of_service> ./scripts/run-local-gatling-smoke-test.sh
 ```
+
+To run the Gatling suite with a specific CRN, override `CRN`:
+
+```bash
+CRN=X994316 ./scripts/run-gatling-suite.sh
+```
+
+To run the Gatling suite against dev with a specific CRN:
+
+```bash
+BASE_URL=https://electronic-monitoring-data-insights-api-dev.hmpps.service.justice.gov.uk \
+CRN=X994316 \
+./scripts/run-gatling-suite.sh
+```
+
+**If you want to run against preprod or prod the get EMDI token script will need to be updated.**
 
 After running the test, the Gatling report is written to `build/reports/gatling/`. Open the latest simulation folder's `index.html` to view the results.
