@@ -227,6 +227,16 @@ CRN=X994316 \
 ./scripts/run-gatling-suite.sh
 ```
 
+The positions real-data test uses person ID `10001` and the window `2026-04-01T00:00:00Z` to
+`2026-04-02T00:00:00Z` by default. These can be overridden:
+
+```bash
+PERSON_ID=10001 \
+POSITIONS_FROM=2026-04-01T00:00:00Z \
+POSITIONS_TO=2026-04-02T00:00:00Z \
+./scripts/run-gatling-suite.sh
+```
+
 **If you want to run against preprod or prod the get EMDI token script will need to be updated.**
 
 After running the test, the Gatling report is written to `build/reports/gatling/`. Open the latest simulation folder's `index.html` to view the results.
