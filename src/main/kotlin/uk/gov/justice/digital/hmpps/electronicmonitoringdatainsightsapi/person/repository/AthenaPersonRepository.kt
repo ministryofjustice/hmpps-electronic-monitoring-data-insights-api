@@ -92,6 +92,7 @@ class AthenaPersonRepository(
       c.order_id AS order_id
     FROM ${properties.athena.mdssDatabase}.caseload c
     ${builder.where}
+    AND current_date BETWEEN c.order_start_date AND c.order_end_date
     LIMIT ${properties.athena.rowLimit}
     """.trimIndent()
 
