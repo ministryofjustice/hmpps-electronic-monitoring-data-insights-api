@@ -21,6 +21,7 @@ generic-service:
     APPLICATIONINSIGHTS_CONFIGURATION_FILE: applicationinsights.json
     DB_PORT: "5432"   # port is not secret, you can keep this here
     ATHENA_TIMEOUT_MS: "120000"
+    SERVICE_STATUS_CACHE_TIMEOUT: "5m"
 
   # Pre-existing kubernetes secrets to load as environment variables in the deployment.
   # namespace_secrets:

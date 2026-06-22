@@ -29,6 +29,8 @@ aws:
 service:
   base-url: http://localhost:8081
   ui-base-url: http://localhost:8081
+  status:
+    cache-timeout: 5m
 
 apis:
   probation-search-api:
