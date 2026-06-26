@@ -34,8 +34,8 @@ class AthenaServiceStatusRepositoryTest {
 
   @Test
   fun `getDataOutOfSyncLatestPosition should return latest position when result row exists`() {
-    every { runner.run<Instant>(any(), any(), any(), any(), any()) } answers {
-      val mapper = it.invocation.args[3] as (List<Datum>) -> Instant
+    every { runner.run<Instant?>(any(), any(), any(), any(), any()) } answers {
+      val mapper = it.invocation.args[3] as (List<Datum>) -> Instant?
       listOf(mapper(listOf(datum("2026-06-26 10:15:30.123456"))))
     }
 
@@ -43,8 +43,11 @@ class AthenaServiceStatusRepositoryTest {
   }
 
   @Test
-  fun `getDataOutOfSyncLatestPosition should return null when no result row exists`() {
-    every { runner.run<Instant>(any(), any(), any(), any(), any()) } returns emptyList()
+  fun `getDataOutOfSyncLatestPosition should return null when latest position is null`() {
+    every { runner.run<Instant?>(any(), any(), any(), any(), any()) } answers {
+      val mapper = it.invocation.args[3] as (List<Datum>) -> Instant?
+      listOf(mapper(listOf(datum(null))))
+    }
 
     assertThat(repository.getDataOutOfSyncLatestPosition()).isNull()
   }
@@ -54,7 +57,7 @@ class AthenaServiceStatusRepositoryTest {
     val sqlSlot = slot<String>()
     val databaseSlot = slot<String>()
     every {
-      runner.run<Instant>(
+      runner.run<Instant?>(
         capture(sqlSlot),
         capture(databaseSlot),
         any(),
@@ -73,8 +76,8 @@ class AthenaServiceStatusRepositoryTest {
 
   @Test
   fun `getDataOutOfSyncLatestPosition should throw when latest position cannot be mapped`() {
-    every { runner.run<Instant>(any(), any(), any(), any(), any()) } answers {
-      val mapper = it.invocation.args[3] as (List<Datum>) -> Instant
+    every { runner.run<Instant?>(any(), any(), any(), any(), any()) } answers {
+      val mapper = it.invocation.args[3] as (List<Datum>) -> Instant?
       listOf(mapper(listOf(datum("not-a-number"))))
     }
 

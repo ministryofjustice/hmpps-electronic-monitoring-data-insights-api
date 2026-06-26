@@ -31,9 +31,8 @@ class AthenaServiceStatusRepository(
       HAVING max(position_gps_date) < date_add('minute', -${serviceStatusProperties.dataOutOfSyncThresholdMinutes}, current_timestamp)
     """.trimIndent()
 
-  private fun mapLatestPosition(cols: List<Datum>): Instant {
-    val latestPosition = cols.firstOrNull()?.varCharValue()
-      ?: throw IllegalStateException("Data out of sync status query returned an invalid latest position")
+  private fun mapLatestPosition(cols: List<Datum>): Instant? {
+    val latestPosition = cols.firstOrNull()?.varCharValue() ?: return null
 
     return try {
       LocalDateTime.parse(latestPosition, DateTimeConstants.ATHENA_TIMESTAMP).toInstant(ZoneOffset.UTC)
