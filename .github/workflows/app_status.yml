@@ -1,0 +1,47 @@
+name: EM Data Insights API Status Alert
+
+on:
+  schedule:
+    - cron: "*/5 * * * *"
+  workflow_dispatch:
+
+jobs:
+  check-status:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check status endpoint
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL_DEV }}
+          STATUS_URL: https://electronic-monitoring-data-insights-api-dev.hmpps.service.justice.gov.uk/status
+        run: |
+          response=$(curl -fsS "$STATUS_URL" || true)
+
+          if [ -z "$response" ]; then
+            payload=$(jq -n \
+              --arg text "🚨 EM Data Insights API dev status check failed: no response from $STATUS_URL" \
+              '{text: $text}')
+
+            curl -X POST "$SLACK_WEBHOOK_URL" \
+              -H "Content-Type: application/json" \
+              -d "$payload"
+
+            exit 0
+          fi
+
+          if echo "$response" | jq -e '.statuses | length > 0' > /dev/null; then
+            alert_text=$(echo "$response" | jq -r '
+              .statuses[]
+              | "• \(.code): \(.description) — latest position: \(.latestPosition)"
+            ')
+
+            payload=$(jq -n \
+              --arg text "🚨 EM Data Insights API dev is reporting a problem:\n$alert_text\n\n$STATUS_URL" \
+              '{text: $text}')
+
+            curl -X POST "$SLACK_WEBHOOK_URL" \
+              -H "Content-Type: application/json" \
+              -d "$payload"
+          else
+            echo "Status endpoint reports no problems."
+          fi
