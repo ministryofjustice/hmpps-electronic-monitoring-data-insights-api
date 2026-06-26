@@ -9,6 +9,7 @@ import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.services
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.servicestatus.model.ServiceStatusCode
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.servicestatus.model.ServiceStatusResponse
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.servicestatus.service.ServiceStatusService
+import java.time.Instant
 
 class ServiceStatusControllerTest {
   private val serviceStatusService = mockk<ServiceStatusService>()
@@ -17,7 +18,13 @@ class ServiceStatusControllerTest {
   @Test
   fun `getStatus should return service statuses`() {
     val response = ServiceStatusResponse(
-      listOf(ServiceStatus(ServiceStatusCode.RESTORE_IN_PROGRESS, "Restore is in progress")),
+      listOf(
+        ServiceStatus(
+          code = ServiceStatusCode.DATA_OUT_OF_SYNC,
+          description = "Data out of sync",
+          latestPosition = Instant.parse("2026-06-26T10:15:30.123456Z"),
+        ),
+      ),
     )
     every { serviceStatusService.getStatus() } returns response
 

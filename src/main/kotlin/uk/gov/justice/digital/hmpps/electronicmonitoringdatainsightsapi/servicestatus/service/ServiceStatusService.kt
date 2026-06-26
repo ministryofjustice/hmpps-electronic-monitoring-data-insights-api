@@ -12,11 +12,21 @@ class ServiceStatusService(
   private val repository: ServiceStatusRepository,
 ) {
   @Cacheable(ServiceStatusCacheConfig.SERVICE_STATUS_CACHE_NAME)
-  fun getStatus(): ServiceStatusResponse = ServiceStatusResponse(
-    statuses = if (repository.restoreInProgress()) {
-      listOf(ServiceStatus(ServiceStatusCode.RESTORE_IN_PROGRESS, ServiceStatusCode.RESTORE_IN_PROGRESS.description))
-    } else {
-      emptyList()
-    },
-  )
+  fun getStatus(): ServiceStatusResponse {
+    val latestPosition = repository.getDataOutOfSyncLatestPosition()
+
+    return ServiceStatusResponse(
+      statuses = if (latestPosition != null) {
+        listOf(
+          ServiceStatus(
+            code = ServiceStatusCode.DATA_OUT_OF_SYNC,
+            description = ServiceStatusCode.DATA_OUT_OF_SYNC.description,
+            latestPosition = latestPosition,
+          ),
+        )
+      } else {
+        emptyList()
+      },
+    )
+  }
 }

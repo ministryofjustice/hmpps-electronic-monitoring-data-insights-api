@@ -1,5 +1,7 @@
 package uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.servicestatus.repository
 
+import java.time.Instant
+
 interface ServiceStatusRepository {
-  fun restoreInProgress(): Boolean
+  fun getDataOutOfSyncLatestPosition(): Instant?
 }

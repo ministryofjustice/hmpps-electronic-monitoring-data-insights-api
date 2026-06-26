@@ -1,5 +1,7 @@
 package uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.servicestatus.model
 
+import java.time.Instant
+
 data class ServiceStatusResponse(
   val statuses: List<ServiceStatus>,
 )
@@ -7,10 +9,11 @@ data class ServiceStatusResponse(
 data class ServiceStatus(
   val code: ServiceStatusCode,
   val description: String,
+  val latestPosition: Instant? = null,
 )
 
 enum class ServiceStatusCode(
   val description: String,
 ) {
-  RESTORE_IN_PROGRESS("Restore is in progress"),
+  DATA_OUT_OF_SYNC("Data out of sync"),
 }

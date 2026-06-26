@@ -88,6 +88,7 @@ service:
   ui-base-url: ${UI_SERVICE_BASE_URL}
   status:
     cache-timeout: ${SERVICE_STATUS_CACHE_TIMEOUT:5m}
+    data-out-of-sync-threshold-minutes: ${SERVICE_STATUS_DATA_OUT_OF_SYNC_THRESHOLD_MINUTES:15}
 
 probation:
   search:
