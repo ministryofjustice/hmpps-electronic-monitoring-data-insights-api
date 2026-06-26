@@ -1,40 +1,56 @@
-name: EM Data Insights API Status Alert
+name: EM Data Insights API Dev Status Alert
 
 on:
   schedule:
     - cron: "*/5 * * * *"
   workflow_dispatch:
 
+permissions:
+  actions: write
+  contents: read
+
 jobs:
   check-status:
     runs-on: ubuntu-latest
 
+    env:
+      STATUS_URL: https://electronic-monitoring-data-insights-api-dev.hmpps.service.justice.gov.uk/status
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL_DEV }}
+      STATE_FILE: service-state.txt
+
     steps:
-      - name: Check status endpoint
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL_DEV }}
-          STATUS_URL: https://electronic-monitoring-data-insights-api-dev.hmpps.service.justice.gov.uk/status
+      - name: Restore previous state
+        uses: actions/cache/restore@v4
+        with:
+          path: service-state.txt
+          key: em-api-dev-status-${{ github.run_id }}
+          restore-keys: |
+            em-api-dev-status-
+
+      - name: Check status and alert on state change
         run: |
+          previous_state=$(cat "$STATE_FILE" 2>/dev/null || echo "HEALTHY")
+
           response=$(curl -fsS "$STATUS_URL" || true)
 
           if [ -z "$response" ]; then
-            payload=$(jq -n \
-              --arg text "🚨 EM Data Insights API dev status check failed: no response from $STATUS_URL" \
-              '{text: $text}')
-
-            curl -X POST "$SLACK_WEBHOOK_URL" \
-              -H "Content-Type: application/json" \
-              -d "$payload"
-
-            exit 0
-          fi
-
-          if echo "$response" | jq -e '.statuses | length > 0' > /dev/null; then
+            current_state="UNHEALTHY"
+            alert_text="Status endpoint returned no response"
+          elif echo "$response" | jq -e '.statuses | length > 0' > /dev/null; then
+            current_state="UNHEALTHY"
             alert_text=$(echo "$response" | jq -r '
               .statuses[]
               | "• \(.code): \(.description) — latest position: \(.latestPosition)"
             ')
+          else
+            current_state="HEALTHY"
+            alert_text=""
+          fi
 
+          echo "Previous state: $previous_state"
+          echo "Current state: $current_state"
+
+          if [ "$previous_state" = "HEALTHY" ] && [ "$current_state" = "UNHEALTHY" ]; then
             payload=$(jq -n \
               --arg text "🚨 EM Data Insights API dev is reporting a problem:\n$alert_text\n\n$STATUS_URL" \
               '{text: $text}')
@@ -42,6 +58,22 @@ jobs:
             curl -X POST "$SLACK_WEBHOOK_URL" \
               -H "Content-Type: application/json" \
               -d "$payload"
-          else
-            echo "Status endpoint reports no problems."
           fi
+
+          if [ "$previous_state" = "UNHEALTHY" ] && [ "$current_state" = "HEALTHY" ]; then
+            payload=$(jq -n \
+              --arg text "✅ EM Data Insights API dev has recovered.\n\n$STATUS_URL" \
+              '{text: $text}')
+
+            curl -X POST "$SLACK_WEBHOOK_URL" \
+              -H "Content-Type: application/json" \
+              -d "$payload"
+          fi
+
+          echo "$current_state" > "$STATE_FILE"
+
+      - name: Save current state
+        uses: actions/cache/save@v4
+        with:
+          path: service-state.txt
+          key: em-api-dev-status-${{ github.run_id }}
