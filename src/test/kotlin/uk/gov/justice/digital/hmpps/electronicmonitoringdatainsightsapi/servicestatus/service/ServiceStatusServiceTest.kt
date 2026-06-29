@@ -4,6 +4,7 @@ import io.mockk.every
 import io.mockk.mockk
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import org.springframework.cache.annotation.CachePut
 import org.springframework.cache.annotation.Cacheable
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.servicestatus.model.ServiceStatusCode
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.servicestatus.repository.ServiceStatusRepository
@@ -43,5 +44,14 @@ class ServiceStatusServiceTest {
       .getAnnotation(Cacheable::class.java)
 
     assertThat(cacheable.value).containsExactly(ServiceStatusCacheConfig.SERVICE_STATUS_CACHE_NAME)
+  }
+
+  @Test
+  fun `refreshStatus should update cache`() {
+    val cachePut = ServiceStatusService::class.java
+      .getMethod("refreshStatus")
+      .getAnnotation(CachePut::class.java)
+
+    assertThat(cachePut.value).containsExactly(ServiceStatusCacheConfig.SERVICE_STATUS_CACHE_NAME)
   }
 }
