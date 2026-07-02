@@ -13,7 +13,7 @@ configurations {
 val springdocOpenapiVersion = "3.0.3"
 val hmppsKotlinSpringBootStarterVersion = "2.5.0"
 val kotlinLoggingVersion = "3.0.5"
-val athenaVersion = "2.46.17"
+val athenaVersion = "2.46.20"
 
 dependencies {
   implementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter:$hmppsKotlinSpringBootStarterVersion")
@@ -22,11 +22,11 @@ dependencies {
   implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:$springdocOpenapiVersion")
   implementation("io.github.microutils:kotlin-logging:$kotlinLoggingVersion")
 
-  implementation("org.jetbrains.exposed:exposed-core:1.3.0")
-  implementation("org.jetbrains.exposed:exposed-json:1.3.0")
-  implementation("org.jetbrains.exposed:exposed-dao:1.3.0")
-  implementation("org.jetbrains.exposed:exposed-jdbc:1.3.0")
-  implementation("org.jetbrains.exposed:exposed-java-time:1.3.0")
+  implementation("org.jetbrains.exposed:exposed-core:1.3.1")
+  implementation("org.jetbrains.exposed:exposed-json:1.3.1")
+  implementation("org.jetbrains.exposed:exposed-dao:1.3.1")
+  implementation("org.jetbrains.exposed:exposed-jdbc:1.3.1")
+  implementation("org.jetbrains.exposed:exposed-java-time:1.3.1")
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core")
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor")
   implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.11.0")
@@ -41,7 +41,7 @@ dependencies {
   implementation(platform("software.amazon.awssdk:bom:$athenaVersion"))
   implementation("software.amazon.awssdk:athena")
 
-  implementation("org.postgresql:postgresql:42.7.11")
+  implementation("org.postgresql:postgresql:42.7.12")
 
   implementation("software.amazon.awssdk:s3:$athenaVersion")
   implementation("software.amazon.awssdk:athena:$athenaVersion")
