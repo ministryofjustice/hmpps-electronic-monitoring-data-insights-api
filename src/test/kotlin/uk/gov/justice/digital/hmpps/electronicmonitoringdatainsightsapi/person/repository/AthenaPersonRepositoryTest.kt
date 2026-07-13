@@ -163,6 +163,7 @@ class AthenaPersonRepositoryTest {
 
     assertThat(sqlSlot.captured)
       .contains("AND c.responsible_organisation IN (CAST(? AS VARCHAR), CAST(? AS VARCHAR))")
+      .contains("AND c.mdss_person_id IS NOT NULL")
 
     assertThat(paramsSlot.captured).contains(
       nomisId,
