@@ -25,6 +25,12 @@ spring:
             client-secret: ${probation-search-api.client.secret}
             authorization-grant-type: client_credentials
             scope: read
+          person-record-api:
+            provider: hmpps-auth
+            client-id: ${person-record-api.client.id}
+            client-secret: ${person-record-api.client.secret}
+            authorization-grant-type: client_credentials
+            scope: read
   http:
     codecs:
       max-in-memory-size: 10MB
@@ -97,3 +103,5 @@ probation:
 apis:
   probation-search-api:
     url: ${PROBATION_SEARCH_API_URL}
+  person-record-api:
+    url: ${PERSON_RECORD_API_URL}

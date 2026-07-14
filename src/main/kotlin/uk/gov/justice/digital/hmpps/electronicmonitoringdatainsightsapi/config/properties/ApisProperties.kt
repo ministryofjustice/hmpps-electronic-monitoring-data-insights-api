@@ -17,6 +17,12 @@ data class ApisProperties(
   @field:Valid
   val probationSearchApi: ApiEndpoint,
 
+  /**
+   * Person Record API configuration.
+   */
+  @field:Valid
+  val personRecordApi: ApiEndpoint,
+
 ) {
   /**
    * Configuration for an individual API endpoint.

@@ -13,6 +13,11 @@ probation-search-api:
     id: probation-search-api-client
     secret: client-secret
 
+person-record-api:
+  client:
+    id: person-record-api-client
+    secret: client-secret
+
 aws:
   region: eu-west-2
   endpoint-url: http://localhost:8091
@@ -35,4 +40,6 @@ service:
 
 apis:
   probation-search-api:
+    url: http://localhost:8090
+  person-record-api:
     url: http://localhost:8090
