@@ -70,5 +70,4 @@ class HmppsAuthMockServer : WireMockServer(WIREMOCK_PORT) {
       ),
     )
   }
-
 }
