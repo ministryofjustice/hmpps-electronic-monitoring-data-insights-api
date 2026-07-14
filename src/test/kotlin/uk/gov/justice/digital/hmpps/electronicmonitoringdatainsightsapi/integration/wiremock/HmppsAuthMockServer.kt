@@ -2,7 +2,6 @@ package uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.integra
 
 import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.client.WireMock.aResponse
-import com.github.tomakehurst.wiremock.client.WireMock.equalToJson
 import com.github.tomakehurst.wiremock.client.WireMock.get
 import com.github.tomakehurst.wiremock.client.WireMock.post
 import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
@@ -72,27 +71,4 @@ class HmppsAuthMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
-  fun stubProbationSearchByCrn(crn: String, pncNumber: String? = null, nomsNumber: String? = null) {
-    stubFor(
-      post(urlEqualTo("/search"))
-        .withRequestBody(equalToJson("""{"crn":"$crn"}"""))
-        .willReturn(
-          aResponse()
-            .withHeader("Content-Type", "application/json")
-            .withBody(
-              """
-              [
-                {
-                  "otherIds": {
-                    "crn": "$crn",
-                    "pncNumber": ${pncNumber?.let { "\"$it\"" } ?: "null"},
-                    "nomsNumber": ${nomsNumber?.let { "\"$it\"" } ?: "null"}
-                  }
-                }
-              ]
-              """.trimIndent(),
-            ),
-        ),
-    )
-  }
 }

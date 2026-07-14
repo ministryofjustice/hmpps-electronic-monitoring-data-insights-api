@@ -12,8 +12,8 @@ import org.mockito.kotlin.verifyNoInteractions
 import org.mockito.kotlin.whenever
 import org.springframework.beans.factory.ObjectProvider
 import org.springframework.http.HttpStatus
-import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.client.probationsearch.OtherIds
-import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.client.probationsearch.ProbationSearchApiClient
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.client.cpr.CprApiClient
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.client.cpr.CprIdentifiers
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.service.CurrentUserService
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.config.ServiceProperties
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.model.PagedPeople
@@ -38,7 +38,7 @@ class PersonControllerTest {
   private lateinit var currentUserService: CurrentUserService
 
   @Mock
-  private lateinit var probationSearchApiClient: ProbationSearchApiClient
+  private lateinit var cprApiClient: CprApiClient
 
   private lateinit var controller: PersonController
 
@@ -49,9 +49,9 @@ class PersonControllerTest {
       devPersonProvider = devPersonProvider,
       currentUserService = currentUserService,
       serviceProperties = serviceProperties,
-      probationSearchApiClient = probationSearchApiClient,
+      cprApiClient = cprApiClient,
       devStubEnabled = false,
-      probationSearchEnabled = false,
+      cprEnabled = false,
     )
   }
 
@@ -112,14 +112,19 @@ class PersonControllerTest {
       devPersonProvider = devPersonProvider,
       currentUserService = currentUserService,
       serviceProperties = serviceProperties,
-      probationSearchApiClient = probationSearchApiClient,
+      cprApiClient = cprApiClient,
       devStubEnabled = false,
-      probationSearchEnabled = true,
+      cprEnabled = true,
     )
     val pagedPeople = PagedPeople(listOf(Person(personId = "123456")), null)
 
-    whenever(probationSearchApiClient.searchByCrn(crn)).thenReturn(
-      listOf(OtherIds(crn = crn, pncNumber = "2012/0052494Q", nomsNumber = "G5555TT")),
+    whenever(cprApiClient.getIdentifiersByCrn(crn)).thenReturn(
+      CprIdentifiers(
+        crns = listOf(crn),
+        pncs = listOf("2012/0052494Q"),
+        prisonNumbers = listOf("G5555TT"),
+        otherIdentifiers = listOf("MON12345", "mon67890", "OTHER-1"),
+      ),
     )
     whenever(
       personService.searchPeople(
@@ -127,6 +132,7 @@ class PersonControllerTest {
           deliusId = crn,
           pncId = "EXISTING-PNC",
           nomisId = "G5555TT",
+          orderIds = listOf("MON12345"),
         ),
       ),
     ).thenReturn(pagedPeople)
@@ -142,7 +148,7 @@ class PersonControllerTest {
 
     assertThat(result.statusCode).isEqualTo(HttpStatus.OK)
     assertThat(result.body).isEqualTo(PersonResponse(pagedPeople.persons, pagedPeople.nextToken))
-    verify(probationSearchApiClient, times(1)).searchByCrn(crn)
+    verify(cprApiClient, times(1)).getIdentifiersByCrn(crn)
   }
 
   @Test
@@ -160,7 +166,7 @@ class PersonControllerTest {
     val result = controller.searchPeople(criteria, null)
 
     assertThat(result.statusCode).isEqualTo(HttpStatus.OK)
-    verifyNoInteractions(probationSearchApiClient)
+    verifyNoInteractions(cprApiClient)
   }
 
   @Test
@@ -179,11 +185,11 @@ class PersonControllerTest {
     assertThat(result.statusCode).isEqualTo(HttpStatus.OK)
     assertThat(result.body).isNotNull()
     assertThat(result.body!!.uri.toString()).contains(crn)
-    verifyNoInteractions(probationSearchApiClient)
+    verifyNoInteractions(cprApiClient)
   }
 
   @Test
-  fun `exists endpoint should use probation search ids when enabled`() {
+  fun `exists endpoint should use CPR identifiers when enrichment is enabled`() {
     val crn = "X123456"
     val mockPeople = PagedPeople(listOf(Person(personId = "123456")), null)
     val controller = PersonController(
@@ -191,13 +197,18 @@ class PersonControllerTest {
       devPersonProvider = devPersonProvider,
       currentUserService = currentUserService,
       serviceProperties = serviceProperties,
-      probationSearchApiClient = probationSearchApiClient,
+      cprApiClient = cprApiClient,
       devStubEnabled = false,
-      probationSearchEnabled = true,
+      cprEnabled = true,
     )
 
-    whenever(probationSearchApiClient.searchByCrn(crn)).thenReturn(
-      listOf(OtherIds(crn = crn, pncNumber = "2012/0052494Q", nomsNumber = "G5555TT")),
+    whenever(cprApiClient.getIdentifiersByCrn(crn)).thenReturn(
+      CprIdentifiers(
+        crns = listOf(crn),
+        pncs = listOf("2012/0052494Q"),
+        prisonNumbers = listOf("G5555TT"),
+        otherIdentifiers = listOf("MON12345", "MON67890", "mon99999", "OTHER-1"),
+      ),
     )
     whenever(
       personService.searchPeople(
@@ -205,6 +216,7 @@ class PersonControllerTest {
           deliusId = crn,
           pncId = "2012/0052494Q",
           nomisId = "G5555TT",
+          orderIds = listOf("MON12345", "MON67890"),
         ),
       ),
     ).thenReturn(mockPeople)
@@ -214,7 +226,7 @@ class PersonControllerTest {
     assertThat(result.statusCode).isEqualTo(HttpStatus.OK)
     assertThat(result.body).isNotNull()
     assertThat(result.body!!.uri.toString()).contains(crn)
-    verify(probationSearchApiClient, times(1)).searchByCrn(crn)
+    verify(cprApiClient, times(1)).getIdentifiersByCrn(crn)
   }
 
   @Test

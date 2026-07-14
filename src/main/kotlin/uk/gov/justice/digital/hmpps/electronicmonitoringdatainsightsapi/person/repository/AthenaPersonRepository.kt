@@ -64,6 +64,10 @@ class AthenaPersonRepository(
       *identifierCriteria(personsQueryCriteria).toTypedArray(),
     )
     builder.addIn(
+      "c.order_id",
+      personsQueryCriteria.orderIds,
+    )
+    builder.addIn(
       "c.enforceable_condition",
       Constants.ENFORCEABLE_CONDITIONS,
     )

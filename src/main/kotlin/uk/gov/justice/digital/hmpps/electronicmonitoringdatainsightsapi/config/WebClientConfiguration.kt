@@ -20,17 +20,6 @@ class WebClientConfiguration(
   @Bean
   fun hmppsAuthHealthWebClient(builder: WebClient.Builder): WebClient = builder.healthWebClient(hmppsAuthBaseUri, apiProperties.healthTimeout)
 
-  @Bean(name = ["probationSearchApiWebClient"])
-  fun probationSearchApiWebClient(
-    authorizedClientManager: OAuth2AuthorizedClientManager,
-    builder: WebClient.Builder,
-  ): WebClient = builder.authorisedWebClient(
-    authorizedClientManager,
-    registrationId = "probation-search-api",
-    url = apisProperties.probationSearchApi.url,
-    timeout = apiProperties.timeout,
-  )
-
   @Bean(name = ["personRecordApiWebClient"])
   fun personRecordApiWebClient(
     authorizedClientManager: OAuth2AuthorizedClientManager,
