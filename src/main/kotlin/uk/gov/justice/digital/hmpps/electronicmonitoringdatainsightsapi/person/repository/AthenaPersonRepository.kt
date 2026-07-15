@@ -62,10 +62,8 @@ class AthenaPersonRepository(
 
     builder.addAnyEq(
       *identifierCriteria(personsQueryCriteria).toTypedArray(),
-    )
-    builder.addIn(
-      "c.order_id",
-      personsQueryCriteria.orderIds,
+      inColumn = "c.order_id",
+      inValues = personsQueryCriteria.orderIds,
     )
     builder.addIn(
       "c.enforceable_condition",
@@ -159,20 +157,36 @@ class AthenaPersonRepository(
         }
     }
 
-    fun addAnyEq(vararg criteria: Pair<String, String?>) {
+    fun addAnyEq(
+      vararg criteria: Pair<String, String?>,
+      inColumn: String,
+      inValues: List<String>?,
+    ) {
       val cleanedCriteria = criteria
         .mapNotNull { (column, raw) ->
           raw?.trim()
             ?.takeIf(String::isNotEmpty)
             ?.let { column to it }
         }
+      val cleanedInValues = inValues
+        ?.map(String::trim)
+        ?.filter(String::isNotEmpty)
+        .orEmpty()
 
-      if (cleanedCriteria.isEmpty()) return
+      if (cleanedCriteria.isEmpty() && cleanedInValues.isEmpty()) return
 
-      val conditions = cleanedCriteria.joinToString(" OR ") { (column) -> "$column = CAST(? AS VARCHAR)" }
+      val conditions = cleanedCriteria
+        .map { (column) -> "$column = CAST(? AS VARCHAR)" }
+        .toMutableList()
 
-      where.append("  AND ($conditions)\n")
+      if (cleanedInValues.isNotEmpty()) {
+        val placeholders = cleanedInValues.joinToString(", ") { "CAST(? AS VARCHAR)" }
+        conditions += "$inColumn IN ($placeholders)"
+      }
+
+      where.append("  AND (${conditions.joinToString(" OR ")})\n")
       params += cleanedCriteria.map { (_, value) -> value }
+      params += cleanedInValues
     }
 
     fun addIn(column: String, values: List<String>?) {

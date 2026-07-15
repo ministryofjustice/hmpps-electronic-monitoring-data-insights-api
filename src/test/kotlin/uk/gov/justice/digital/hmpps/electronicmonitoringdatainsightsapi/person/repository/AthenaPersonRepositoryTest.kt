@@ -239,7 +239,9 @@ class AthenaPersonRepositoryTest {
     )
 
     assertThat(sqlSlot.captured)
-      .contains("AND c.order_id IN (CAST(? AS VARCHAR), CAST(? AS VARCHAR))")
+      .contains(
+        "AND (c.delius_id = CAST(? AS VARCHAR) OR c.order_id IN (CAST(? AS VARCHAR), CAST(? AS VARCHAR)))",
+      )
 
     assertThat(paramsSlot.captured).startsWith(
       "X123456",
