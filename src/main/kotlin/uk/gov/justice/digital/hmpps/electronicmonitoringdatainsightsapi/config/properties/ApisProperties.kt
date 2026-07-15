@@ -12,10 +12,10 @@ import org.springframework.boot.context.properties.ConfigurationProperties
 @ConfigurationProperties(prefix = "apis")
 data class ApisProperties(
   /**
-   * Probation Search API configuration.
+   * Person Record API configuration.
    */
   @field:Valid
-  val probationSearchApi: ApiEndpoint,
+  val personRecordApi: ApiEndpoint,
 
 ) {
   /**

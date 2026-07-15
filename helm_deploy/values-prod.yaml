@@ -9,8 +9,8 @@ generic-service:
 
   env:
     HMPPS_AUTH_URL: "https://sign-in.hmpps.service.justice.gov.uk/auth"
-    PROBATION_SEARCH_API_URL: "https://probation-offender-search.hmpps.service.justice.gov.uk"
-    PROBATION_SEARCH_ENABLED: "true"
+    PERSON_RECORD_API_URL: "https://hmpps-person-record.hmpps.service.justice.gov.uk"
+    CPR_ENABLED: "true"
     UI_SERVICE_BASE_URL: "https://electronic-monitoring-data-insights-ui.hmpps.service.justice.gov.uk"
     SERVICE_BASE_URL: "https://electronic-monitoring-data-insights-api.hmpps.service.justice.gov.uk"
     MFA_REQUIRED: "false"

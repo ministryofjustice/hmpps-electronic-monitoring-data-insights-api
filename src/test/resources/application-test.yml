@@ -8,9 +8,9 @@ management.endpoint:
 hmpps-auth:
   url: "http://localhost:8090/auth"
 
-probation-search-api:
+person-record-api:
   client:
-    id: probation-search-api-client
+    id: person-record-api-client
     secret: client-secret
 
 aws:
@@ -34,5 +34,5 @@ service:
     data-out-of-sync-threshold-minutes: 15
 
 apis:
-  probation-search-api:
+  person-record-api:
     url: http://localhost:8090

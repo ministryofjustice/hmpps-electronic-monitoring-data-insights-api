@@ -215,6 +215,42 @@ class AthenaPersonRepositoryTest {
   }
 
   @Test
+  fun `search should filter by order IDs using an IN query`() {
+    val sqlSlot = slot<String>()
+    val paramsSlot = slot<List<String>>()
+
+    every {
+      runner.fetchPaged<Person>(
+        sql = capture(sqlSlot),
+        database = eq(properties.athena.defaultDatabase),
+        cursor = isNull(),
+        params = capture(paramsSlot),
+        pageSize = eq(properties.athena.rowLimit),
+        mapper = any(),
+      )
+    } returns PaginatedResult(emptyList(), null)
+
+    repository.searchPeople(
+      PeopleQueryCriteria(
+        deliusId = "X123456",
+        orderIds = listOf("MON12345", " MON67890 ", ""),
+      ),
+      nextToken = null,
+    )
+
+    assertThat(sqlSlot.captured)
+      .contains(
+        "AND (c.delius_id = CAST(? AS VARCHAR) OR c.order_id IN (CAST(? AS VARCHAR), CAST(? AS VARCHAR)))",
+      )
+
+    assertThat(paramsSlot.captured).startsWith(
+      "X123456",
+      "MON12345",
+      "MON67890",
+    )
+  }
+
+  @Test
   fun `search should include four variations for two digit PNC years`() {
     val sqlSlot = slot<String>()
     val paramsSlot = slot<List<String>>()

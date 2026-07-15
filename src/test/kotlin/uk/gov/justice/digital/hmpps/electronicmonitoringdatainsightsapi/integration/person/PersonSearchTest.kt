@@ -79,7 +79,6 @@ class PersonSearchTest : IntegrationTestBase() {
 
   @Test
   fun `Exists endpoint returns the correct URL`() {
-    stubProbationSearchByCrn("X123456", pncNumber = "2000/123456A", nomsNumber = "A1234BC")
     stubQueryExecution(
       "123",
       1,

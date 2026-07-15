@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestMethod
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
-import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.client.probationsearch.ProbationSearchApiClient
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.client.cpr.CprApiClient
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.HAS_VIEW_ROLE
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.service.CurrentUserService
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.config.ServiceProperties
@@ -36,11 +36,11 @@ class PersonController(
   private val serviceProperties: ServiceProperties,
   private val currentUserService: CurrentUserService,
   private val devPersonProvider: ObjectProvider<DevPersonProvider>,
-  private val probationSearchApiClient: ProbationSearchApiClient,
+  private val cprApiClient: CprApiClient,
   @Value("\${dev.stub.enabled:false}")
   private val devStubEnabled: Boolean,
-  @Value("\${probation.search.enabled:false}")
-  private val probationSearchEnabled: Boolean,
+  @Value("\${cpr.enabled:false}")
+  private val cprEnabled: Boolean,
 ) {
 
   companion object {
@@ -171,26 +171,29 @@ class PersonController(
     return peopleQueryCriteria.copy(
       nomisId = peopleQueryCriteria.nomisId ?: enrichedPeopleQueryCriteria.nomisId,
       pncId = peopleQueryCriteria.pncId ?: enrichedPeopleQueryCriteria.pncId,
+      orderIds = peopleQueryCriteria.orderIds.ifEmpty { enrichedPeopleQueryCriteria.orderIds },
     )
   }
 
   private fun findPerson(crn: String): PeopleQueryCriteria {
-    if (!probationSearchEnabled) {
+    if (!cprEnabled) {
       return PeopleQueryCriteria(deliusId = crn)
     }
 
-    val probationSearchOtherIds = probationSearchApiClient.searchByCrn(crn)
+    val identifiers = cprApiClient.getIdentifiersByCrn(crn)
     log.info(
-      "Probation Search returned ids for CRN {}: {}",
+      "CPR returned identifiers for CRN {}: prisonNumbers={}, pncs={}, otherIdentifiers={}",
       crn,
-      probationSearchOtherIds.joinToString { "crn=${it.crn}, pncNumber=${it.pncNumber}, nomsNumber=${it.nomsNumber}" },
+      identifiers.prisonNumbers,
+      identifiers.pncs,
+      identifiers.otherIdentifiers,
     )
-    val otherIds = probationSearchOtherIds.firstOrNull()
 
     return PeopleQueryCriteria(
       deliusId = crn,
-      pncId = otherIds?.pncNumber,
-      nomisId = otherIds?.nomsNumber,
+      pncId = identifiers.pncs.firstOrNull(),
+      nomisId = identifiers.prisonNumbers.firstOrNull(),
+      orderIds = identifiers.otherIdentifiers.filter { it.startsWith("MON") },
     )
   }
 }
