@@ -96,6 +96,11 @@ class AthenaPersonRepository(
     ${builder.where}
     AND c.mdss_person_id IS NOT NULL
     AND current_date BETWEEN c.order_start_date AND c.order_end_date
+    AND EXISTS (
+      SELECT 1
+      FROM position p
+      WHERE p.person_id = c.mdss_person_id
+    )
     LIMIT ${properties.athena.rowLimit}
     """.trimIndent()
 
