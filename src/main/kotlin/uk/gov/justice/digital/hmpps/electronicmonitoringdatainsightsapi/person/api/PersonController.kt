@@ -41,6 +41,8 @@ class PersonController(
   private val devStubEnabled: Boolean,
   @Value("\${cpr.enabled:false}")
   private val cprEnabled: Boolean,
+  @Value("\${access-control.enabled:false}")
+  private val accessControlEnabled: Boolean,
 ) {
 
   companion object {
@@ -72,6 +74,12 @@ class PersonController(
           nextToken = null,
         ),
       )
+    }
+
+    if(accessControlEnabled) {
+      log.info("Access control is enabled")
+      //TODO user the access control endpoint to determine if the user has access to the person
+      // if not throw an appropriate exception
     }
 
     val pagedPeople = personService.searchPeople(enrichPeopleQueryCriteria(peopleQueryCriteria))

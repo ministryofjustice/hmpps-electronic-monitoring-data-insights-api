@@ -93,6 +93,11 @@ service:
 cpr:
   enabled: ${CPR_ENABLED:false}
 
+access-control:
+  enabled: ${ACCESS_CONTROL_ENABLED:false}
+
 apis:
   person-record-api:
     url: ${PERSON_RECORD_API_URL}
+  access-control-api:
+    url: ${ACCESS_CONTROL_API_URL}

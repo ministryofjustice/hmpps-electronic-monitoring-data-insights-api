@@ -11,6 +11,8 @@ generic-service:
     HMPPS_AUTH_URL: "https://sign-in.hmpps.service.justice.gov.uk/auth"
     PERSON_RECORD_API_URL: "https://hmpps-person-record.hmpps.service.justice.gov.uk"
     CPR_ENABLED: "true"
+    ACCESS_CONTROL_API_URL: "probation-access-control.hmpps.service.justice.gov.uk"
+    ACCESS_CONTROL_ENABLED: "true"
     UI_SERVICE_BASE_URL: "https://electronic-monitoring-data-insights-ui.hmpps.service.justice.gov.uk"
     SERVICE_BASE_URL: "https://electronic-monitoring-data-insights-api.hmpps.service.justice.gov.uk"
     MFA_REQUIRED: "false"
