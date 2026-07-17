@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.api
 
 import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
@@ -12,6 +13,9 @@ import org.mockito.kotlin.verifyNoInteractions
 import org.mockito.kotlin.whenever
 import org.springframework.beans.factory.ObjectProvider
 import org.springframework.http.HttpStatus
+import org.springframework.security.access.AccessDeniedException
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.client.accesscontrol.AccessControlApiClient
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.client.accesscontrol.AccessResponse
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.client.cpr.CprApiClient
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.client.cpr.CprIdentifiers
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.service.CurrentUserService
@@ -40,6 +44,9 @@ class PersonControllerTest {
   @Mock
   private lateinit var cprApiClient: CprApiClient
 
+  @Mock
+  private lateinit var accessControlApiClient: AccessControlApiClient
+
   private lateinit var controller: PersonController
 
   @BeforeEach
@@ -50,6 +57,7 @@ class PersonControllerTest {
       currentUserService = currentUserService,
       serviceProperties = serviceProperties,
       cprApiClient = cprApiClient,
+      accessControlApiClient = accessControlApiClient,
       devStubEnabled = false,
       cprEnabled = false,
     )
@@ -113,6 +121,7 @@ class PersonControllerTest {
       currentUserService = currentUserService,
       serviceProperties = serviceProperties,
       cprApiClient = cprApiClient,
+      accessControlApiClient = accessControlApiClient,
       devStubEnabled = false,
       cprEnabled = true,
     )
@@ -170,6 +179,100 @@ class PersonControllerTest {
   }
 
   @Test
+  fun `searchPeople should search when access control allows the user to view the CRN`() {
+    val crn = "X123456"
+    val criteria = PeopleQueryCriteria(deliusId = crn, enrichIds = false)
+    val pagedPeople = PagedPeople(listOf(Person(personId = "123456", deliusId = crn)), null)
+    val controller = accessControlledController()
+
+    whenever(currentUserService.username()).thenReturn("TEST_USER")
+    whenever(accessControlApiClient.getUserAccess("TEST_USER", crn)).thenReturn(
+      AccessResponse(crn, userExcluded = false, userRestricted = false),
+    )
+    whenever(personService.searchPeople(criteria, null)).thenReturn(pagedPeople)
+
+    val result = controller.searchPeople(criteria, null)
+
+    assertThat(result.statusCode).isEqualTo(HttpStatus.OK)
+    assertThat(result.body).isEqualTo(PersonResponse(pagedPeople.persons, null))
+    verify(accessControlApiClient).getUserAccess("TEST_USER", crn)
+  }
+
+  @Test
+  fun `searchPeople should not check access for the SYSTEM user`() {
+    val criteria = PeopleQueryCriteria(nomisId = "A1234BC", enrichIds = false)
+    val pagedPeople = PagedPeople(listOf(Person(personId = "123456", nomisId = "A1234BC")), null)
+    val controller = accessControlledController()
+
+    whenever(currentUserService.username()).thenReturn("SYSTEM")
+    whenever(personService.searchPeople(criteria, null)).thenReturn(pagedPeople)
+
+    val result = controller.searchPeople(criteria, null)
+
+    assertThat(result.statusCode).isEqualTo(HttpStatus.OK)
+    assertThat(result.body).isEqualTo(PersonResponse(pagedPeople.persons, null))
+    verifyNoInteractions(accessControlApiClient)
+  }
+
+  @Test
+  fun `searchPeople should deny an excluded user`() {
+    val crn = "X123456"
+    val criteria = PeopleQueryCriteria(deliusId = crn, enrichIds = false)
+    val controller = accessControlledController()
+
+    whenever(currentUserService.username()).thenReturn("TEST_USER")
+    whenever(accessControlApiClient.getUserAccess("TEST_USER", crn)).thenReturn(
+      AccessResponse(
+        crn = crn,
+        userExcluded = true,
+        userRestricted = false,
+        exclusionMessage = "You are excluded from viewing this case",
+      ),
+    )
+
+    assertThatThrownBy { controller.searchPeople(criteria, null) }
+      .isInstanceOf(AccessDeniedException::class.java)
+      .hasMessage("You are excluded from viewing this case")
+    verifyNoInteractions(personService)
+  }
+
+  @Test
+  fun `searchPeople should deny a user who is not on the restriction allow-list`() {
+    val crn = "X123456"
+    val criteria = PeopleQueryCriteria(deliusId = crn, enrichIds = false)
+    val controller = accessControlledController()
+    val restrictionMessage =
+      "This is a restricted offender record. Please contact:\r\n\r\nTeam: TWR 4\r\nResponsible Officer: bob smith, 0778 887655566"
+
+    whenever(currentUserService.username()).thenReturn("TEST_USER")
+    whenever(accessControlApiClient.getUserAccess("TEST_USER", crn)).thenReturn(
+      AccessResponse(
+        crn = crn,
+        userExcluded = false,
+        userRestricted = true,
+        restrictionMessage = restrictionMessage,
+      ),
+    )
+
+    assertThatThrownBy { controller.searchPeople(criteria, null) }
+      .isInstanceOf(AccessDeniedException::class.java)
+      .hasMessage(restrictionMessage)
+    verifyNoInteractions(personService)
+  }
+
+  private fun accessControlledController() = PersonController(
+    personService = personService,
+    devPersonProvider = devPersonProvider,
+    currentUserService = currentUserService,
+    serviceProperties = serviceProperties,
+    cprApiClient = cprApiClient,
+    accessControlApiClient = accessControlApiClient,
+    devStubEnabled = false,
+    cprEnabled = false,
+    accessControlEnabled = true,
+  )
+
+  @Test
   fun `exists endpoint should return 200 and person when they exist`() {
     val crn = "X123456"
     val mockPeople = PagedPeople(listOf(Person(personId = "123456")), null)
@@ -198,6 +301,7 @@ class PersonControllerTest {
       currentUserService = currentUserService,
       serviceProperties = serviceProperties,
       cprApiClient = cprApiClient,
+      accessControlApiClient = accessControlApiClient,
       devStubEnabled = false,
       cprEnabled = true,
     )
