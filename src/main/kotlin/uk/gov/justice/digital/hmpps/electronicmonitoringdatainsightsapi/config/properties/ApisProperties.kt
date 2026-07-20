@@ -17,6 +17,9 @@ data class ApisProperties(
   @field:Valid
   val personRecordApi: ApiEndpoint,
 
+  @field:Valid
+  val accessControlApi: ApiEndpoint,
+
 ) {
   /**
    * Configuration for an individual API endpoint.

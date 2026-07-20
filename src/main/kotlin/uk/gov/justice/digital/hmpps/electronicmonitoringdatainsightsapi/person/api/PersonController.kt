@@ -9,12 +9,15 @@ import org.springframework.beans.factory.ObjectProvider
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
+import org.springframework.security.access.AccessDeniedException
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestMethod
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.client.accesscontrol.AccessControlApiClient
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.client.accesscontrol.AccessResponse
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.client.cpr.CprApiClient
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.HAS_VIEW_ROLE
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.service.CurrentUserService
@@ -37,10 +40,13 @@ class PersonController(
   private val currentUserService: CurrentUserService,
   private val devPersonProvider: ObjectProvider<DevPersonProvider>,
   private val cprApiClient: CprApiClient,
+  private val accessControlApiClient: AccessControlApiClient,
   @Value("\${dev.stub.enabled:false}")
   private val devStubEnabled: Boolean,
   @Value("\${cpr.enabled:false}")
   private val cprEnabled: Boolean,
+  @Value("\${access-control.enabled:false}")
+  private val accessControlEnabled: Boolean = false,
 ) {
 
   companion object {
@@ -74,6 +80,15 @@ class PersonController(
       )
     }
 
+    if (accessControlEnabled) {
+      val username = currentUserService.username()
+      if (username != "SYSTEM") {
+        val crn = peopleQueryCriteria.deliusId?.trim()?.takeIf(String::isNotEmpty)
+          ?: throw AccessDeniedException("A CRN is required when access control is enabled")
+        checkUserAccess(username, crn)
+      }
+    }
+
     val pagedPeople = personService.searchPeople(enrichPeopleQueryCriteria(peopleQueryCriteria))
 
     return ResponseEntity.ok(
@@ -83,6 +98,23 @@ class PersonController(
       ),
     )
   }
+
+  private fun checkUserAccess(username: String, crn: String) {
+    log.info("Checking user {} has access to CRN {}", username, crn)
+
+    val access = accessControlApiClient.getUserAccess(username, crn)
+    if (access.userExcluded || access.userRestricted) {
+      throw AccessDeniedException(access.denialMessage(username))
+    }
+
+    log.info("User {} has access to CRN {}", username, crn)
+  }
+
+  private fun AccessResponse.denialMessage(username: String): String = when {
+    userExcluded -> exclusionMessage
+    userRestricted -> restrictionMessage
+    else -> null
+  } ?: "User $username does not have access to CRN $crn"
 
   @OptIn(ExperimentalTime::class)
   @PreAuthorize(HAS_VIEW_ROLE)
@@ -123,11 +155,6 @@ class PersonController(
   fun existsInEMDI(
     @PathVariable @Parameter(description = "The crn of the person", required = true) crn: String,
   ): ResponseEntity<ExistsInEMDI> {
-    val username = currentUserService.username()
-    log.info("Checking user {} has access to this crn {}", username, crn)
-    // TODO use probation integration service here to see if the user can access this CRN
-    log.info("User {} has access to this crn {}", username, crn)
-
     val provider = devPersonProvider.ifAvailable
 
     val exists = if (

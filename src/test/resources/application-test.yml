@@ -13,6 +13,11 @@ person-record-api:
     id: person-record-api-client
     secret: client-secret
 
+access-control-api:
+  client:
+    id: access-control-api-client
+    secret: client-secret
+
 aws:
   region: eu-west-2
   endpoint-url: http://localhost:8091
@@ -35,4 +40,6 @@ service:
 
 apis:
   person-record-api:
+    url: http://localhost:8090
+  access-control-api:
     url: http://localhost:8090
