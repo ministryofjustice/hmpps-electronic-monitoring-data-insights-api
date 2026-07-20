@@ -76,6 +76,16 @@ class AthenaPersonRepository(
       )
     }
 
+    val enhancedSearchCriteria = if (personsQueryCriteria.enhancedPeopleSearch) {
+      "AND EXISTS (" +
+        "      SELECT 1" +
+        "      FROM ${properties.athena.mdssDatabase}.position p" +
+        "      WHERE p.person_id = c.mdss_person_id" +
+        "    )"
+    } else {
+      ""
+    }
+
     val sql = """
     SELECT
       c.mdss_person_id AS person_id,
@@ -96,6 +106,7 @@ class AthenaPersonRepository(
     ${builder.where}
     AND c.mdss_person_id IS NOT NULL
     AND current_date BETWEEN c.order_start_date AND c.order_end_date
+    $enhancedSearchCriteria
     LIMIT ${properties.athena.rowLimit}
     """.trimIndent()
 
