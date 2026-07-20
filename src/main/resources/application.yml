@@ -27,8 +27,8 @@ spring:
             scope: read
           access-control-api:
             provider: hmpps-auth
-            client-id: ${access-control-api.client.id}
-            client-secret: ${access-control-api.client.secret}
+            client-id: ${probation-access-control-api.client.id}
+            client-secret: ${probation-access-control-api.client.secret}
             authorization-grant-type: client_credentials
             scope: read
   http:
