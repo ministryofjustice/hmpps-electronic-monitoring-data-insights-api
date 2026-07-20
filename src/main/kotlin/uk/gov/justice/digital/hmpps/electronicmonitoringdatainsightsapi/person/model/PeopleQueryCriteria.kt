@@ -11,6 +11,7 @@ data class PeopleQueryCriteria(
   val prisonId: String? = null,
   val orderIds: List<String> = emptyList(),
   val enrichIds: Boolean = true,
+  val enhancedPeopleSearch: Boolean = false,
 ) {
   @AssertTrue(message = "At least one of the following must be provided: nomisId, pncId, deliusId, horId, ceprId, prisonId, orderIds")
   fun isValid(): Boolean = !(

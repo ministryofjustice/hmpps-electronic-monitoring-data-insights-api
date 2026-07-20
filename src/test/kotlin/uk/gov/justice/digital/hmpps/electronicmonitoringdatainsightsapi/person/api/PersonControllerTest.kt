@@ -133,6 +133,7 @@ class PersonControllerTest {
           pncId = "EXISTING-PNC",
           nomisId = "G5555TT",
           orderIds = listOf("MON12345"),
+          enhancedPeopleSearch = true,
         ),
       ),
     ).thenReturn(pagedPeople)
