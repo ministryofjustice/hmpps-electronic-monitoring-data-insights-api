@@ -79,7 +79,7 @@ class AthenaPersonRepository(
     val enhancedSearchCriteria = if (personsQueryCriteria.enhancedPeopleSearch) {
       "AND EXISTS (" +
         "      SELECT 1" +
-        "      FROM position p" +
+        "      FROM ${properties.athena.mdssDatabase}.position p" +
         "      WHERE p.person_id = c.mdss_person_id" +
         "    )"
     } else {
