@@ -11,7 +11,7 @@ configurations {
 }
 
 val springdocOpenapiVersion = "3.0.3"
-val hmppsKotlinSpringBootStarterVersion = "2.5.0"
+val hmppsKotlinSpringBootStarterVersion = "3.0.0"
 val kotlinLoggingVersion = "3.0.5"
 val athenaVersion = "2.48.3"
 
