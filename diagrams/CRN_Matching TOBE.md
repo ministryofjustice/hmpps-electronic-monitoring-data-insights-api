@@ -26,4 +26,3 @@ sequenceDiagram
         EMDI-->>EMDI-UI: Return matched result
     else LAO access denied
         EMDI-->>EMDI-UI: Return 403 Forbidden
-    end
