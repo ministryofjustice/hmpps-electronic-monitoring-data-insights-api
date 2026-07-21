@@ -1,15 +1,3 @@
-# EMDI Offender Lookup Sequence
-
-**Description**
-
-This sequence diagram shows the end-to-end flow for retrieving Electronic Monitoring (EM) data for a probation case. The EMDI service:
-- validates Limited Access Offenders (LAO) access,
-- retrieves offender identifiers from the Core Person Record API,
-- searches the EMDI Data Store for matching EM data, and
-- returns the result to the EMDI-UI API.
-
-```mermaid
-
 sequenceDiagram
     autonumber
 
@@ -35,5 +23,3 @@ sequenceDiagram
     else LAO access denied
         EMDI-->>EMDI-UI: Return 403 Forbidden
     end
-
-    ```
