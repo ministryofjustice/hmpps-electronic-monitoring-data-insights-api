@@ -1,0 +1,27 @@
+
+
+sequenceDiagram
+    autonumber
+
+    participant MPOP as MPOP API
+    participant EMDI as EMDI
+    participant PAC as Probation Access Control API
+    participant CPR as Core Person Record API
+    participant EMDIDataStore as EMDI Data Store
+
+    MPOP->>EMDI: Request
+
+    EMDI->>PAC: Check LAO access for CRN
+    PAC-->>EMDI: LAO access result
+
+    alt LAO access permitted
+        EMDI->>CPR: Lookup using CRN
+        CPR-->>EMDI: Return NOMIS / PNC / Order ID
+
+        EMDI->>EMDIDataStore: Check EM data exists<br/>(including fuzzy matching and formatting)
+        EMDIDataStore-->>EMDI: Match result
+
+        EMDI-->>MPOP: Return matched result
+    else LAO access denied
+        EMDI-->>MPOP: Return 403 Forbidden
+    end
