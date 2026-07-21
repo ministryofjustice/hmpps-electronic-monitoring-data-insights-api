@@ -15,7 +15,7 @@ sequenceDiagram
     autonumber
 
     participant MPOP as MPOP API
-    participant EMDI as EMDI
+    participant EMDI as EMDI API
     participant PAC as Probation Access Control API
     participant CPR as Core Person Record API
     participant PIEMDI as PI-EMDI API
