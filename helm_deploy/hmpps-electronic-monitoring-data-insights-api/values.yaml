@@ -35,6 +35,8 @@ generic-service:
     hmpps-electronic-monitoring-data-insights-api-client-creds:
       PERSON_RECORD_API_CLIENT_ID: "CPR_API_CLIENT_ID"
       PERSON_RECORD_API_CLIENT_SECRET: "CPR_API_CLIENT_SECRET"
+      PROBATION_ACCESS_CONTROL_API_CLIENT_ID: "PROBATION_ACCESS_CONTROL_API_CLIENT_ID"
+      ROBATION_ACCESS_CONTROL_API_CLIENT_SECRET: "ROBATION_ACCESS_CONTROL_API_CLIENT_SECRET"
     rds-postgresql-instance-output:
       DB_NAME: "database_name"
       DB_USER: "database_username"
