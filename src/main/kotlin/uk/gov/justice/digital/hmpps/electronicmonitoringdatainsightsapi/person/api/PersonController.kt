@@ -104,7 +104,9 @@ class PersonController(
 
     val access = accessControlApiClient.getUserAccess(username, crn)
     if (access.userExcluded || access.userRestricted) {
-      throw AccessDeniedException(access.denialMessage(username))
+      val message = access.denialMessage(username)
+      log.info(message)
+      throw AccessDeniedException(message)
     }
 
     log.info("User {} has access to CRN {}", username, crn)
