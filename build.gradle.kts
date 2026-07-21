@@ -1,6 +1,6 @@
 plugins {
   val kotlinVersion = "2.4.10"
-  id("uk.gov.justice.hmpps.gradle-spring-boot") version "10.5.7"
+  id("uk.gov.justice.hmpps.gradle-spring-boot") version "11.0.1"
   id("io.gatling.gradle") version "3.15.1.1"
   kotlin("plugin.spring") version kotlinVersion
   kotlin("plugin.serialization") version kotlinVersion
@@ -13,7 +13,7 @@ configurations {
 val springdocOpenapiVersion = "3.0.3"
 val hmppsKotlinSpringBootStarterVersion = "3.0.0"
 val kotlinLoggingVersion = "3.0.5"
-val athenaVersion = "2.48.3"
+val athenaVersion = "2.48.4"
 
 dependencies {
   implementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter:$hmppsKotlinSpringBootStarterVersion")
@@ -53,7 +53,7 @@ dependencies {
   testImplementation("org.springframework.boot:spring-boot-webflux-test")
   testImplementation("org.springframework.boot:spring-boot-webmvc-test")
   testImplementation("org.springframework.boot:spring-boot-starter-webclient-test")
-  testImplementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter-test:2.5.0")
+  testImplementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter-test:3.0.0")
   testImplementation("org.wiremock:wiremock-standalone:3.13.2")
   testImplementation("com.ninja-squad:springmockk:5.0.1")
   testImplementation("io.swagger.parser.v3:swagger-parser:2.1.45") {
