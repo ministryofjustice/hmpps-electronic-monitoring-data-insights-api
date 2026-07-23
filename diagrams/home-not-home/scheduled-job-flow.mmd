@@ -1,0 +1,62 @@
+sequenceDiagram
+    box Modernisation Platform
+        participant Scheduler as Job Scheduler
+        participant Matcher as Address Matching Job
+        participant EM as Curated EM Address Data
+        participant AB as AddressBase Athena Table
+        participant Home as Home or Not Home Job
+        participant GPS as Curated GPS Data
+        participant S3 as S3 Artefact Store
+    end
+
+    box Ordnance Survey
+        participant Places as OS Places API
+        participant NGD as OS NGD Features API
+    end
+
+    box Cloud Platform
+        participant DB as PostgreSQL/PostGIS
+        participant API as EMDI API
+        participant UX as EMDI UX
+    end
+
+    actor User as EMDI User
+
+    Scheduler->>Matcher: Start scheduled address-matching run
+    Matcher->>Matcher: Create run ID and load configuration
+    Matcher->>EM: Read person IDs and messy addresses
+    EM-->>Matcher: Return source address records
+
+    Matcher->>Matcher: Clean addresses and extract postcodes
+    Matcher->>AB: Read matching AddressBase candidates
+    AB-->>Matcher: Return canonical addresses and UPRNs
+    Matcher->>Matcher: Run exact and probabilistic matching
+
+    loop Unique matched UPRNs not cached
+        Matcher->>Places: Look up UPRN
+        Places-->>Matcher: Return address record and TOID
+        Matcher->>NGD: Retrieve building parts using TOID
+        NGD-->>Matcher: Return building geometries
+        Matcher->>Matcher: Merge building parts
+    end
+
+    Matcher->>S3: Write manifest, QA and intermediate artefacts
+    Matcher->>DB: Upsert resolved addresses and home geometry
+    Matcher-->>Scheduler: Matching run succeeds or fails
+
+    Scheduler->>Home: Start scheduled home-status run
+    Home->>DB: Read resolved address and home geometry
+    Home->>GPS: Read person GPS positions
+    GPS-->>Home: Return timestamped GPS observations
+
+    Home->>Home: Calculate home/not-home intervals
+    Home->>S3: Write manifest, QA and intermediate artefacts
+    Home->>DB: Upsert home/not-home intervals
+    Home-->>Scheduler: Home-status run succeeds or fails
+
+    User->>UX: View person home-status information
+    UX->>API: Request home/not-home intervals
+    API->>DB: Query person, address and interval data
+    DB-->>API: Return resolved address and home-status results
+    API-->>UX: Return API response
+    UX-->>User: Display home/not-home timeline
