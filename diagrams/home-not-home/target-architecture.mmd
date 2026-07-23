@@ -1,29 +1,59 @@
-sequenceDiagram
-    autonumber
+flowchart LR
+    subgraph AP["Analytical Platform"]
+        DS["Data scientists"]
+        MATCHDEV["Address Matching<br/>algorithm development"]
+        HOMEDEV["Home or Not Home<br/>algorithm development"]
+        EXP["Experiments, validation<br/>and threshold tuning"]
 
-    participant EMDI_UI as EMDI UI API
-    participant EMDI as EMDI API
-    participant PAC as Probation Access Control API
-    participant CPR as Core Person Record API
-    participant PIEMDI as PI-EMDI API
-    participant EMDIDataStore as EMDI Data Store
+        DS --> MATCHDEV
+        DS --> HOMEDEV
+        MATCHDEV --> EXP
+        HOMEDEV --> EXP
+    end
 
-    EMDI_UI->>EMDI: Search for CRN
+    subgraph MP["Modernisation Platform"]
+        OSFILE["OS AddressBase delivery"]
+        ABINGEST["AddressBase ingestion<br/>and validation pipeline"]
+        AB["Versioned AddressBase<br/>Athena table"]
 
-    EMDI->>PAC: Check LAO access for CRN
-    PAC-->>EMDI: LAO access result
+        EMADDR["Curated EM person<br/>and address data"]
+        GPS["Curated EM GPS<br/>position data"]
 
-    alt LAO access permitted
-        EMDI->>CPR: Lookup using CRN
-        CPR-->>EMDI: Return NOMIS / PNC identifiers
+        MATCHJOB["Address<br/>Matching Job(Scheduled )"]
+        HOMEJOB["Home or<br/>Not Home Job(Scheduled)"]
 
-        EMDI->>PIEMDI: Get Order ID from personal contact notes
-        PIEMDI-->>EMDI: Return Order ID
+        S3["S3 pipeline artefacts<br/>manifests, QA, intermediates"]
+        PLACES["OS Places API"]
+        NGD["OS NGD Features API"]
 
-        EMDI->>EMDIDataStore: Check EM data exists<br/>(including fuzzy matching and formatting)
-        EMDIDataStore-->>EMDI: Match result
+        OSFILE --> ABINGEST
+        ABINGEST --> AB
 
-        EMDI-->>EMDI_UI: Return matched result
-    else LAO access denied
-        EMDI-->>EMDI_UI: Return 403 Forbidden
-end
+        EMADDR --> MATCHJOB
+        AB --> MATCHJOB
+
+        MATCHJOB --> PLACES
+        PLACES --> NGD
+        NGD --> MATCHJOB
+
+        MATCHJOB --> HOMEJOB
+        GPS --> HOMEJOB
+
+        MATCHJOB --> S3
+        HOMEJOB --> S3
+    end
+
+    subgraph CP["Cloud Platform"]
+        DB["EMDI RDS - PostgreSQL RDS<br/>with PostGIS"]
+        API["EMDI API"]
+        UX["EMDI UX"]
+
+        DB --> API
+        API --> UX
+    end
+
+    EXP -->|"Promote approved matcher version"| MATCHJOB
+    EXP -->|"Promote approved home-status version"| HOMEJOB
+
+    MATCHJOB -->|"Upsert resolved addresses<br/>and home geometry"| DB
+    HOMEJOB -->|"Upsert home/not-home intervals"| DB
