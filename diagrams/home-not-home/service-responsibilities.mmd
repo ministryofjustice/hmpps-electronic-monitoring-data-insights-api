@@ -1,0 +1,46 @@
+flowchart TD
+    subgraph AddressBasePipeline["AddressBase Ingestion Pipeline"]
+        AB1["Download licensed OS delivery"]
+        AB2["Validate files and schema"]
+        AB3["Transform to Parquet"]
+        AB4["Publish versioned Athena table"]
+
+        AB1 --> AB2 --> AB3 --> AB4
+    end
+
+    subgraph Matcher["Address Matching Job"]
+        M1["Read curated person addresses"]
+        M2["Clean and normalise addresses"]
+        M3["Match against AddressBase"]
+        M4["Resolve UPRN"]
+        M5["Retrieve TOID and building geometry"]
+        M6["Persist match result"]
+
+        M1 --> M2 --> M3 --> M4 --> M5 --> M6
+    end
+
+    subgraph HomeStatus["Home or Not Home Job"]
+        H1["Read GPS observations"]
+        H2["Read resolved home geometry"]
+        H3["Evaluate each observation"]
+        H4["Group observations into intervals"]
+        H5["Assign HOME, NOT_HOME or UNKNOWN"]
+        H6["Persist intervals"]
+
+        H1 --> H3
+        H2 --> H3
+        H3 --> H4 --> H5 --> H6
+    end
+
+    subgraph Serving["Serving Layer"]
+        S1["Query home-status intervals"]
+        S2["Apply access controls"]
+        S3["Expose stable API contract"]
+        S4["Render timeline in EMDI UX"]
+
+        S1 --> S2 --> S3 --> S4
+    end
+
+    AB4 --> M3
+    M6 --> H2
+    H6 --> S1
