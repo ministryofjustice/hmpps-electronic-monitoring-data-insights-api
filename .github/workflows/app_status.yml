@@ -2,108 +2,30 @@ name: EM Data Insights API Dev Status Alert
 
 on:
   schedule:
-    - cron: "*/1 * * * *"
+    - cron: "* * * * *"
   workflow_dispatch:
 
-permissions:
-  actions: write
-  contents: read
-
 jobs:
-  check-status:
+  send-test-message:
     runs-on: ubuntu-latest
 
     env:
-      STATUS_URL: https://electronic-monitoring-data-insights-api-dev.hmpps.service.justice.gov.uk/status
       SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL_DEV }}
-      STATE_FILE: service-state.txt
 
     steps:
-      - name: Restore previous state
-        uses: actions/cache/restore@v4
-        with:
-          path: service-state.txt
-          key: em-api-dev-status-${{ github.run_id }}
-          restore-keys: |
-            em-api-dev-status-
-
-      - name: Check status and alert on state change
-        shell: bash
+      - name: Send test Slack message
         run: |
-          set -u
+          minute=$(date -u +%M)
 
-          previous_state=$(cat "$STATE_FILE" 2>/dev/null || echo "HEALTHY")
-
-          current_minute=$(date -u +%M)
-
-          # Simulate DATA_OUT_OF_SYNC at minute 00 and minute 30.
-          if [ "$current_minute" = "00" ] || [ "$current_minute" = "30" ]; then
-            latest_position=$(date -u -d "10 minutes ago" +"%Y-%m-%dT%H:%M:%SZ")
-
-            response=$(jq -n \
-              --arg latestPosition "$latest_position" \
-              '{
-                statuses: [
-                  {
-                    code: "DATA_OUT_OF_SYNC",
-                    description: "Data out of sync",
-                    latestPosition: $latestPosition
-                  }
-                ]
-              }')
-
-            echo "Using simulated out-of-sync response:"
+          if [ "$minute" = "00" ] || [ "$minute" = "30" ]; then
+            text="🚨 TEST ALERT: EM Data Insights API dev is reporting a DATA_OUT_OF_SYNC issue."
+          elif [ "$minute" = "15" ] || [ "$minute" = "45" ]; then
+            text="✅ TEST OK: EM Data Insights API dev is healthy."
           else
-            response='{"statuses":[]}'
-
-            echo "Using simulated healthy response:"
+            echo "No message to send."
+            exit 0
           fi
 
-          echo "$response" | jq .
-
-          if echo "$response" | jq -e '.statuses | length > 0' > /dev/null; then
-            current_state="UNHEALTHY"
-
-            alert_text=$(echo "$response" | jq -r '
-              .statuses[]
-              | "• \(.code): \(.description) — latest position: \(.latestPosition)"
-            ')
-          else
-            current_state="HEALTHY"
-            alert_text=""
-          fi
-
-          echo "Previous state: $previous_state"
-          echo "Current state: $current_state"
-
-          if [ "$previous_state" = "HEALTHY" ] && [ "$current_state" = "UNHEALTHY" ]; then
-            payload=$(jq -n \
-              --arg text "🚨 EM Data Insights API dev is reporting a problem:\n$alert_text\n\n$STATUS_URL" \
-              '{text: $text}')
-
-            curl --fail-with-body \
-              --request POST \
-              --header "Content-Type: application/json" \
-              --data "$payload" \
-              "$SLACK_WEBHOOK_URL"
-          fi
-
-          if [ "$previous_state" = "UNHEALTHY" ] && [ "$current_state" = "HEALTHY" ]; then
-            payload=$(jq -n \
-              --arg text "✅ EM Data Insights API dev has recovered.\n\n$STATUS_URL" \
-              '{text: $text}')
-
-            curl --fail-with-body \
-              --request POST \
-              --header "Content-Type: application/json" \
-              --data "$payload" \
-              "$SLACK_WEBHOOK_URL"
-          fi
-
-          echo "$current_state" > "$STATE_FILE"
-
-      - name: Save current state
-        uses: actions/cache/save@v4
-        with:
-          path: service-state.txt
-          key: em-api-dev-status-${{ github.run_id }}
+          curl -X POST "$SLACK_WEBHOOK_URL" \
+            -H "Content-Type: application/json" \
+            -d "$(jq -n --arg text "$text" '{text: $text}')"
