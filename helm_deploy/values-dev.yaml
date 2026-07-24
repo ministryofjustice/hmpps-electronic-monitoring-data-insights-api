@@ -26,7 +26,7 @@ generic-service:
     WORKGROUP: "800964199911_default"
     DEV_STUB_ENABLED: "true"
     DEV_TEST_DATA_REFRESH_ENABLED: "true"
-    TEST_STATUS_ALERT_ENABLED: "true"
+    STATUS_ALERT_ENABLED: "true"
 
   namespace_secrets:
     slack-webhook:

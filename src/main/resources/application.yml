@@ -105,8 +105,8 @@ access-control:
 slack:
   webhook-url: ${SLACK_WEBHOOK_URL:}
 
-test-status-alert:
-  enabled: ${TEST_STATUS_ALERT_ENABLED:false}
+status-alert:
+  enabled: ${STATUS_ALERT_ENABLED:false}
 
 apis:
   person-record-api:

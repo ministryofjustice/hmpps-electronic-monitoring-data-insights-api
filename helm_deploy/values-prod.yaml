@@ -22,6 +22,11 @@ generic-service:
     ATHENA_OUTPUT_BUCKET: "s3://emds-prod-athena-query-results-20240918073115959600000002/output"
     WORKGROUP: "976799291502-default"
     RESPONSIBLE_ORGANISATIONS: "Probation London Community/Suspended Sentence,Probation London Licences"
+    STATUS_ALERT_ENABLED: "true"
+
+  namespace_secrets:
+    slack-webhook-prod:
+      SLACK_WEBHOOK_URL: "hub_channel_url"
 
 generic-prometheus-alerts:
   alertSeverity: hmpps-electronic-monitoring-data-insights-prod
