@@ -22,11 +22,12 @@ class StatusAlertSchedulerTest {
   private val serviceStatusService = mockk<ServiceStatusService>()
   private val restClientBuilder = RestClient.builder()
   private val server = MockRestServiceServer.bindTo(restClientBuilder).build()
+  private val restClient = restClientBuilder.build()
   private val scheduler = AlertStatusScheduler(
     serviceStatusService = serviceStatusService,
     slackWebhookUrl = "https://hooks.slack.test/services/test",
     serviceBaseUrl = "https://example.test/",
-    restClientBuilder = restClientBuilder,
+    restClient = restClient,
   )
 
   @Test
