@@ -5,7 +5,7 @@ sequenceDiagram
     participant EMDI as EMDI API
     participant PAC as Probation Access Control API
     participant CPR as Core Person Record API
-    participant EMDIDataStore as EMDI Data Store
+    participant EMDataStore as EM Data Store
 
     EMDI_UI->>EMDI: Search for CRN
 
@@ -16,8 +16,8 @@ sequenceDiagram
         EMDI->>CPR: Lookup using CRN
         CPR-->>EMDI: Return NOMIS / PNC / Order ID
 
-        EMDI->>EMDIDataStore: Check EM data exists<br/>(including fuzzy matching and formatting)
-        EMDIDataStore-->>EMDI: Match result
+        EMDI->>EMDataStore: Check EM data exists<br/>(including fuzzy matching and formatting)
+        EMDataStore-->>EMDI: Match result
 
         EMDI-->>EMDI_UI: Return matched result
     else LAO access denied
