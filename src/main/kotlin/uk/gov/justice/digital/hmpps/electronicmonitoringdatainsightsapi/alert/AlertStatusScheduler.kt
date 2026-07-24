@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.alert
 
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.http.MediaType
 import org.springframework.scheduling.annotation.Scheduled
@@ -21,10 +22,9 @@ class AlertStatusScheduler(
   private val slackWebhookUrl: String,
   @Value("\${service.base-url}")
   private val serviceBaseUrl: String,
-  restClientBuilder: RestClient.Builder,
+  @Qualifier("slackRestClient")
+  private val restClient: RestClient,
 ) {
-  private val restClient = restClientBuilder.build()
-
   @Scheduled(cron = "0 */15 * * * *", zone = "UTC")
   fun checkStatus() {
     val outOfSyncStatus = serviceStatusService.getStatus()
