@@ -2,7 +2,7 @@ name: EM Data Insights API Dev Status Alert
 
 on:
   schedule:
-    - cron: "*/5 * * * *"
+    - cron: "*/1 * * * *"
   workflow_dispatch:
 
 permissions:
@@ -28,16 +28,42 @@ jobs:
             em-api-dev-status-
 
       - name: Check status and alert on state change
+        shell: bash
         run: |
+          set -u
+
           previous_state=$(cat "$STATE_FILE" 2>/dev/null || echo "HEALTHY")
 
-          response=$(curl -fsS "$STATUS_URL" || true)
+          current_minute=$(date -u +%M)
 
-          if [ -z "$response" ]; then
+          # Simulate DATA_OUT_OF_SYNC at minute 00 and minute 30.
+          if [ "$current_minute" = "00" ] || [ "$current_minute" = "30" ]; then
+            latest_position=$(date -u -d "10 minutes ago" +"%Y-%m-%dT%H:%M:%SZ")
+
+            response=$(jq -n \
+              --arg latestPosition "$latest_position" \
+              '{
+                statuses: [
+                  {
+                    code: "DATA_OUT_OF_SYNC",
+                    description: "Data out of sync",
+                    latestPosition: $latestPosition
+                  }
+                ]
+              }')
+
+            echo "Using simulated out-of-sync response:"
+          else
+            response='{"statuses":[]}'
+
+            echo "Using simulated healthy response:"
+          fi
+
+          echo "$response" | jq .
+
+          if echo "$response" | jq -e '.statuses | length > 0' > /dev/null; then
             current_state="UNHEALTHY"
-            alert_text="Status endpoint returned no response"
-          elif echo "$response" | jq -e '.statuses | length > 0' > /dev/null; then
-            current_state="UNHEALTHY"
+
             alert_text=$(echo "$response" | jq -r '
               .statuses[]
               | "• \(.code): \(.description) — latest position: \(.latestPosition)"
@@ -55,9 +81,11 @@ jobs:
               --arg text "🚨 EM Data Insights API dev is reporting a problem:\n$alert_text\n\n$STATUS_URL" \
               '{text: $text}')
 
-            curl -X POST "$SLACK_WEBHOOK_URL" \
-              -H "Content-Type: application/json" \
-              -d "$payload"
+            curl --fail-with-body \
+              --request POST \
+              --header "Content-Type: application/json" \
+              --data "$payload" \
+              "$SLACK_WEBHOOK_URL"
           fi
 
           if [ "$previous_state" = "UNHEALTHY" ] && [ "$current_state" = "HEALTHY" ]; then
@@ -65,9 +93,11 @@ jobs:
               --arg text "✅ EM Data Insights API dev has recovered.\n\n$STATUS_URL" \
               '{text: $text}')
 
-            curl -X POST "$SLACK_WEBHOOK_URL" \
-              -H "Content-Type: application/json" \
-              -d "$payload"
+            curl --fail-with-body \
+              --request POST \
+              --header "Content-Type: application/json" \
+              --data "$payload" \
+              "$SLACK_WEBHOOK_URL"
           fi
 
           echo "$current_state" > "$STATE_FILE"
