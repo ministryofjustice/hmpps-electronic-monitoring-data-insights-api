@@ -9,13 +9,16 @@ import org.springframework.beans.factory.ObjectProvider
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
+import org.springframework.security.access.AccessDeniedException
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestMethod
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
-import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.client.probationsearch.ProbationSearchApiClient
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.client.accesscontrol.AccessControlApiClient
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.client.accesscontrol.AccessResponse
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.client.cpr.CprApiClient
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.HAS_VIEW_ROLE
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.service.CurrentUserService
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.config.ServiceProperties
@@ -36,11 +39,14 @@ class PersonController(
   private val serviceProperties: ServiceProperties,
   private val currentUserService: CurrentUserService,
   private val devPersonProvider: ObjectProvider<DevPersonProvider>,
-  private val probationSearchApiClient: ProbationSearchApiClient,
+  private val cprApiClient: CprApiClient,
+  private val accessControlApiClient: AccessControlApiClient,
   @Value("\${dev.stub.enabled:false}")
   private val devStubEnabled: Boolean,
-  @Value("\${probation.search.enabled:false}")
-  private val probationSearchEnabled: Boolean,
+  @Value("\${cpr.enabled:false}")
+  private val cprEnabled: Boolean,
+  @Value("\${access-control.enabled:false}")
+  private val accessControlEnabled: Boolean = false,
 ) {
 
   companion object {
@@ -74,6 +80,15 @@ class PersonController(
       )
     }
 
+    if (accessControlEnabled) {
+      val username = currentUserService.username()
+      if (username != "SYSTEM") {
+        val crn = peopleQueryCriteria.deliusId?.trim()?.takeIf(String::isNotEmpty)
+          ?: throw AccessDeniedException("A CRN is required when access control is enabled")
+        checkUserAccess(username, crn)
+      }
+    }
+
     val pagedPeople = personService.searchPeople(enrichPeopleQueryCriteria(peopleQueryCriteria))
 
     return ResponseEntity.ok(
@@ -83,6 +98,25 @@ class PersonController(
       ),
     )
   }
+
+  private fun checkUserAccess(username: String, crn: String) {
+    log.info("Checking user {} has access to CRN {}", username, crn)
+
+    val access = accessControlApiClient.getUserAccess(username, crn)
+    if (access.userExcluded || access.userRestricted) {
+      val message = access.denialMessage(username)
+      log.info(message)
+      throw AccessDeniedException(message)
+    }
+
+    log.info("User {} has access to CRN {}", username, crn)
+  }
+
+  private fun AccessResponse.denialMessage(username: String): String = when {
+    userExcluded -> exclusionMessage
+    userRestricted -> restrictionMessage
+    else -> null
+  } ?: "User $username does not have access to CRN $crn"
 
   @OptIn(ExperimentalTime::class)
   @PreAuthorize(HAS_VIEW_ROLE)
@@ -123,11 +157,6 @@ class PersonController(
   fun existsInEMDI(
     @PathVariable @Parameter(description = "The crn of the person", required = true) crn: String,
   ): ResponseEntity<ExistsInEMDI> {
-    val username = currentUserService.username()
-    log.info("Checking user {} has access to this crn {}", username, crn)
-    // TODO use probation integration service here to see if the user can access this CRN
-    log.info("User {} has access to this crn {}", username, crn)
-
     val provider = devPersonProvider.ifAvailable
 
     val exists = if (
@@ -171,26 +200,30 @@ class PersonController(
     return peopleQueryCriteria.copy(
       nomisId = peopleQueryCriteria.nomisId ?: enrichedPeopleQueryCriteria.nomisId,
       pncId = peopleQueryCriteria.pncId ?: enrichedPeopleQueryCriteria.pncId,
+      orderIds = peopleQueryCriteria.orderIds.ifEmpty { enrichedPeopleQueryCriteria.orderIds },
+      enhancedPeopleSearch = true,
     )
   }
 
   private fun findPerson(crn: String): PeopleQueryCriteria {
-    if (!probationSearchEnabled) {
+    if (!cprEnabled) {
       return PeopleQueryCriteria(deliusId = crn)
     }
 
-    val probationSearchOtherIds = probationSearchApiClient.searchByCrn(crn)
+    val identifiers = cprApiClient.getIdentifiersByCrn(crn)
     log.info(
-      "Probation Search returned ids for CRN {}: {}",
+      "CPR returned identifiers for CRN {}: prisonNumbers={}, pncs={}, otherIdentifiers={}",
       crn,
-      probationSearchOtherIds.joinToString { "crn=${it.crn}, pncNumber=${it.pncNumber}, nomsNumber=${it.nomsNumber}" },
+      identifiers.prisonNumbers,
+      identifiers.pncs,
+      identifiers.otherIdentifiers,
     )
-    val otherIds = probationSearchOtherIds.firstOrNull()
 
     return PeopleQueryCriteria(
       deliusId = crn,
-      pncId = otherIds?.pncNumber,
-      nomisId = otherIds?.nomsNumber,
+      pncId = identifiers.pncs.firstOrNull(),
+      nomisId = identifiers.prisonNumbers.firstOrNull(),
+      orderIds = identifiers.otherIdentifiers.filter { it.startsWith("MON") },
     )
   }
 }

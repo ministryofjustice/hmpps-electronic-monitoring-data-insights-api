@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.api
 
 import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
@@ -12,8 +13,11 @@ import org.mockito.kotlin.verifyNoInteractions
 import org.mockito.kotlin.whenever
 import org.springframework.beans.factory.ObjectProvider
 import org.springframework.http.HttpStatus
-import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.client.probationsearch.OtherIds
-import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.client.probationsearch.ProbationSearchApiClient
+import org.springframework.security.access.AccessDeniedException
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.client.accesscontrol.AccessControlApiClient
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.client.accesscontrol.AccessResponse
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.client.cpr.CprApiClient
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.client.cpr.CprIdentifiers
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.service.CurrentUserService
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.config.ServiceProperties
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.model.PagedPeople
@@ -38,7 +42,10 @@ class PersonControllerTest {
   private lateinit var currentUserService: CurrentUserService
 
   @Mock
-  private lateinit var probationSearchApiClient: ProbationSearchApiClient
+  private lateinit var cprApiClient: CprApiClient
+
+  @Mock
+  private lateinit var accessControlApiClient: AccessControlApiClient
 
   private lateinit var controller: PersonController
 
@@ -49,9 +56,10 @@ class PersonControllerTest {
       devPersonProvider = devPersonProvider,
       currentUserService = currentUserService,
       serviceProperties = serviceProperties,
-      probationSearchApiClient = probationSearchApiClient,
+      cprApiClient = cprApiClient,
+      accessControlApiClient = accessControlApiClient,
       devStubEnabled = false,
-      probationSearchEnabled = false,
+      cprEnabled = false,
     )
   }
 
@@ -112,14 +120,20 @@ class PersonControllerTest {
       devPersonProvider = devPersonProvider,
       currentUserService = currentUserService,
       serviceProperties = serviceProperties,
-      probationSearchApiClient = probationSearchApiClient,
+      cprApiClient = cprApiClient,
+      accessControlApiClient = accessControlApiClient,
       devStubEnabled = false,
-      probationSearchEnabled = true,
+      cprEnabled = true,
     )
     val pagedPeople = PagedPeople(listOf(Person(personId = "123456")), null)
 
-    whenever(probationSearchApiClient.searchByCrn(crn)).thenReturn(
-      listOf(OtherIds(crn = crn, pncNumber = "2012/0052494Q", nomsNumber = "G5555TT")),
+    whenever(cprApiClient.getIdentifiersByCrn(crn)).thenReturn(
+      CprIdentifiers(
+        crns = listOf(crn),
+        pncs = listOf("2012/0052494Q"),
+        prisonNumbers = listOf("G5555TT"),
+        otherIdentifiers = listOf("MON12345", "mon67890", "OTHER-1"),
+      ),
     )
     whenever(
       personService.searchPeople(
@@ -127,6 +141,8 @@ class PersonControllerTest {
           deliusId = crn,
           pncId = "EXISTING-PNC",
           nomisId = "G5555TT",
+          orderIds = listOf("MON12345"),
+          enhancedPeopleSearch = true,
         ),
       ),
     ).thenReturn(pagedPeople)
@@ -142,7 +158,7 @@ class PersonControllerTest {
 
     assertThat(result.statusCode).isEqualTo(HttpStatus.OK)
     assertThat(result.body).isEqualTo(PersonResponse(pagedPeople.persons, pagedPeople.nextToken))
-    verify(probationSearchApiClient, times(1)).searchByCrn(crn)
+    verify(cprApiClient, times(1)).getIdentifiersByCrn(crn)
   }
 
   @Test
@@ -160,8 +176,102 @@ class PersonControllerTest {
     val result = controller.searchPeople(criteria, null)
 
     assertThat(result.statusCode).isEqualTo(HttpStatus.OK)
-    verifyNoInteractions(probationSearchApiClient)
+    verifyNoInteractions(cprApiClient)
   }
+
+  @Test
+  fun `searchPeople should search when access control allows the user to view the CRN`() {
+    val crn = "X123456"
+    val criteria = PeopleQueryCriteria(deliusId = crn, enrichIds = false)
+    val pagedPeople = PagedPeople(listOf(Person(personId = "123456", deliusId = crn)), null)
+    val controller = accessControlledController()
+
+    whenever(currentUserService.username()).thenReturn("TEST_USER")
+    whenever(accessControlApiClient.getUserAccess("TEST_USER", crn)).thenReturn(
+      AccessResponse(crn, userExcluded = false, userRestricted = false),
+    )
+    whenever(personService.searchPeople(criteria, null)).thenReturn(pagedPeople)
+
+    val result = controller.searchPeople(criteria, null)
+
+    assertThat(result.statusCode).isEqualTo(HttpStatus.OK)
+    assertThat(result.body).isEqualTo(PersonResponse(pagedPeople.persons, null))
+    verify(accessControlApiClient).getUserAccess("TEST_USER", crn)
+  }
+
+  @Test
+  fun `searchPeople should not check access for the SYSTEM user`() {
+    val criteria = PeopleQueryCriteria(nomisId = "A1234BC", enrichIds = false)
+    val pagedPeople = PagedPeople(listOf(Person(personId = "123456", nomisId = "A1234BC")), null)
+    val controller = accessControlledController()
+
+    whenever(currentUserService.username()).thenReturn("SYSTEM")
+    whenever(personService.searchPeople(criteria, null)).thenReturn(pagedPeople)
+
+    val result = controller.searchPeople(criteria, null)
+
+    assertThat(result.statusCode).isEqualTo(HttpStatus.OK)
+    assertThat(result.body).isEqualTo(PersonResponse(pagedPeople.persons, null))
+    verifyNoInteractions(accessControlApiClient)
+  }
+
+  @Test
+  fun `searchPeople should deny an excluded user`() {
+    val crn = "X123456"
+    val criteria = PeopleQueryCriteria(deliusId = crn, enrichIds = false)
+    val controller = accessControlledController()
+
+    whenever(currentUserService.username()).thenReturn("TEST_USER")
+    whenever(accessControlApiClient.getUserAccess("TEST_USER", crn)).thenReturn(
+      AccessResponse(
+        crn = crn,
+        userExcluded = true,
+        userRestricted = false,
+        exclusionMessage = "You are excluded from viewing this case",
+      ),
+    )
+
+    assertThatThrownBy { controller.searchPeople(criteria, null) }
+      .isInstanceOf(AccessDeniedException::class.java)
+      .hasMessage("You are excluded from viewing this case")
+    verifyNoInteractions(personService)
+  }
+
+  @Test
+  fun `searchPeople should deny a user who is not on the restriction allow-list`() {
+    val crn = "X123456"
+    val criteria = PeopleQueryCriteria(deliusId = crn, enrichIds = false)
+    val controller = accessControlledController()
+    val restrictionMessage =
+      "This is a restricted offender record. Please contact:\r\n\r\nTeam: TWR 4\r\nResponsible Officer: bob smith, 0778 887655566"
+
+    whenever(currentUserService.username()).thenReturn("TEST_USER")
+    whenever(accessControlApiClient.getUserAccess("TEST_USER", crn)).thenReturn(
+      AccessResponse(
+        crn = crn,
+        userExcluded = false,
+        userRestricted = true,
+        restrictionMessage = restrictionMessage,
+      ),
+    )
+
+    assertThatThrownBy { controller.searchPeople(criteria, null) }
+      .isInstanceOf(AccessDeniedException::class.java)
+      .hasMessage(restrictionMessage)
+    verifyNoInteractions(personService)
+  }
+
+  private fun accessControlledController() = PersonController(
+    personService = personService,
+    devPersonProvider = devPersonProvider,
+    currentUserService = currentUserService,
+    serviceProperties = serviceProperties,
+    cprApiClient = cprApiClient,
+    accessControlApiClient = accessControlApiClient,
+    devStubEnabled = false,
+    cprEnabled = false,
+    accessControlEnabled = true,
+  )
 
   @Test
   fun `exists endpoint should return 200 and person when they exist`() {
@@ -179,11 +289,11 @@ class PersonControllerTest {
     assertThat(result.statusCode).isEqualTo(HttpStatus.OK)
     assertThat(result.body).isNotNull()
     assertThat(result.body!!.uri.toString()).contains(crn)
-    verifyNoInteractions(probationSearchApiClient)
+    verifyNoInteractions(cprApiClient)
   }
 
   @Test
-  fun `exists endpoint should use probation search ids when enabled`() {
+  fun `exists endpoint should use CPR identifiers when enrichment is enabled`() {
     val crn = "X123456"
     val mockPeople = PagedPeople(listOf(Person(personId = "123456")), null)
     val controller = PersonController(
@@ -191,13 +301,19 @@ class PersonControllerTest {
       devPersonProvider = devPersonProvider,
       currentUserService = currentUserService,
       serviceProperties = serviceProperties,
-      probationSearchApiClient = probationSearchApiClient,
+      cprApiClient = cprApiClient,
+      accessControlApiClient = accessControlApiClient,
       devStubEnabled = false,
-      probationSearchEnabled = true,
+      cprEnabled = true,
     )
 
-    whenever(probationSearchApiClient.searchByCrn(crn)).thenReturn(
-      listOf(OtherIds(crn = crn, pncNumber = "2012/0052494Q", nomsNumber = "G5555TT")),
+    whenever(cprApiClient.getIdentifiersByCrn(crn)).thenReturn(
+      CprIdentifiers(
+        crns = listOf(crn),
+        pncs = listOf("2012/0052494Q"),
+        prisonNumbers = listOf("G5555TT"),
+        otherIdentifiers = listOf("MON12345", "MON67890", "mon99999", "OTHER-1"),
+      ),
     )
     whenever(
       personService.searchPeople(
@@ -205,6 +321,7 @@ class PersonControllerTest {
           deliusId = crn,
           pncId = "2012/0052494Q",
           nomisId = "G5555TT",
+          orderIds = listOf("MON12345", "MON67890"),
         ),
       ),
     ).thenReturn(mockPeople)
@@ -214,7 +331,7 @@ class PersonControllerTest {
     assertThat(result.statusCode).isEqualTo(HttpStatus.OK)
     assertThat(result.body).isNotNull()
     assertThat(result.body!!.uri.toString()).contains(crn)
-    verify(probationSearchApiClient, times(1)).searchByCrn(crn)
+    verify(cprApiClient, times(1)).getIdentifiersByCrn(crn)
   }
 
   @Test

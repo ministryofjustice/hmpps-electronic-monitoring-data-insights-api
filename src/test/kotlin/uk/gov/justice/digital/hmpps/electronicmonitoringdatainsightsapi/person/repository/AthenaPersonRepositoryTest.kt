@@ -163,6 +163,7 @@ class AthenaPersonRepositoryTest {
 
     assertThat(sqlSlot.captured)
       .contains("AND c.responsible_organisation IN (CAST(? AS VARCHAR), CAST(? AS VARCHAR))")
+      .contains("AND c.mdss_person_id IS NOT NULL")
 
     assertThat(paramsSlot.captured).contains(
       nomisId,
@@ -210,6 +211,42 @@ class AthenaPersonRepositoryTest {
       "2016/305863C",
       "16/305863C",
       "X123456",
+    )
+  }
+
+  @Test
+  fun `search should filter by order IDs using an IN query`() {
+    val sqlSlot = slot<String>()
+    val paramsSlot = slot<List<String>>()
+
+    every {
+      runner.fetchPaged<Person>(
+        sql = capture(sqlSlot),
+        database = eq(properties.athena.defaultDatabase),
+        cursor = isNull(),
+        params = capture(paramsSlot),
+        pageSize = eq(properties.athena.rowLimit),
+        mapper = any(),
+      )
+    } returns PaginatedResult(emptyList(), null)
+
+    repository.searchPeople(
+      PeopleQueryCriteria(
+        deliusId = "X123456",
+        orderIds = listOf("MON12345", " MON67890 ", ""),
+      ),
+      nextToken = null,
+    )
+
+    assertThat(sqlSlot.captured)
+      .contains(
+        "AND (c.delius_id = CAST(? AS VARCHAR) OR c.order_id IN (CAST(? AS VARCHAR), CAST(? AS VARCHAR)))",
+      )
+
+    assertThat(paramsSlot.captured).startsWith(
+      "X123456",
+      "MON12345",
+      "MON67890",
     )
   }
 

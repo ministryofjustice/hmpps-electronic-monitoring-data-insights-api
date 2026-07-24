@@ -62,6 +62,8 @@ class AthenaPersonRepository(
 
     builder.addAnyEq(
       *identifierCriteria(personsQueryCriteria).toTypedArray(),
+      inColumn = "c.order_id",
+      inValues = personsQueryCriteria.orderIds,
     )
     builder.addIn(
       "c.enforceable_condition",
@@ -72,6 +74,16 @@ class AthenaPersonRepository(
         "c.responsible_organisation",
         properties.athena.responsibleOrganisations,
       )
+    }
+
+    val enhancedSearchCriteria = if (personsQueryCriteria.enhancedPeopleSearch) {
+      "AND EXISTS (" +
+        "      SELECT 1" +
+        "      FROM ${properties.athena.mdssDatabase}.position p" +
+        "      WHERE p.person_id = c.mdss_person_id" +
+        "    )"
+    } else {
+      ""
     }
 
     val sql = """
@@ -92,7 +104,9 @@ class AthenaPersonRepository(
       c.order_id AS order_id
     FROM ${properties.athena.mdssDatabase}.caseload c
     ${builder.where}
+    AND c.mdss_person_id IS NOT NULL
     AND current_date BETWEEN c.order_start_date AND c.order_end_date
+    $enhancedSearchCriteria
     LIMIT ${properties.athena.rowLimit}
     """.trimIndent()
 
@@ -154,20 +168,36 @@ class AthenaPersonRepository(
         }
     }
 
-    fun addAnyEq(vararg criteria: Pair<String, String?>) {
+    fun addAnyEq(
+      vararg criteria: Pair<String, String?>,
+      inColumn: String,
+      inValues: List<String>?,
+    ) {
       val cleanedCriteria = criteria
         .mapNotNull { (column, raw) ->
           raw?.trim()
             ?.takeIf(String::isNotEmpty)
             ?.let { column to it }
         }
+      val cleanedInValues = inValues
+        ?.map(String::trim)
+        ?.filter(String::isNotEmpty)
+        .orEmpty()
 
-      if (cleanedCriteria.isEmpty()) return
+      if (cleanedCriteria.isEmpty() && cleanedInValues.isEmpty()) return
 
-      val conditions = cleanedCriteria.joinToString(" OR ") { (column) -> "$column = CAST(? AS VARCHAR)" }
+      val conditions = cleanedCriteria
+        .map { (column) -> "$column = CAST(? AS VARCHAR)" }
+        .toMutableList()
 
-      where.append("  AND ($conditions)\n")
+      if (cleanedInValues.isNotEmpty()) {
+        val placeholders = cleanedInValues.joinToString(", ") { "CAST(? AS VARCHAR)" }
+        conditions += "$inColumn IN ($placeholders)"
+      }
+
+      where.append("  AND (${conditions.joinToString(" OR ")})\n")
       params += cleanedCriteria.map { (_, value) -> value }
+      params += cleanedInValues
     }
 
     fun addIn(column: String, values: List<String>?) {

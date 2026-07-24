@@ -19,10 +19,16 @@ spring:
           hmpps-auth:
             token-uri: ${hmpps-auth.url}/oauth/token
         registration:
-          probation-search-api:
+          person-record-api:
             provider: hmpps-auth
-            client-id: ${probation-search-api.client.id}
-            client-secret: ${probation-search-api.client.secret}
+            client-id: ${person-record-api.client.id}
+            client-secret: ${person-record-api.client.secret}
+            authorization-grant-type: client_credentials
+            scope: read
+          access-control-api:
+            provider: hmpps-auth
+            client-id: ${probation-access-control-api.client.id}
+            client-secret: ${probation-access-control-api.client.secret}
             authorization-grant-type: client_credentials
             scope: read
   http:
@@ -90,10 +96,14 @@ service:
     cache-timeout: ${SERVICE_STATUS_CACHE_TIMEOUT:5m}
     data-out-of-sync-threshold-minutes: ${SERVICE_STATUS_DATA_OUT_OF_SYNC_THRESHOLD_MINUTES:15}
 
-probation:
-  search:
-    enabled: ${PROBATION_SEARCH_ENABLED:false}
+cpr:
+  enabled: ${CPR_ENABLED:false}
+
+access-control:
+  enabled: ${ACCESS_CONTROL_ENABLED:false}
 
 apis:
-  probation-search-api:
-    url: ${PROBATION_SEARCH_API_URL}
+  person-record-api:
+    url: ${PERSON_RECORD_API_URL}
+  access-control-api:
+    url: ${ACCESS_CONTROL_API_URL}
