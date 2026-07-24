@@ -29,8 +29,8 @@ generic-service:
     TEST_STATUS_ALERT_ENABLED: "true"
 
   namespace_secrets:
-    hmpps-electronic-monitoring-data-insights-api-slack:
-      SLACK_WEBHOOK_URL: "SLACK_WEBHOOK_URL"
+    slack-webhook:
+      SLACK_WEBHOOK_URL: "hub_channel_url"
 
 generic-prometheus-alerts:
   alertSeverity: hmpps-electronic-monitoring-data-insights-dev
