@@ -26,7 +26,11 @@ generic-service:
     WORKGROUP: "800964199911_default"
     DEV_STUB_ENABLED: "true"
     DEV_TEST_DATA_REFRESH_ENABLED: "true"
+    TEST_STATUS_ALERT_ENABLED: "true"
 
+  namespace_secrets:
+    hmpps-electronic-monitoring-data-insights-api-slack:
+      SLACK_WEBHOOK_URL: "SLACK_WEBHOOK_URL"
 
 generic-prometheus-alerts:
   alertSeverity: hmpps-electronic-monitoring-data-insights-dev
