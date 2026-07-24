@@ -102,6 +102,12 @@ cpr:
 access-control:
   enabled: ${ACCESS_CONTROL_ENABLED:false}
 
+slack:
+  webhook-url: ${SLACK_WEBHOOK_URL:}
+
+test-status-alert:
+  enabled: ${TEST_STATUS_ALERT_ENABLED:false}
+
 apis:
   person-record-api:
     url: ${PERSON_RECORD_API_URL}
