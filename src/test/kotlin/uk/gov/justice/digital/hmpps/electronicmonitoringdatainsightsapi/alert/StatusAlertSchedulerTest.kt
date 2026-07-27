@@ -31,23 +31,15 @@ class StatusAlertSchedulerTest {
   )
 
   @Test
-  fun `checkStatus sends an alert when data is out of sync`() {
-    every { serviceStatusService.getStatus() } returns ServiceStatusResponse(
-      statuses = listOf(
-        ServiceStatus(
-          code = ServiceStatusCode.DATA_OUT_OF_SYNC,
-          description = "Data out of sync",
-          latestPosition = Instant.parse("2026-07-24T09:30:00Z"),
-        ),
-      ),
-    )
+  fun `checkStatus sends an alert only when data first becomes out of sync`() {
+    every { serviceStatusService.getStatus() } returns outOfSyncResponse()
     server.expect(requestTo("https://hooks.slack.test/services/test"))
       .andExpect(method(HttpMethod.POST))
       .andExpect(
         content().json(
           """
           {
-            "text": "🚨 EM Data Insights API is reporting DATA_OUT_OF_SYNC.\nLatest position: 2026-07-24T09:30:00Z\n<https://example.test/status|View service status>"
+            "text": "🚨 EM Data Insights API is reporting DATA_OUT_OF_SYNC.\nLatest position: 24 Jul 2026 10:30:00 BST\n<https://example.test/status|View service status>"
           }
           """.trimIndent(),
         ),
@@ -55,12 +47,42 @@ class StatusAlertSchedulerTest {
       .andRespond(withSuccess())
 
     scheduler.checkStatus()
+    scheduler.checkStatus()
 
     server.verify()
   }
 
   @Test
-  fun `checkStatus does not send an alert when there are no active statuses`() {
+  fun `checkStatus sends a recovery alert when data returns to sync`() {
+    every { serviceStatusService.getStatus() } returnsMany listOf(
+      outOfSyncResponse(),
+      ServiceStatusResponse(emptyList()),
+      ServiceStatusResponse(emptyList()),
+    )
+    server.expect(requestTo("https://hooks.slack.test/services/test"))
+      .andRespond(withSuccess())
+    server.expect(requestTo("https://hooks.slack.test/services/test"))
+      .andExpect(method(HttpMethod.POST))
+      .andExpect(
+        content().json(
+          """
+          {
+            "text": "✅ EM Data Insights API data is back in sync.\n<https://example.test/status|View service status>"
+          }
+          """.trimIndent(),
+        ),
+      )
+      .andRespond(withSuccess())
+
+    scheduler.checkStatus()
+    scheduler.checkStatus()
+    scheduler.checkStatus()
+
+    server.verify()
+  }
+
+  @Test
+  fun `checkStatus does not send an alert when data starts in sync`() {
     every { serviceStatusService.getStatus() } returns ServiceStatusResponse(emptyList())
 
     scheduler.checkStatus()
@@ -74,7 +96,17 @@ class StatusAlertSchedulerTest {
       .getMethod("checkStatus")
       .getAnnotation(Scheduled::class.java)
 
-    assertThat(scheduled.cron).isEqualTo("0 */15 * * * *")
+    assertThat(scheduled.cron).isEqualTo("0 */5 * * * *")
     assertThat(scheduled.zone).isEqualTo("UTC")
   }
+
+  private fun outOfSyncResponse() = ServiceStatusResponse(
+    statuses = listOf(
+      ServiceStatus(
+        code = ServiceStatusCode.DATA_OUT_OF_SYNC,
+        description = "Data out of sync",
+        latestPosition = Instant.parse("2026-07-24T09:30:00Z"),
+      ),
+    ),
+  )
 }
