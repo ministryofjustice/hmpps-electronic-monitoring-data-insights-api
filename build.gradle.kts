@@ -66,6 +66,10 @@ kotlin {
   jvmToolchain(25)
 }
 
+dependencyCheck {
+  suppressionFiles.add("$rootDir/dependencyCheck/suppression.xml")
+}
+
 tasks {
   withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
     compilerOptions.jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_25

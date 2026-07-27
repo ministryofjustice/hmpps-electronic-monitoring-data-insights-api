@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<suppressions xmlns="https://jeremylong.github.io/DependencyCheck/dependency-suppression.1.4.xsd">
+
+    <suppress until="2027-01-31Z">
+        <notes><![CDATA[
+    CVE-2025-51306 / CVE-2025-51308 are advisories against Gatling Enterprise,
+    the hosted commercial product (affected: versions below 1.25.0).
+    ]]></notes>
+        <packageUrl regex="true">^pkg:maven/io\.gatling(\.[^/]+)?/.*$</packageUrl>
+        <cve>CVE-2025-51306</cve>
+        <cve>CVE-2025-51308</cve>
+    </suppress>
+
+    <suppress until="2027-01-31Z">
+        <notes><![CDATA[
+    CVE-2022-32511 is jmespath.rb (Ruby). NVD's own CPE for this CVE pins
+    target_sw: cpe:2.3:a:jmespath:jmespath:*:*:*:*:*:ruby:*:*
+    io.burt:jmespath-core is the independent Java implementation, pulled in
+    transitively.
+    ]]></notes>
+        <packageUrl regex="true">^pkg:maven/io\.burt/jmespath-core@.*$</packageUrl>
+        <cve>CVE-2022-32511</cve>
+    </suppress>
+
+    <suppress until="2027-01-31Z">
+        <notes><![CDATA[
+    CVE-2026-54133 is jmespath.php (PHP), fixed in 2.9.1. NVD CPE pins
+    target_sw: cpe:2.3:a:jmespath:jmespath:*:*:*:*:*:php:*:*
+    ]]></notes>
+        <packageUrl regex="true">^pkg:maven/io\.burt/jmespath-core@.*$</packageUrl>
+        <cve>CVE-2026-54133</cve>
+    </suppress>
+
+</suppressions>
