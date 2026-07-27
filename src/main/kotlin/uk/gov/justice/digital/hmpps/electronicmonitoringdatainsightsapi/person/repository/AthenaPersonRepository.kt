@@ -107,6 +107,9 @@ class AthenaPersonRepository(
     AND c.mdss_person_id IS NOT NULL
     AND current_date BETWEEN c.order_start_date AND c.order_end_date
     $enhancedSearchCriteria
+    ORDER BY
+      CASE WHEN c.is_monitored = TRUE THEN 0 ELSE 1 END,
+      c.is_monitored DESC NULLS LAST
     LIMIT ${properties.athena.rowLimit}
     """.trimIndent()
 
