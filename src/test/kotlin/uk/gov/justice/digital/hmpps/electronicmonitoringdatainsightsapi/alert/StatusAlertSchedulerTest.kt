@@ -96,7 +96,7 @@ class StatusAlertSchedulerTest {
       .getMethod("checkStatus")
       .getAnnotation(Scheduled::class.java)
 
-    assertThat(scheduled.cron).isEqualTo("0 */15 * * * *")
+    assertThat(scheduled.cron).isEqualTo("0 */5 * * * *")
     assertThat(scheduled.zone).isEqualTo("UTC")
   }
 
