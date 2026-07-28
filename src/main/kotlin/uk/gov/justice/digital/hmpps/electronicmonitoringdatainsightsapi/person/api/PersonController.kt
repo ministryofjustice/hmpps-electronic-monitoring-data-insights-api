@@ -51,6 +51,7 @@ class PersonController(
 
   companion object {
     private val DEV_CRNS = setOf("X777777", "X969367", "X991426", "X990645", "Y004041")
+    private val CRN_PATTERN = Regex("^[A-Z]\\d{6}$")
   }
 
   @PreAuthorize(HAS_VIEW_ROLE)
@@ -206,6 +207,10 @@ class PersonController(
   }
 
   private fun findPerson(crn: String): PeopleQueryCriteria {
+    require(CRN_PATTERN.matches(crn)) {
+      "The CRN provided ($crn) must be one uppercase letter followed by six digits"
+    }
+
     if (!cprEnabled) {
       return PeopleQueryCriteria(deliusId = crn)
     }
