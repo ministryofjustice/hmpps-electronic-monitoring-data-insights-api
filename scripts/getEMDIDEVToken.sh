@@ -1,4 +1,3 @@
-
 #!/usr/bin/env bash
 
 set -euo pipefail
@@ -18,7 +17,9 @@ TOKEN_NAME="EMDI API Token"
 SECRET="hmpps-electronic-monitoring-data-insights-ui-client-creds"
 SERVICE_POD_NAME_PREFIX="hmpps-em-data-insights-dev-service-pod"
 
-AUTH_URL="https://sign-in-dev.hmpps.service.justice.gov.uk/auth/oauth/token?grant_type=client_credentials"
+USERNAME="${1:-AUTH_ADM}"
+
+AUTH_URL="https://sign-in-dev.hmpps.service.justice.gov.uk/auth/oauth/token"
 
 for cmd in kubectl jq curl base64 grep head; do
   if ! command -v "$cmd" >/dev/null 2>&1; then
@@ -65,7 +66,10 @@ echo "Requesting ${TOKEN_NAME} from HMPPS Auth via pod..."
 RESPONSE=$(
   kubectl -n "$NAMESPACE" exec "$POD" -- \
     curl -sS -X POST "$AUTH_URL" \
-      -H "Authorization: Basic $CLIENT_AUTH"
+      -H "Authorization: Basic $CLIENT_AUTH" \
+      -H "Content-Type: application/x-www-form-urlencoded" \
+      --data-urlencode "grant_type=client_credentials" \
+      --data-urlencode "username=$USERNAME"
 )
 
 AUTH_TOKEN=$(printf '%s' "$RESPONSE" | jq -r '.access_token // empty')
@@ -82,4 +86,3 @@ echo "-----------------------------"
 echo "${AUTH_TOKEN}"
 echo "-----------------------------"
 echo
-
