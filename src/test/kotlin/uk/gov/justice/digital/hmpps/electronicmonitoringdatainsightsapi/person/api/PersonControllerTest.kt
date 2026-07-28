@@ -293,6 +293,17 @@ class PersonControllerTest {
   }
 
   @Test
+  fun `exists endpoint should reject an invalid CRN`() {
+    val crn = "invalid"
+
+    assertThatThrownBy { controller.existsInEMDI(crn) }
+      .isInstanceOf(IllegalArgumentException::class.java)
+      .hasMessage("The CRN provided ($crn) must be one uppercase letter followed by six digits")
+
+    verifyNoInteractions(cprApiClient, personService)
+  }
+
+  @Test
   fun `exists endpoint should use CPR identifiers when enrichment is enabled`() {
     val crn = "X123456"
     val mockPeople = PagedPeople(listOf(Person(personId = "123456")), null)
