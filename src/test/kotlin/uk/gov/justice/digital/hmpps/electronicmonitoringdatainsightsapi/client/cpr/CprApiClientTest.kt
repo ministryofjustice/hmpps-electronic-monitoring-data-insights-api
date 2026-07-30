@@ -10,7 +10,9 @@ import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
+import org.springframework.http.HttpStatus.NOT_FOUND
 import org.springframework.web.reactive.function.client.WebClient
+import org.springframework.web.server.ResponseStatusException
 
 class CprApiClientTest {
 
@@ -85,5 +87,19 @@ class CprApiClientTest {
     assertThatThrownBy { client.getIdentifiersByCrn("B123435") }
       .isInstanceOf(CprApiException::class.java)
       .hasMessage("Error getting CPR person by CRN B123435")
+  }
+
+  @Test
+  fun `getPersonByCrn should preserve not found response`() {
+    cprApi.stubFor(
+      get(urlEqualTo("/person/probation/X123456"))
+        .willReturn(aResponse().withStatus(404)),
+    )
+
+    assertThatThrownBy { client.getPersonByCrn("X123456") }
+      .isInstanceOfSatisfying(ResponseStatusException::class.java) {
+        assertThat(it.statusCode).isEqualTo(NOT_FOUND)
+        assertThat(it.reason).isEqualTo("CPR person X123456 not found")
+      }
   }
 }

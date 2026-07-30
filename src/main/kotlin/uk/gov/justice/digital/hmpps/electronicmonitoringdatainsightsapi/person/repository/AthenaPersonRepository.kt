@@ -374,7 +374,7 @@ class AthenaPersonRepository(
       buildList {
         add("%${criteria.forename.trim()}%")
         add("%${criteria.surname.trim()}%")
-        add(criteria.dateOfBirth.toString())
+        add("'${criteria.dateOfBirth}'")
         postcode?.let(::add)
       },
     )

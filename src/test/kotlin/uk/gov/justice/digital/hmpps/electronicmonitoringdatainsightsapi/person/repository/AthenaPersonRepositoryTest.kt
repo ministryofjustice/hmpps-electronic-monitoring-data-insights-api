@@ -443,7 +443,7 @@ class AthenaPersonRepositoryTest {
     assertThat(paramsSlot.captured).containsExactly(
       "%sig%",
       "%fre%",
-      "1856-05-06",
+      "'1856-05-06'",
       "nw3 5sx",
     )
   }
@@ -478,7 +478,7 @@ class AthenaPersonRepositoryTest {
     assertThat(paramsSlot.captured).containsExactly(
       "%John%",
       "%Smith%",
-      "1990-08-21",
+      "'1990-08-21'",
     )
   }
 
