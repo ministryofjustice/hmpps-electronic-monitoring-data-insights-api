@@ -52,7 +52,7 @@ class PersonService(
       forename = requireNotNull(request.forename),
       surname = requireNotNull(request.surname),
       dateOfBirth = requireNotNull(request.dateOfBirth),
-      postcode = requireNotNull(request.postcode),
+      postcode = request.postcode?.takeIf(String::isNotBlank),
     )
   }
 }

@@ -24,10 +24,20 @@ class PersonSearchRequestTest {
   }
 
   @Test
-  fun `request is invalid without a CRN when any personal detail is missing`() {
+  fun `request is valid without a postcode`() {
     val request = PersonSearchRequest(
       forename = "John",
       surname = "Smith",
+      dateOfBirth = LocalDate.of(1990, 8, 21),
+    )
+
+    assertThat(request.isValid()).isTrue()
+  }
+
+  @Test
+  fun `request is invalid without a CRN when a required personal detail is missing`() {
+    val request = PersonSearchRequest(
+      forename = "John",
       dateOfBirth = LocalDate.of(1990, 8, 21),
     )
 

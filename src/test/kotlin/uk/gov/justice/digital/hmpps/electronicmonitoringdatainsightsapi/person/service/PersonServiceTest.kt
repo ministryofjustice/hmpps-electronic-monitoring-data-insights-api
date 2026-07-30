@@ -78,6 +78,28 @@ class PersonServiceTest {
   }
 
   @Test
+  fun `searchPeopleByPersonalDetails should allow direct search without postcode`() {
+    val request = PersonSearchRequest(
+      forename = "John",
+      surname = "Smith",
+      dateOfBirth = LocalDate.of(1990, 8, 21),
+    )
+    val criteria = PersonalDetailsSearchCriteria(
+      forename = "John",
+      surname = "Smith",
+      dateOfBirth = LocalDate.of(1990, 8, 21),
+      postcode = null,
+    )
+    val people = listOf(Person(personId = "41593"))
+    every { personRepository.findByPersonalDetails(criteria) } returns people
+
+    val result = personService.searchPeopleByPersonalDetails(request)
+
+    assertThat(result).isEqualTo(people)
+    verify(exactly = 1) { personRepository.findByPersonalDetails(criteria) }
+  }
+
+  @Test
   fun `searchPeopleByPersonalDetails should use CPR details when CRN is supplied`() {
     val request = PersonSearchRequest(crn = "X123456")
     val criteria = PersonalDetailsSearchCriteria(
