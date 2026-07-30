@@ -21,4 +21,6 @@ constructor(
   val street: String? = null,
   val orderId: String? = null,
   val positionData: PositionData? = null,
+  val responsibleOrganisation: String? = null,
+  val enforceableCondition: String? = null,
 )

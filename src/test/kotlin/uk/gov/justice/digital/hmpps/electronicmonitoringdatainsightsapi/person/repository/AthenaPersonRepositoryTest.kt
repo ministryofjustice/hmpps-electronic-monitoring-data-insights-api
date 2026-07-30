@@ -440,6 +440,9 @@ class AthenaPersonRepositoryTest {
       .contains("LOWER(c.postcode) = LOWER(CAST(? AS VARCHAR))")
       .contains("SELECT max(p.position_gps_date)")
       .contains("WHERE p.person_id = c.mdss_person_id")
+      .contains("c.responsible_organisation AS responsible_organisation")
+      .contains("c.enforceable_condition AS enforceable_condition")
+      .contains("ORDER BY c.grouped_date DESC")
     assertThat(paramsSlot.captured).containsExactly(
       "%sig%",
       "%fre%",
@@ -495,6 +498,8 @@ class AthenaPersonRepositoryTest {
     assertThat(result.positionData?.hasPositionData).isTrue()
     assertThat(result.positionData?.latestPositionGpsDate)
       .isEqualTo(Instant.parse("2026-07-30T12:34:56.123456Z"))
+    assertThat(result.responsibleOrganisation).isEqualTo("Probation London Licences")
+    assertThat(result.enforceableCondition).isEqualTo("Location Monitoring (Fitted Device)")
   }
 
   @Test
@@ -534,6 +539,8 @@ class AthenaPersonRepositoryTest {
     datum("20 Maresfield Gardens"),
     datum("ORDER1"),
     datum(latestPositionGpsDate),
+    datum("Probation London Licences"),
+    datum("Location Monitoring (Fitted Device)"),
   )
 
   private fun datum(value: String?): Datum = Datum.builder().varCharValue(value).build()
