@@ -100,6 +100,34 @@ class PersonServiceTest {
   }
 
   @Test
+  fun `searchPeopleByPersonalDetails should deduplicate people by person id`() {
+    val request = PersonSearchRequest(
+      forename = "John",
+      surname = "Smith",
+      dateOfBirth = LocalDate.of(1990, 8, 21),
+    )
+    val criteria = PersonalDetailsSearchCriteria(
+      forename = "John",
+      surname = "Smith",
+      dateOfBirth = LocalDate.of(1990, 8, 21),
+      postcode = null,
+    )
+    val latestPerson = Person(personId = "41593", orderId = "LATEST")
+    every { personRepository.findByPersonalDetails(criteria) } returns listOf(
+      latestPerson,
+      Person(personId = "41593", orderId = "OLDER"),
+      Person(personId = "98765", orderId = "OTHER"),
+    )
+
+    val result = personService.searchPeopleByPersonalDetails(request)
+
+    assertThat(result).containsExactly(
+      latestPerson,
+      Person(personId = "98765", orderId = "OTHER"),
+    )
+  }
+
+  @Test
   fun `searchPeopleByPersonalDetails should use CPR details when CRN is supplied`() {
     val request = PersonSearchRequest(crn = "X123456")
     val criteria = PersonalDetailsSearchCriteria(

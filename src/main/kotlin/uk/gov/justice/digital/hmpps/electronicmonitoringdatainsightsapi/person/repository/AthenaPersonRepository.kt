@@ -359,13 +359,16 @@ class AthenaPersonRepository(
         SELECT max(p.position_gps_date)
         FROM ${properties.athena.mdssDatabase}.position p
         WHERE p.person_id = c.mdss_person_id
-      ) AS latest_position_gps_date
+      ) AS latest_position_gps_date,
+      c.responsible_organisation AS responsible_organisation,
+      c.enforceable_condition AS enforceable_condition
     FROM ${properties.athena.mdssDatabase}.caseload c
     WHERE LOWER(c.first_name) LIKE LOWER(CAST(? AS VARCHAR))
       AND LOWER(c.last_name) LIKE LOWER(CAST(? AS VARCHAR))
       AND c.date_of_birth = CAST(? AS DATE)
       $postcodeCondition
       AND c.mdss_person_id IS NOT NULL
+    ORDER BY c.grouped_date DESC
     LIMIT ${properties.athena.rowLimit}
     """.trimIndent()
 
@@ -419,6 +422,8 @@ class AthenaPersonRepository(
       } else {
         null
       },
+      responsibleOrganisation = v(COL_RESPONSIBLE_ORGANISATION),
+      enforceableCondition = v(COL_ENFORCEABLE_CONDITION),
     )
   }
 
@@ -472,6 +477,8 @@ class AthenaPersonRepository(
     private const val COL_STREET = 12
     private const val COL_ORDER_ID = 13
     private const val COL_LATEST_POSITION_GPS_DATE = 14
+    private const val COL_RESPONSIBLE_ORGANISATION = 15
+    private const val COL_ENFORCEABLE_CONDITION = 16
     private const val COL_RAW_GROUPED_DATE = 0
     private const val COL_RAW_UNIQUE_DEVICE_WEARER_ID = 1
     private const val COL_RAW_FIRST_NAME = 2

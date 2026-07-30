@@ -24,6 +24,7 @@ class PersonService(
   fun getRawCaseloadByDeliusId(deliusId: String): List<RawCaseload> = personRepository.findRawCaseloadByDeliusId(deliusId)
 
   fun searchPeopleByPersonalDetails(request: PersonSearchRequest): List<Person> = personRepository.findByPersonalDetails(resolveSearchCriteria(request))
+    .distinctBy(Person::personId)
 
   private fun resolveSearchCriteria(request: PersonSearchRequest): PersonalDetailsSearchCriteria {
     val crn = request.crn?.trim()?.takeIf(String::isNotEmpty)
