@@ -12,14 +12,15 @@ class CprApiClient(
   private val personRecordApiWebClient: WebClient,
 ) {
 
-  fun getIdentifiersByCrn(crn: String): CprIdentifiers = personRecordApiWebClient
+  fun getPersonByCrn(crn: String): CprPerson = personRecordApiWebClient
     .get()
     .uri("/person/probation/{crn}", crn)
     .retrieve()
     .bodyToMono<CprPerson>()
-    .map(CprPerson::identifiers)
     .onErrorResume {
       Mono.error(CprApiException("Error getting CPR person by CRN $crn", it))
     }
     .block()!!
+
+  fun getIdentifiersByCrn(crn: String): CprIdentifiers = getPersonByCrn(crn).identifiers
 }

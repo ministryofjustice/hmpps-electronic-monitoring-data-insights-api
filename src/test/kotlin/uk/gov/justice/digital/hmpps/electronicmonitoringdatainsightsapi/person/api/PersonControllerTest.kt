@@ -25,6 +25,7 @@ import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.m
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.model.Person
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.model.RawCaseload
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.service.PersonService
+import java.time.LocalDate
 
 @ExtendWith(MockitoExtension::class)
 class PersonControllerTest {
@@ -110,6 +111,24 @@ class PersonControllerTest {
     assertThat(result.statusCode).isEqualTo(HttpStatus.OK)
     assertThat(result.body).isEqualTo(rawCaseload)
     verify(personService, times(1)).getRawCaseloadByDeliusId(deliusId)
+  }
+
+  @Test
+  fun `searchPeopleByPersonalDetails should return matching people`() {
+    val request = PersonSearchRequest(
+      forename = "Sig",
+      surname = "Fre",
+      dateOfBirth = LocalDate.of(1856, 5, 6),
+      postcode = "NW3 5SX",
+    )
+    val people = listOf(Person(personId = "41593", personName = "Sigmund Freud"))
+    whenever(personService.searchPeopleByPersonalDetails(request)).thenReturn(people)
+
+    val result = controller.searchPeopleByPersonalDetails(request)
+
+    assertThat(result.statusCode).isEqualTo(HttpStatus.OK)
+    assertThat(result.body).isEqualTo(people)
+    verify(personService).searchPeopleByPersonalDetails(request)
   }
 
   @Test

@@ -4,7 +4,23 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class CprPerson(
+  val firstName: String? = null,
+  val lastName: String? = null,
+  val dateOfBirth: String? = null,
+  val addresses: List<CprAddress> = emptyList(),
   val identifiers: CprIdentifiers,
+)
+
+@JsonIgnoreProperties(ignoreUnknown = true)
+data class CprAddress(
+  val postcode: String? = null,
+  val status: CprAddressStatus? = null,
+)
+
+@JsonIgnoreProperties(ignoreUnknown = true)
+data class CprAddressStatus(
+  val code: String? = null,
+  val description: String? = null,
 )
 
 @JsonIgnoreProperties(ignoreUnknown = true)
