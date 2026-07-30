@@ -12,6 +12,7 @@ import org.springframework.http.ResponseEntity
 import org.springframework.security.access.AccessDeniedException
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.PathVariable
+import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestMethod
 import org.springframework.web.bind.annotation.RequestParam
@@ -146,6 +147,24 @@ class PersonController(
   )
   fun getRawCaseload(@PathVariable deliusId: String) = ResponseEntity.ok(
     personService.getRawCaseloadByDeliusId(deliusId),
+  )
+
+  @PreAuthorize(HAS_VIEW_ROLE)
+  @Operation(
+    tags = ["People"],
+    summary = "Search for people by personal details",
+    description = "Searches caseload by partial forename and surname, date of birth, and postcode.",
+  )
+  @RequestMapping(
+    method = [RequestMethod.POST],
+    path = ["/search"],
+    consumes = [MediaType.APPLICATION_JSON_VALUE],
+    produces = [MediaType.APPLICATION_JSON_VALUE],
+  )
+  fun searchPeopleByPersonalDetails(
+    @Valid @RequestBody request: PersonSearchRequest,
+  ): ResponseEntity<List<Person>> = ResponseEntity.ok(
+    personService.searchPeopleByPersonalDetails(request),
   )
 
   @PreAuthorize(HAS_VIEW_ROLE)

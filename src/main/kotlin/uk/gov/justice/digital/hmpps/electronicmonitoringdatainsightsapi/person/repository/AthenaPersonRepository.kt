@@ -7,11 +7,17 @@ import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.athena.A
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.athena.AwsProperties
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.exception.DataIntegrityException
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.jpa.Constants
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.util.DateTimeConstants
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.model.PagedPeople
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.model.PeopleQueryCriteria
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.model.Person
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.model.PersonalDetailsSearchCriteria
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.model.PositionData
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.model.RawCaseload
+import java.time.Instant
 import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.ZoneOffset
 import kotlin.String
 
 private val log = KotlinLogging.logger {}
@@ -314,10 +320,75 @@ class AthenaPersonRepository(
     return SqlAndParams(sql, listOf(trimmedDeliusId, trimmedDeliusId, trimmedDeliusId))
   }
 
+  override fun findByPersonalDetails(criteria: PersonalDetailsSearchCriteria): List<Person> {
+    val built = buildPersonalDetailsSearchSql(criteria)
+
+    return runner.run(
+      sql = built.sql,
+      database = properties.athena.mdssDatabase,
+      skipHeaderRow = true,
+      mapper = ::mapRow,
+      params = built.params,
+    )
+  }
+
+  private fun buildPersonalDetailsSearchSql(criteria: PersonalDetailsSearchCriteria): SqlAndParams {
+    val postcode = criteria.postcode?.trim()?.takeIf(String::isNotEmpty)
+    val postcodeCondition = if (postcode != null) {
+      "AND LOWER(c.postcode) = LOWER(CAST(? AS VARCHAR))"
+    } else {
+      ""
+    }
+    val sql = """
+    SELECT
+      c.mdss_person_id AS person_id,
+      c.unique_device_wearer_id AS consumer_id,
+      CONCAT_WS(' ', c.first_name, c.last_name) AS person_name,
+      c.nomis_id AS u_id_nomis,
+      c.pnc_id AS u_id_pnc,
+      c.delius_id AS u_delius_id,
+      CAST(NULL AS VARCHAR) AS u_home_office_reference,
+      CAST(NULL AS VARCHAR) AS cepr,
+      CAST(NULL AS VARCHAR) AS u_prison_number,
+      c.date_of_birth AS u_dob,
+      c.postcode AS zip,
+      c.city_or_town AS city,
+      c.house_number_and_street_name AS street,
+      c.order_id AS order_id,
+      (
+        SELECT max(p.position_gps_date)
+        FROM ${properties.athena.mdssDatabase}.position p
+        WHERE p.person_id = c.mdss_person_id
+      ) AS latest_position_gps_date
+    FROM ${properties.athena.mdssDatabase}.caseload c
+    WHERE LOWER(c.first_name) LIKE LOWER(CAST(? AS VARCHAR))
+      AND LOWER(c.last_name) LIKE LOWER(CAST(? AS VARCHAR))
+      AND c.date_of_birth = CAST(? AS DATE)
+      $postcodeCondition
+      AND c.mdss_person_id IS NOT NULL
+    LIMIT ${properties.athena.rowLimit}
+    """.trimIndent()
+
+    return SqlAndParams(
+      sql,
+      buildList {
+        add("%${criteria.forename.trim()}%")
+        add("%${criteria.surname.trim()}%")
+        add(criteria.dateOfBirth.toString())
+        postcode?.let(::add)
+      },
+    )
+  }
+
   private fun mapRow(cols: List<Datum>): Person {
     fun v(i: Int): String? = cols.getOrNull(i)?.varCharValue()
 
     fun date(i: Int): LocalDate? = v(i)?.trim()?.takeIf { it.isNotEmpty() }?.let { LocalDate.parse(it) } // expects YYYY-MM-DD
+
+    fun timestamp(i: Int): Instant? = v(i)
+      ?.trim()
+      ?.takeIf(String::isNotEmpty)
+      ?.let { LocalDateTime.parse(it, DateTimeConstants.ATHENA_TIMESTAMP).toInstant(ZoneOffset.UTC) }
 
     // Helper specifically for mandatory IDs
     fun requiredId(i: Int, fieldName: String): String = v(i)
@@ -339,6 +410,15 @@ class AthenaPersonRepository(
       city = v(COL_CITY),
       street = v(COL_STREET),
       orderId = v(COL_ORDER_ID),
+      positionData = if (cols.size > COL_LATEST_POSITION_GPS_DATE) {
+        val latestPositionGpsDate = timestamp(COL_LATEST_POSITION_GPS_DATE)
+        PositionData(
+          hasPositionData = latestPositionGpsDate != null,
+          latestPositionGpsDate = latestPositionGpsDate,
+        )
+      } else {
+        null
+      },
     )
   }
 
@@ -391,6 +471,7 @@ class AthenaPersonRepository(
     private const val COL_CITY = 11
     private const val COL_STREET = 12
     private const val COL_ORDER_ID = 13
+    private const val COL_LATEST_POSITION_GPS_DATE = 14
     private const val COL_RAW_GROUPED_DATE = 0
     private const val COL_RAW_UNIQUE_DEVICE_WEARER_ID = 1
     private const val COL_RAW_FIRST_NAME = 2

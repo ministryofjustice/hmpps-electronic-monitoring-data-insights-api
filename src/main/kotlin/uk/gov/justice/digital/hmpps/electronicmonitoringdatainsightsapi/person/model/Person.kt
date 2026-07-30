@@ -20,4 +20,5 @@ constructor(
   val city: String? = null,
   val street: String? = null,
   val orderId: String? = null,
+  val positionData: PositionData? = null,
 )

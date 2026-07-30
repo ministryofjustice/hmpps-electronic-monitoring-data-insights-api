@@ -15,7 +15,10 @@ import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.e
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.model.PaginatedResult
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.model.PeopleQueryCriteria
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.model.Person
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.model.PersonalDetailsSearchCriteria
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.model.RawCaseload
+import java.time.Instant
+import java.time.LocalDate
 import kotlin.String
 import kotlin.collections.emptyList
 
@@ -405,6 +408,133 @@ class AthenaPersonRepositoryTest {
       ),
     )
   }
+
+  @Test
+  fun `findByPersonalDetails should use case insensitive partial name and exact birth date and postcode filters`() {
+    val sqlSlot = slot<String>()
+    val paramsSlot = slot<List<String>>()
+    val request = PersonalDetailsSearchCriteria(
+      forename = " sig ",
+      surname = " fre ",
+      dateOfBirth = LocalDate.of(1856, 5, 6),
+      postcode = " nw3 5sx ",
+    )
+
+    every {
+      runner.run<Person>(
+        sql = capture(sqlSlot),
+        database = eq(properties.athena.mdssDatabase),
+        skipHeaderRow = eq(true),
+        mapper = any(),
+        params = capture(paramsSlot),
+      )
+    } returns emptyList()
+
+    repository.findByPersonalDetails(request)
+
+    assertThat(sqlSlot.captured)
+      .contains("FROM allied_mdss_test.caseload c")
+      .contains("LOWER(c.first_name) LIKE LOWER(CAST(? AS VARCHAR))")
+      .contains("LOWER(c.last_name) LIKE LOWER(CAST(? AS VARCHAR))")
+      .contains("c.date_of_birth = CAST(? AS DATE)")
+      .contains("LOWER(c.postcode) = LOWER(CAST(? AS VARCHAR))")
+      .contains("SELECT max(p.position_gps_date)")
+      .contains("WHERE p.person_id = c.mdss_person_id")
+    assertThat(paramsSlot.captured).containsExactly(
+      "%sig%",
+      "%fre%",
+      "1856-05-06",
+      "nw3 5sx",
+    )
+  }
+
+  @Test
+  fun `findByPersonalDetails should omit postcode filter when postcode is unavailable`() {
+    val sqlSlot = slot<String>()
+    val paramsSlot = slot<List<String>>()
+    val criteria = PersonalDetailsSearchCriteria(
+      forename = "John",
+      surname = "Smith",
+      dateOfBirth = LocalDate.of(1990, 8, 21),
+      postcode = null,
+    )
+    every {
+      runner.run<Person>(
+        sql = capture(sqlSlot),
+        database = eq(properties.athena.mdssDatabase),
+        skipHeaderRow = eq(true),
+        mapper = any(),
+        params = capture(paramsSlot),
+      )
+    } returns emptyList()
+
+    repository.findByPersonalDetails(criteria)
+
+    assertThat(sqlSlot.captured)
+      .contains("LOWER(c.first_name) LIKE LOWER(CAST(? AS VARCHAR))")
+      .contains("LOWER(c.last_name) LIKE LOWER(CAST(? AS VARCHAR))")
+      .contains("c.date_of_birth = CAST(? AS DATE)")
+      .doesNotContain("LOWER(c.postcode)")
+    assertThat(paramsSlot.captured).containsExactly(
+      "%John%",
+      "%Smith%",
+      "1990-08-21",
+    )
+  }
+
+  @Test
+  fun `findByPersonalDetails should identify and map the latest position data`() {
+    val row = personalDetailsRow("2026-07-30 12:34:56.123456")
+    every { runner.run<Person>(any(), any(), any(), any(), any()) } answers {
+      val mapper = it.invocation.args[3] as (List<Datum>) -> Person
+      listOf(mapper(row))
+    }
+
+    val result = repository.findByPersonalDetails(personalDetailsRequest()).single()
+
+    assertThat(result.positionData?.hasPositionData).isTrue()
+    assertThat(result.positionData?.latestPositionGpsDate)
+      .isEqualTo(Instant.parse("2026-07-30T12:34:56.123456Z"))
+  }
+
+  @Test
+  fun `findByPersonalDetails should explicitly identify when position data does not exist`() {
+    val row = personalDetailsRow(null)
+    every { runner.run<Person>(any(), any(), any(), any(), any()) } answers {
+      val mapper = it.invocation.args[3] as (List<Datum>) -> Person
+      listOf(mapper(row))
+    }
+
+    val result = repository.findByPersonalDetails(personalDetailsRequest()).single()
+
+    assertThat(result.positionData?.hasPositionData).isFalse()
+    assertThat(result.positionData?.latestPositionGpsDate).isNull()
+  }
+
+  private fun personalDetailsRequest() = PersonalDetailsSearchCriteria(
+    forename = "Sig",
+    surname = "Fre",
+    dateOfBirth = LocalDate.of(1856, 5, 6),
+    postcode = "NW3 5SX",
+  )
+
+  private fun personalDetailsRow(latestPositionGpsDate: String?) = listOf(
+    datum("41593"),
+    datum("wearer-1"),
+    datum("Sigmund Freud"),
+    datum("A1234BC"),
+    datum("PNC123"),
+    datum("E643189"),
+    datum(null),
+    datum(null),
+    datum(null),
+    datum("1856-05-06"),
+    datum("NW3 5SX"),
+    datum("London"),
+    datum("20 Maresfield Gardens"),
+    datum("ORDER1"),
+    datum(latestPositionGpsDate),
+  )
 
   private fun datum(value: String?): Datum = Datum.builder().varCharValue(value).build()
 }
