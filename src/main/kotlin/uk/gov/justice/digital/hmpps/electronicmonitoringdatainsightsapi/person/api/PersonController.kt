@@ -76,7 +76,7 @@ class PersonController(
       val people = provider.getPeople()
       return ResponseEntity.ok(
         PersonResponse(
-          persons = people.persons,
+          persons = people.persons.distinctBy(Person::personId),
           nextToken = null,
         ),
       )
@@ -152,8 +152,10 @@ class PersonController(
   @PreAuthorize(HAS_VIEW_ROLE)
   @Operation(
     tags = ["People"],
-    summary = "Search for people by personal details",
-    description = "Searches caseload by partial forename and surname, date of birth, and postcode.",
+    summary = "Search for people by personal details - ** Dev use only **",
+    description = "Searches caseload by partial forename and surname, date of birth, and postcode. This is for Dev use only **" +
+      "Use CRN or person name/dob to return results from EM. The CRN option gets the person name and dob from CPR and then they " +
+      "are used to search against EM data. Partial names will also match. Postcode is optional.",
   )
   @RequestMapping(
     method = [RequestMethod.POST],
