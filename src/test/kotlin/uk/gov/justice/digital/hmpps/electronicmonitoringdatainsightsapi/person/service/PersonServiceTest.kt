@@ -15,6 +15,7 @@ import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.m
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.model.PersonalDetailsSearchCriteria
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.model.RawCaseload
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.repository.PersonRepository
+import java.time.Instant
 import java.time.LocalDate
 
 class PersonServiceTest {
@@ -125,6 +126,62 @@ class PersonServiceTest {
       latestPerson,
       Person(personId = "98765", orderId = "OTHER"),
     )
+  }
+
+  @Test
+  fun `searchPeopleByPersonalDetails should mark every result whose order is outside today's period`() {
+    val request = PersonSearchRequest(
+      forename = "John",
+      surname = "Smith",
+      dateOfBirth = LocalDate.of(1990, 8, 21),
+    )
+    val criteria = PersonalDetailsSearchCriteria(
+      forename = "John",
+      surname = "Smith",
+      dateOfBirth = LocalDate.of(1990, 8, 21),
+    )
+    every { personRepository.findByPersonalDetails(criteria) } returns listOf(
+      Person(
+        personId = "41593",
+        orderStartDate = Instant.parse("2000-01-01T00:00:00Z"),
+        orderEndDate = Instant.parse("2000-12-31T23:59:59Z"),
+      ),
+      Person(
+        personId = "98765",
+        orderStartDate = Instant.parse("2001-01-01T00:00:00Z"),
+        orderEndDate = Instant.parse("2001-12-31T23:59:59Z"),
+      ),
+    )
+
+    val result = personService.searchPeopleByPersonalDetails(request)
+
+    assertThat(result.first().outsideOrderPeriod).isTrue()
+    assertThat(result.last().outsideOrderPeriod).isTrue()
+  }
+
+  @Test
+  fun `searchPeopleByPersonalDetails should not mark results when an order includes today`() {
+    val request = PersonSearchRequest(
+      forename = "John",
+      surname = "Smith",
+      dateOfBirth = LocalDate.of(1990, 8, 21),
+    )
+    val criteria = PersonalDetailsSearchCriteria(
+      forename = "John",
+      surname = "Smith",
+      dateOfBirth = LocalDate.of(1990, 8, 21),
+    )
+    every { personRepository.findByPersonalDetails(criteria) } returns listOf(
+      Person(
+        personId = "41593",
+        orderStartDate = Instant.parse("2000-01-01T00:00:00Z"),
+        orderEndDate = Instant.parse("2100-12-31T23:59:59Z"),
+      ),
+    )
+
+    val result = personService.searchPeopleByPersonalDetails(request)
+
+    assertThat(result.first().outsideOrderPeriod).isFalse()
   }
 
   @Test

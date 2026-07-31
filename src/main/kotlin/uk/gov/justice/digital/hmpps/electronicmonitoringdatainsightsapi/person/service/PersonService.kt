@@ -10,6 +10,7 @@ import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.m
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.model.RawCaseload
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.repository.PersonRepository
 import java.time.LocalDate
+import java.time.ZoneOffset
 
 @Service
 class PersonService(
@@ -25,6 +26,19 @@ class PersonService(
 
   fun searchPeopleByPersonalDetails(request: PersonSearchRequest): List<Person> = personRepository.findByPersonalDetails(resolveSearchCriteria(request))
     .distinctBy(Person::personId)
+    .updateOutsidePeriodFlag()
+
+  private fun List<Person>.updateOutsidePeriodFlag(): List<Person> {
+    val today = LocalDate.now()
+
+    for (person in this) {
+      val startDate = person.orderStartDate?.atZone(ZoneOffset.UTC)?.toLocalDate() ?: continue
+      val endDate = person.orderEndDate?.atZone(ZoneOffset.UTC)?.toLocalDate() ?: continue
+      person.outsideOrderPeriod = today.isBefore(startDate) || today.isAfter(endDate)
+    }
+
+    return this
+  }
 
   private fun resolveSearchCriteria(request: PersonSearchRequest): PersonalDetailsSearchCriteria {
     val crn = request.crn?.trim()?.takeIf(String::isNotEmpty)

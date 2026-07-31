@@ -361,7 +361,9 @@ class AthenaPersonRepository(
         WHERE p.person_id = c.mdss_person_id
       ) AS latest_position_gps_date,
       c.responsible_organisation AS responsible_organisation,
-      c.enforceable_condition AS enforceable_condition
+      c.enforceable_condition AS enforceable_condition,
+      c.order_start_date AS order_start_date,
+      c.order_end_date AS order_end_date
     FROM ${properties.athena.mdssDatabase}.caseload c
     WHERE LOWER(c.first_name) LIKE LOWER(CAST(? AS VARCHAR))
       AND LOWER(c.last_name) LIKE LOWER(CAST(? AS VARCHAR))
@@ -424,6 +426,8 @@ class AthenaPersonRepository(
       },
       responsibleOrganisation = v(COL_RESPONSIBLE_ORGANISATION),
       enforceableCondition = v(COL_ENFORCEABLE_CONDITION),
+      orderStartDate = timestamp(COL_ORDER_START_DATE),
+      orderEndDate = timestamp(COL_ORDER_END_DATE),
     )
   }
 
@@ -479,6 +483,8 @@ class AthenaPersonRepository(
     private const val COL_LATEST_POSITION_GPS_DATE = 14
     private const val COL_RESPONSIBLE_ORGANISATION = 15
     private const val COL_ENFORCEABLE_CONDITION = 16
+    private const val COL_ORDER_START_DATE = 17
+    private const val COL_ORDER_END_DATE = 18
     private const val COL_RAW_GROUPED_DATE = 0
     private const val COL_RAW_UNIQUE_DEVICE_WEARER_ID = 1
     private const val COL_RAW_FIRST_NAME = 2
