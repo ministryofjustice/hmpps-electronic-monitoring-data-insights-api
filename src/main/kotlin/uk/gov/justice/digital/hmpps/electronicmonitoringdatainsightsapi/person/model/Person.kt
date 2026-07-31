@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.model
 
+import java.time.Instant
 import java.time.LocalDate
 import kotlin.time.ExperimentalTime
 
@@ -23,4 +24,7 @@ constructor(
   val positionData: PositionData? = null,
   val responsibleOrganisation: String? = null,
   val enforceableCondition: String? = null,
+  val orderStartDate: Instant? = null,
+  val orderEndDate: Instant? = null,
+  var outsideOrderPeriod: Boolean = false,
 )

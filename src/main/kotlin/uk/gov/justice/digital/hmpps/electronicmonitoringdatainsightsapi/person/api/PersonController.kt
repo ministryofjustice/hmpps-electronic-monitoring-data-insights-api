@@ -95,7 +95,7 @@ class PersonController(
 
     return ResponseEntity.ok(
       PersonResponse(
-        persons = pagedPeople.persons,
+        persons = pagedPeople.persons.distinctBy(Person::personId),
         nextToken = pagedPeople.nextToken,
       ),
     )

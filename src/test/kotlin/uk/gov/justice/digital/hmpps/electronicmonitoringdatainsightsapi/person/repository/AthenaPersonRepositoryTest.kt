@@ -442,6 +442,8 @@ class AthenaPersonRepositoryTest {
       .contains("WHERE p.person_id = c.mdss_person_id")
       .contains("c.responsible_organisation AS responsible_organisation")
       .contains("c.enforceable_condition AS enforceable_condition")
+      .contains("c.order_start_date AS order_start_date")
+      .contains("c.order_end_date AS order_end_date")
       .contains("ORDER BY c.grouped_date DESC")
     assertThat(paramsSlot.captured).containsExactly(
       "%sig%",
@@ -500,6 +502,8 @@ class AthenaPersonRepositoryTest {
       .isEqualTo(Instant.parse("2026-07-30T12:34:56.123456Z"))
     assertThat(result.responsibleOrganisation).isEqualTo("Probation London Licences")
     assertThat(result.enforceableCondition).isEqualTo("Location Monitoring (Fitted Device)")
+    assertThat(result.orderStartDate).isEqualTo(Instant.parse("2026-01-01T00:00:00Z"))
+    assertThat(result.orderEndDate).isEqualTo(Instant.parse("2026-12-31T23:59:59Z"))
   }
 
   @Test
@@ -541,6 +545,8 @@ class AthenaPersonRepositoryTest {
     datum(latestPositionGpsDate),
     datum("Probation London Licences"),
     datum("Location Monitoring (Fitted Device)"),
+    datum("2026-01-01 00:00:00.000000"),
+    datum("2026-12-31 23:59:59.000000"),
   )
 
   private fun datum(value: String?): Datum = Datum.builder().varCharValue(value).build()
