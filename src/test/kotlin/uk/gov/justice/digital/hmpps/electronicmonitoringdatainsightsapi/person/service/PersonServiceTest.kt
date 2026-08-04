@@ -101,6 +101,27 @@ class PersonServiceTest {
   }
 
   @Test
+  fun `searchPeopleByPersonalDetails should allow direct search without date of birth`() {
+    val request = PersonSearchRequest(
+      forename = "John",
+      surname = "Smith",
+    )
+    val criteria = PersonalDetailsSearchCriteria(
+      forename = "John",
+      surname = "Smith",
+      dateOfBirth = null,
+      postcode = null,
+    )
+    val people = listOf(Person(personId = "41593"))
+    every { personRepository.findByPersonalDetails(criteria) } returns people
+
+    val result = personService.searchPeopleByPersonalDetails(request)
+
+    assertThat(result).isEqualTo(people)
+    verify(exactly = 1) { personRepository.findByPersonalDetails(criteria) }
+  }
+
+  @Test
   fun `searchPeopleByPersonalDetails should deduplicate people by person id`() {
     val request = PersonSearchRequest(
       forename = "John",
@@ -210,6 +231,33 @@ class PersonServiceTest {
 
     assertThat(result).isEqualTo(people)
     verify(exactly = 1) { cprApiClient.getPersonByCrn("X123456") }
+    verify(exactly = 1) { personRepository.findByPersonalDetails(criteria) }
+  }
+
+  @Test
+  fun `searchPeopleByPersonalDetails should use only CPR names when name-only search is requested`() {
+    val request = PersonSearchRequest(crn = "X123456", searchByNameOnly = true)
+    val criteria = PersonalDetailsSearchCriteria(
+      forename = "John",
+      surname = "Smith",
+      dateOfBirth = null,
+      postcode = null,
+    )
+    val people = listOf(Person(personId = "41593"))
+    every { cprApiClient.getPersonByCrn("X123456") } returns CprPerson(
+      firstName = "John",
+      lastName = "Smith",
+      dateOfBirth = "1990-08-21",
+      addresses = listOf(
+        CprAddress(postcode = "SW1H 9AJ", status = CprAddressStatus(code = "M", description = "Main")),
+      ),
+      identifiers = CprIdentifiers(),
+    )
+    every { personRepository.findByPersonalDetails(criteria) } returns people
+
+    val result = personService.searchPeopleByPersonalDetails(request)
+
+    assertThat(result).isEqualTo(people)
     verify(exactly = 1) { personRepository.findByPersonalDetails(criteria) }
   }
 

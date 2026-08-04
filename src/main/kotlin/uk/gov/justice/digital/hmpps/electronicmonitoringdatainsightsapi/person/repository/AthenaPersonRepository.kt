@@ -333,6 +333,11 @@ class AthenaPersonRepository(
   }
 
   private fun buildPersonalDetailsSearchSql(criteria: PersonalDetailsSearchCriteria): SqlAndParams {
+    val dateOfBirthCondition = if (criteria.dateOfBirth != null) {
+      "AND c.date_of_birth = CAST(? AS DATE)"
+    } else {
+      ""
+    }
     val postcode = criteria.postcode?.trim()?.takeIf(String::isNotEmpty)
     val postcodeCondition = if (postcode != null) {
       "AND LOWER(c.postcode) = LOWER(CAST(? AS VARCHAR))"
@@ -367,7 +372,7 @@ class AthenaPersonRepository(
     FROM ${properties.athena.mdssDatabase}.caseload c
     WHERE LOWER(c.first_name) LIKE LOWER(CAST(? AS VARCHAR))
       AND LOWER(c.last_name) LIKE LOWER(CAST(? AS VARCHAR))
-      AND c.date_of_birth = CAST(? AS DATE)
+      $dateOfBirthCondition
       $postcodeCondition
       AND c.mdss_person_id IS NOT NULL
     ORDER BY c.grouped_date DESC
@@ -379,7 +384,7 @@ class AthenaPersonRepository(
       buildList {
         add("%${criteria.forename.trim()}%")
         add("%${criteria.surname.trim()}%")
-        add("'${criteria.dateOfBirth}'")
+        criteria.dateOfBirth?.let { add("'$it'") }
         postcode?.let(::add)
       },
     )

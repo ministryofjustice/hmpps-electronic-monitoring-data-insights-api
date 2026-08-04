@@ -35,6 +35,16 @@ class PersonSearchRequestTest {
   }
 
   @Test
+  fun `request is valid without a date of birth`() {
+    val request = PersonSearchRequest(
+      forename = "John",
+      surname = "Smith",
+    )
+
+    assertThat(request.isValid()).isTrue()
+  }
+
+  @Test
   fun `request is invalid without a CRN when a required personal detail is missing`() {
     val request = PersonSearchRequest(
       forename = "John",

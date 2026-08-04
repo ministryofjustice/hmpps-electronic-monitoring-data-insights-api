@@ -51,22 +51,26 @@ class PersonService(
         surname = requireNotNull(cprPerson.lastName?.takeIf(String::isNotBlank)) {
           "CPR person $crn does not have a surname"
         },
-        dateOfBirth = requireNotNull(
-          cprPerson.dateOfBirth?.let { runCatching { LocalDate.parse(it) }.getOrNull() },
-        ) {
-          "CPR person $crn does not have a date of birth"
+        dateOfBirth = if (request.searchByNameOnly) {
+          null
+        } else {
+          cprPerson.dateOfBirth?.let { runCatching { LocalDate.parse(it) }.getOrNull() }
         },
-        postcode = cprPerson.addresses
-          .firstOrNull { it.status?.code.equals("M", ignoreCase = true) }
-          ?.postcode
-          ?.takeIf(String::isNotBlank),
+        postcode = if (request.searchByNameOnly) {
+          null
+        } else {
+          cprPerson.addresses
+            .firstOrNull { it.status?.code.equals("M", ignoreCase = true) }
+            ?.postcode
+            ?.takeIf(String::isNotBlank)
+        },
       )
     }
 
     return PersonalDetailsSearchCriteria(
       forename = requireNotNull(request.forename),
       surname = requireNotNull(request.surname),
-      dateOfBirth = requireNotNull(request.dateOfBirth),
+      dateOfBirth = request.dateOfBirth,
       postcode = request.postcode?.takeIf(String::isNotBlank),
     )
   }
