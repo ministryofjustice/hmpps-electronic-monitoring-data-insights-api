@@ -19,14 +19,15 @@ class PersonExclusionZoneTest : IntegrationTestBase() {
       .returnResult()
       .responseBody!!
 
-    assertThat(response.exclusionZones).hasSize(1)
-    assertThat(response.exclusionZones[0].name).isEqualTo("St James Park")
-    assertThat(response.exclusionZones[0].address).isEqualTo("St. James's Park in London SW1A 2BJ")
-    assertThat(response.exclusionZones[0].geometry.type).isEqualTo("Polygon")
-    assertThat(response.exclusionZones[0].geometry.crs.type).isEqualTo("name")
-    assertThat(response.exclusionZones[0].geometry.crs.properties.name).isEqualTo("EPSG:4326")
-    assertThat(response.exclusionZones[0].geometry.coordinates).hasSize(1)
-    assertThat(response.exclusionZones[0].geometry.coordinates.first()).containsExactly(
+    assertThat(response.exclusionZones).hasSize(2)
+    val exclusionZone = response.exclusionZones.first { it.name == "St James Park" }
+    assertThat(exclusionZone.name).isEqualTo("St James Park")
+    assertThat(exclusionZone.address).isEqualTo("St. James's Park in London SW1A 2BJ")
+    assertThat(exclusionZone.geometry.type).isEqualTo("Polygon")
+    assertThat(exclusionZone.geometry.crs.type).isEqualTo("name")
+    assertThat(exclusionZone.geometry.crs.properties.name).isEqualTo("EPSG:4326")
+    assertThat(exclusionZone.geometry.coordinates).hasSize(1)
+    assertThat(exclusionZone.geometry.coordinates.first()).containsExactly(
       listOf(-0.132646597116215, 51.50525361293847),
       listOf(-0.129900015084965, 51.50620856945221),
       listOf(-0.127829349725468, 51.50148033725193),

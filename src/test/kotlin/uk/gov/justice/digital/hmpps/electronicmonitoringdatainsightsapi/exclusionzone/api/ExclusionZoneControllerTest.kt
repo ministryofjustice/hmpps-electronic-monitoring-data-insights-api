@@ -12,9 +12,9 @@ class ExclusionZoneControllerTest {
     val result = exclusionZoneController.getExclusionZones("777777")
 
     assertThat(result.statusCode.value()).isEqualTo(200)
-    assertThat(result.body?.exclusionZones).hasSize(1)
+    assertThat(result.body?.exclusionZones).hasSize(2)
 
-    val exclusionZone = result.body?.exclusionZones?.first()
+    val exclusionZone = result.body?.exclusionZones?.first { it.name == "St James Park" }
     assertThat(exclusionZone?.name).isEqualTo("St James Park")
     assertThat(exclusionZone?.address).isEqualTo("St. James's Park in London SW1A 2BJ")
     assertThat(exclusionZone?.geometry?.type).isEqualTo("Polygon")
