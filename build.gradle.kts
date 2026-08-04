@@ -36,7 +36,11 @@ dependencies {
   implementation(platform("software.amazon.awssdk:bom:$athenaVersion"))
   implementation("software.amazon.awssdk:athena")
 
-  implementation("org.postgresql:postgresql:42.7.13")
+  implementation("org.springframework.boot:spring-boot-starter-jdbc")
+  implementation("org.springframework.boot:spring-boot-starter-flyway")
+  implementation("org.flywaydb:flyway-core")
+  implementation("org.flywaydb:flyway-database-postgresql")
+  runtimeOnly("org.postgresql:postgresql")
 
   implementation("software.amazon.awssdk:s3:$athenaVersion")
   implementation("software.amazon.awssdk:athena:$athenaVersion")
