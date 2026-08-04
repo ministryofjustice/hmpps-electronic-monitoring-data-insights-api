@@ -11,12 +11,12 @@ data class PersonSearchRequest(
   val surname: String? = null,
   val dateOfBirth: LocalDate? = null,
   val postcode: String? = null,
+  val searchByNameOnly: Boolean = false,
 ) {
-  @AssertTrue(message = "Either crn or all of forename, surname and dateOfBirth must be provided")
+  @AssertTrue(message = "Either crn or both forename and surname must be provided")
   fun isValid(): Boolean = !crn.isNullOrBlank() ||
     (
       !forename.isNullOrBlank() &&
-        !surname.isNullOrBlank() &&
-        dateOfBirth != null
+        !surname.isNullOrBlank()
       )
 }

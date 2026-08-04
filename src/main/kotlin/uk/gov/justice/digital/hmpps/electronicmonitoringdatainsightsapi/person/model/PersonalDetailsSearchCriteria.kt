@@ -5,6 +5,6 @@ import java.time.LocalDate
 data class PersonalDetailsSearchCriteria(
   val forename: String,
   val surname: String,
-  val dateOfBirth: LocalDate,
+  val dateOfBirth: LocalDate? = null,
   val postcode: String? = null,
 )

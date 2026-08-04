@@ -488,6 +488,40 @@ class AthenaPersonRepositoryTest {
   }
 
   @Test
+  fun `findByPersonalDetails should omit date of birth filter when date of birth is unavailable`() {
+    val sqlSlot = slot<String>()
+    val paramsSlot = slot<List<String>>()
+    val criteria = PersonalDetailsSearchCriteria(
+      forename = "John",
+      surname = "Smith",
+      dateOfBirth = null,
+      postcode = "SW1H 9AJ",
+    )
+    every {
+      runner.run<Person>(
+        sql = capture(sqlSlot),
+        database = eq(properties.athena.mdssDatabase),
+        skipHeaderRow = eq(true),
+        mapper = any(),
+        params = capture(paramsSlot),
+      )
+    } returns emptyList()
+
+    repository.findByPersonalDetails(criteria)
+
+    assertThat(sqlSlot.captured)
+      .contains("LOWER(c.first_name) LIKE LOWER(CAST(? AS VARCHAR))")
+      .contains("LOWER(c.last_name) LIKE LOWER(CAST(? AS VARCHAR))")
+      .doesNotContain("c.date_of_birth = CAST(? AS DATE)")
+      .contains("LOWER(c.postcode) = LOWER(CAST(? AS VARCHAR))")
+    assertThat(paramsSlot.captured).containsExactly(
+      "%John%",
+      "%Smith%",
+      "SW1H 9AJ",
+    )
+  }
+
+  @Test
   fun `findByPersonalDetails should identify and map the latest position data`() {
     val row = personalDetailsRow("2026-07-30 12:34:56.123456")
     every { runner.run<Person>(any(), any(), any(), any(), any()) } answers {
