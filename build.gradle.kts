@@ -22,11 +22,6 @@ dependencies {
   implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:$springdocOpenapiVersion")
   implementation("io.github.microutils:kotlin-logging:$kotlinLoggingVersion")
 
-  implementation("org.jetbrains.exposed:exposed-core:1.3.1")
-  implementation("org.jetbrains.exposed:exposed-json:1.3.1")
-  implementation("org.jetbrains.exposed:exposed-dao:1.3.1")
-  implementation("org.jetbrains.exposed:exposed-jdbc:1.3.1")
-  implementation("org.jetbrains.exposed:exposed-java-time:1.3.1")
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core")
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor")
   implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.11.0")
