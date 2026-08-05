@@ -48,6 +48,7 @@ class LocationController(
     @PathVariable personId: String,
     @RequestParam @NotNull from: Instant,
     @RequestParam @NotNull to: Instant,
+    @RequestParam(required = false) crn: String?, // TODO this is optional for now but once the front end is sending the CRN make this mandatory
     @RequestParam(required = false) nextToken: String?,
   ): ResponseEntity<LocationResponse> {
     val provider = devLocationProvider.ifAvailable
@@ -73,9 +74,9 @@ class LocationController(
       )
     }
 
-    log.debug("Getting locations for personId: {}, from: {}, to: {}", personId, from, to)
+    log.debug("Getting locations for personId: {}, crn {}, from: {}, to: {}", personId, crn, from, to)
     val pagedLocations = locationService.getLocationsForPerson(personId, from, to, nextToken)
-    log.debug("Found {} locations", pagedLocations.locations.size)
+    log.debug("Found {} locations for personId: {}, crn {}", pagedLocations.locations.size, personId, crn)
     return ResponseEntity.ok(
       LocationResponse(
         locations = pagedLocations.locations,
