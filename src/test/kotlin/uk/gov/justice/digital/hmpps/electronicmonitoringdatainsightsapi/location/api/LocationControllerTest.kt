@@ -41,6 +41,7 @@ class LocationControllerTest {
     val from = Instant.parse("2026-10-01T10:00:00Z")
     val to = Instant.parse("2026-10-01T11:00:00Z")
     val nextToken = "token123"
+    val crn = "X12345"
 
     val mockLocations = listOf(
       Location(positionId = 101, deviceId = 98765, latitude = 51.5074, longitude = -0.1278),
@@ -61,6 +62,7 @@ class LocationControllerTest {
       personId = personId,
       from = from,
       to = to,
+      crn = crn,
       nextToken = nextToken,
     )
 
