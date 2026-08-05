@@ -5,6 +5,20 @@ info.app:
 spring:
   application:
     name: hmpps-electronic-monitoring-data-insights-api
+  datasource:
+    url: jdbc:postgresql://${DB_HOST}:${DB_PORT:5432}/${DB_NAME}
+    username: ${DB_USER}
+    password: ${DB_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+  flyway:
+    enabled: true
+    username: ${DB_USER}
+    password: ${DB_PASSWORD}
+  jpa:
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
   jackson:
     date-format: "yyyy-MM-dd HH:mm:ss"
 
