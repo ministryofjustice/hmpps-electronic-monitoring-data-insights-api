@@ -4,6 +4,7 @@ plugins {
   id("io.gatling.gradle") version "3.15.1.2"
   kotlin("plugin.spring") version kotlinVersion
   kotlin("plugin.serialization") version kotlinVersion
+  kotlin("plugin.jpa") version kotlinVersion
 }
 
 configurations {
@@ -19,6 +20,7 @@ dependencies {
   implementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter:$hmppsKotlinSpringBootStarterVersion")
   implementation("org.springframework.boot:spring-boot-starter-webflux")
   implementation("org.springframework.boot:spring-boot-starter-webclient")
+  implementation("org.springframework.boot:spring-boot-starter-data-jpa")
   implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:$springdocOpenapiVersion")
   implementation("io.github.microutils:kotlin-logging:$kotlinLoggingVersion")
 
@@ -59,6 +61,8 @@ dependencies {
     exclude(group = "io.swagger.core.v3")
   }
   testImplementation("com.h2database:h2:2.4.240")
+  testImplementation("org.testcontainers:testcontainers-postgresql")
+  testImplementation("org.springframework.boot:spring-boot-testcontainers")
 }
 
 kotlin {
