@@ -19,7 +19,7 @@ class PersonLocationTest : IntegrationTestBase() {
     )
 
     val response = webTestClient.get()
-      .uri("/people/123456/locations?from=2024-01-01T00:00:00Z&to=2024-01-31T23:59:59Z")
+      .uri("/people/123456/locations?from=2024-01-01T00:00:00Z&to=2024-01-31T23:59:59Z&crn=X123456")
       .headers(setAuthorisation())
       .exchange()
       .expectStatus().isOk
@@ -45,7 +45,7 @@ class PersonLocationTest : IntegrationTestBase() {
     )
 
     webTestClient.get()
-      .uri("/people/123456/locations?from=2024-01-01T00:00:00Z&to=2024-01-31T23:59:59Z")
+      .uri("/people/123456/locations?from=2024-01-01T00:00:00Z&to=2024-01-31T23:59:59Z&crn=X123456")
       .headers(setAuthorisation())
       .exchange()
       .expectStatus().isOk

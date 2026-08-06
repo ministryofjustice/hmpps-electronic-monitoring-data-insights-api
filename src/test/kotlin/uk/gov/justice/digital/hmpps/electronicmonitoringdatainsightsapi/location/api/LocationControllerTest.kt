@@ -6,12 +6,17 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.Mock
 import org.mockito.junit.jupiter.MockitoExtension
+import org.mockito.kotlin.any
+import org.mockito.kotlin.eq
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import org.springframework.beans.factory.ObjectProvider
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.service.CurrentUserService
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.location.model.Location
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.location.model.PagedLocations
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.location.service.LocationService
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.timelineevents.ActivityCode
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.timelineevents.service.TimelineEventsService
 import java.time.Instant
 
 @ExtendWith(MockitoExtension::class)
@@ -23,12 +28,20 @@ class LocationControllerTest {
   @Mock
   lateinit var devLocationProvider: ObjectProvider<DevLocationProvider>
 
+  @Mock
+  private lateinit var timelineEventsService: TimelineEventsService
+
+  @Mock
+  private lateinit var currentUserService: CurrentUserService
+
   private lateinit var locationController: LocationController
 
   @BeforeEach
   fun setUp() {
     locationController = LocationController(
       locationService = locationService,
+      timelineEventsService = timelineEventsService,
+      currentUserService = currentUserService,
       devLocationProvider = devLocationProvider,
       devStubEnabled = false,
     )
@@ -57,6 +70,8 @@ class LocationControllerTest {
       locationService.getLocationsForPerson(personId, from, to, nextToken),
     ).thenReturn(pagedResult)
 
+    whenever(currentUserService.username()).thenReturn("TEST_USER")
+
     // Act
     val result = locationController.getLocations(
       personId = personId,
@@ -73,6 +88,22 @@ class LocationControllerTest {
     assertThat(result.body?.nextToken).isEqualTo("next-token-456")
 
     verify(locationService).getLocationsForPerson(personId, from, to, nextToken)
+
+    verify(currentUserService).username()
+
+    verify(timelineEventsService).record(
+      startedAt = any<Long>(),
+      userName = eq("TEST_USER"),
+      crn = eq(crn),
+      activityCode = eq(ActivityCode.VIEW_PERSON_LOCATIONS),
+      isSuccessful = eq(true),
+      detail = eq(
+        mapOf(
+          "from" to from,
+          "to" to to,
+        ),
+      ),
+    )
   }
 
   @Test

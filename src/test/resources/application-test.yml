@@ -44,11 +44,3 @@ apis:
   access-control-api:
     url: http://localhost:8090
 
-spring:
-  flyway:
-    enabled: false
-
-management:
-  health:
-    db:
-      enabled: false
