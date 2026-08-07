@@ -2,7 +2,7 @@ package uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.timelin
 
 import mu.KotlinLogging
 import org.springframework.stereotype.Service
-import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.timelineevents.ActivityCode
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.timelineevents.EventType
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.timelineevents.entity.TimelineEventEntity
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.timelineevents.repository.TimelineEventsRepository
 import java.time.Instant
@@ -20,16 +20,16 @@ class TimelineEventsService(
     startedAt: Long,
     userName: String,
     crn: String,
-    activityCode: ActivityCode,
-    isSuccessful: Boolean,
+    eventType: EventType,
+    results: Int?,
     detail: Map<String, Any?> = emptyMap(),
   ) {
     require(userName.isNotBlank()) {
       "userName must not be blank"
     }
 
-    require(userName.isNotBlank() && crn.length == 7) {
-      "crn must be exactly 7 characters"
+    require(crn.isNotBlank()) {
+      "crn must not be blank"
     }
 
     val durationMs = TimeUnit.NANOSECONDS.toMillis(
@@ -41,17 +41,16 @@ class TimelineEventsService(
       occurredAt = Instant.now(),
       userName = userName,
       crn = crn,
-      activityCode = activityCode,
-      isSuccessful = isSuccessful,
+      eventType = eventType,
+      results = results,
       durationMs = durationMs,
       detail = detail,
     )
-
     try {
       timelineEventsRepository.save(event)
     } catch (exception: Exception) {
       log.error(exception) {
-        "Failed to persist timeline event for activityCode=$activityCode, userName=$userName"
+        "Failed to persist timeline event for activityCode=$eventType, userName=$userName"
       }
     }
   }

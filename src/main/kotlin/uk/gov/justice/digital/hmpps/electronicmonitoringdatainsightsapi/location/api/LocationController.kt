@@ -18,7 +18,7 @@ import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.H
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.service.CurrentUserService
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.location.model.Location
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.location.service.LocationService
-import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.timelineevents.ActivityCode
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.timelineevents.EventType
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.timelineevents.service.TimelineEventsService
 import java.time.Instant
 import kotlin.time.ExperimentalTime
@@ -83,15 +83,16 @@ class LocationController(
     val startedAt = System.nanoTime()
 
     val pagedLocations = locationService.getLocationsForPerson(personId, from, to, nextToken)
+
     timelineEventsService.record(
       startedAt = startedAt,
       userName = currentUserService.username(),
       crn = crn,
-      activityCode = ActivityCode.VIEW_PERSON_LOCATIONS,
-      isSuccessful = true,
+      eventType = EventType.VIEW_PERSON_LOCATIONS,
+      pagedLocations.locations.size,
       detail = mapOf(
-        "from" to from,
-        "to" to to,
+        "from" to from.toString(),
+        "to" to to.toString(),
       ),
     )
     log.debug("Found {} locations for personId: {}, crn {}", pagedLocations.locations.size, personId, crn)

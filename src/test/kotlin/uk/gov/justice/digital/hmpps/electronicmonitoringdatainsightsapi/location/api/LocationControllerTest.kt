@@ -15,7 +15,7 @@ import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.s
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.location.model.Location
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.location.model.PagedLocations
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.location.service.LocationService
-import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.timelineevents.ActivityCode
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.timelineevents.EventType
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.timelineevents.service.TimelineEventsService
 import java.time.Instant
 
@@ -95,12 +95,12 @@ class LocationControllerTest {
       startedAt = any<Long>(),
       userName = eq("TEST_USER"),
       crn = eq(crn),
-      activityCode = eq(ActivityCode.VIEW_PERSON_LOCATIONS),
-      isSuccessful = eq(true),
+      eventType = eq(EventType.VIEW_PERSON_LOCATIONS),
+      results = eq(2),
       detail = eq(
         mapOf(
-          "from" to from,
-          "to" to to,
+          "from" to from.toString(),
+          "to" to to.toString(),
         ),
       ),
     )
