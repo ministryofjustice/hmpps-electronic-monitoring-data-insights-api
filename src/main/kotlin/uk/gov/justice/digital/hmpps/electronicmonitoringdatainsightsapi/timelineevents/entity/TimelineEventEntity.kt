@@ -7,7 +7,7 @@ import jakarta.persistence.Id
 import jakarta.persistence.Table
 import org.hibernate.annotations.JdbcTypeCode
 import org.hibernate.type.SqlTypes
-import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.timelineevents.ActivityCode
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.timelineevents.EventType
 import java.time.Instant
 import java.util.UUID
 
@@ -25,9 +25,9 @@ class TimelineEventEntity(
   val crn: String,
 
   @Enumerated(EnumType.STRING)
-  val activityCode: ActivityCode,
+  val eventType: EventType,
 
-  val isSuccessful: Boolean,
+  val results: Int?,
 
   val durationMs: Long?,
 

@@ -5,7 +5,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.integration.IntegrationTestBase
-import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.timelineevents.ActivityCode
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.timelineevents.EventType
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.timelineevents.repository.TimelineEventsRepository
 import java.time.Instant
 
@@ -43,8 +43,8 @@ class LocationTimelineEventsTest : IntegrationTestBase() {
     val event = events.single()
     assertThat(event.userName).isEqualTo("TEST_USER")
     assertThat(event.crn).isEqualTo("X123456")
-    assertThat(event.activityCode).isEqualTo(ActivityCode.VIEW_PERSON_LOCATIONS)
-    assertThat(event.isSuccessful).isTrue()
+    assertThat(event.eventType).isEqualTo(EventType.VIEW_PERSON_LOCATIONS)
+    assertThat(event.results).isEqualTo(4)
     assertThat(event.durationMs).isGreaterThanOrEqualTo(0)
     assertThat(event.occurredAt).isNotNull()
   }
