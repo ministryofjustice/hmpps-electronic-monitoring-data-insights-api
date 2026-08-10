@@ -93,6 +93,7 @@ class LocationController(
       detail = mapOf(
         "from" to from.toString(),
         "to" to to.toString(),
+        "personId" to personId,
       ),
     )
     log.debug("Found {} locations for personId: {}, crn {}", pagedLocations.locations.size, personId, crn)
