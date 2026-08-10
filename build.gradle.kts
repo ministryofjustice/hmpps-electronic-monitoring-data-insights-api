@@ -1,9 +1,10 @@
 plugins {
   val kotlinVersion = "2.4.10"
-  id("uk.gov.justice.hmpps.gradle-spring-boot") version "11.0.2"
+  id("uk.gov.justice.hmpps.gradle-spring-boot") version "11.0.4"
   id("io.gatling.gradle") version "3.15.1.2"
   kotlin("plugin.spring") version kotlinVersion
   kotlin("plugin.serialization") version kotlinVersion
+  kotlin("plugin.jpa") version kotlinVersion
 }
 
 configurations {
@@ -13,12 +14,13 @@ configurations {
 val springdocOpenapiVersion = "3.1.0"
 val hmppsKotlinSpringBootStarterVersion = "3.0.0"
 val kotlinLoggingVersion = "3.0.5"
-val athenaVersion = "2.50.3"
+val athenaVersion = "2.51.3"
 
 dependencies {
   implementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter:$hmppsKotlinSpringBootStarterVersion")
   implementation("org.springframework.boot:spring-boot-starter-webflux")
   implementation("org.springframework.boot:spring-boot-starter-webclient")
+  implementation("org.springframework.boot:spring-boot-starter-data-jpa")
   implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:$springdocOpenapiVersion")
   implementation("io.github.microutils:kotlin-logging:$kotlinLoggingVersion")
 
@@ -36,7 +38,11 @@ dependencies {
   implementation(platform("software.amazon.awssdk:bom:$athenaVersion"))
   implementation("software.amazon.awssdk:athena")
 
-  implementation("org.postgresql:postgresql:42.7.13")
+  implementation("org.springframework.boot:spring-boot-starter-jdbc")
+  implementation("org.springframework.boot:spring-boot-starter-flyway")
+  implementation("org.flywaydb:flyway-core")
+  implementation("org.flywaydb:flyway-database-postgresql")
+  runtimeOnly("org.postgresql:postgresql")
 
   implementation("software.amazon.awssdk:s3:$athenaVersion")
   implementation("software.amazon.awssdk:athena:$athenaVersion")
@@ -55,6 +61,8 @@ dependencies {
     exclude(group = "io.swagger.core.v3")
   }
   testImplementation("com.h2database:h2:2.4.240")
+  testImplementation("org.testcontainers:testcontainers-postgresql")
+  testImplementation("org.springframework.boot:spring-boot-testcontainers")
 }
 
 kotlin {

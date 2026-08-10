@@ -5,6 +5,8 @@ spring:
     url: jdbc:postgresql://localhost:5432/em_data_insights
     username: hmpps
     password: hmpps
+  flyway:
+    enabled: true
 
 aws:
   region: eu-west-2

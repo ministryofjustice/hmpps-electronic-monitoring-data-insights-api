@@ -15,8 +15,11 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.HAS_VIEW_ROLE
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.service.CurrentUserService
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.location.model.Location
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.location.service.LocationService
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.timelineevents.EventType
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.timelineevents.service.TimelineEventsService
 import java.time.Instant
 import kotlin.time.ExperimentalTime
 
@@ -27,6 +30,8 @@ private val log = KotlinLogging.logger {}
 @Tag(name = "Locations", description = "Endpoint to retrieve gsp coordinates for a person by personId")
 class LocationController(
   private val locationService: LocationService,
+  private val timelineEventsService: TimelineEventsService,
+  private val currentUserService: CurrentUserService,
   private val devLocationProvider: ObjectProvider<DevLocationProvider>,
   @Value("\${dev.stub.enabled:false}")
   private val devStubEnabled: Boolean,
@@ -48,6 +53,7 @@ class LocationController(
     @PathVariable personId: String,
     @RequestParam @NotNull from: Instant,
     @RequestParam @NotNull to: Instant,
+    @RequestParam @NotNull crn: String,
     @RequestParam(required = false) nextToken: String?,
   ): ResponseEntity<LocationResponse> {
     val provider = devLocationProvider.ifAvailable
@@ -73,9 +79,24 @@ class LocationController(
       )
     }
 
-    log.debug("Getting locations for personId: {}, from: {}, to: {}", personId, from, to)
+    log.debug("Getting locations for personId: {}, crn {}, from: {}, to: {}", personId, crn, from, to)
+    val startedAt = System.nanoTime()
+
     val pagedLocations = locationService.getLocationsForPerson(personId, from, to, nextToken)
-    log.debug("Found {} locations", pagedLocations.locations.size)
+
+    timelineEventsService.record(
+      startedAt = startedAt,
+      userName = currentUserService.username(),
+      crn = crn,
+      eventType = EventType.VIEW_PERSON_LOCATIONS,
+      pagedLocations.locations.size,
+      detail = mapOf(
+        "from" to from.toString(),
+        "to" to to.toString(),
+        "personId" to personId,
+      ),
+    )
+    log.debug("Found {} locations for personId: {}, crn {}", pagedLocations.locations.size, personId, crn)
     return ResponseEntity.ok(
       LocationResponse(
         locations = pagedLocations.locations,
