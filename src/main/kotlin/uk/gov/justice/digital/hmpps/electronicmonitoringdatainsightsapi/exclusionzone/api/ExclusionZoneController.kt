@@ -45,6 +45,29 @@ class ExclusionZoneController {
           ),
         ),
       ),
+      ExclusionZone(
+        name = "Rapha London",
+        address = "85 Brewer Street, London W1F 9ZN",
+        geometry = Geometry(
+          type = "Polygon",
+          crs = CoordinateReferenceSystem(
+            type = "name",
+            properties = CoordinateReferenceSystemProperties(name = "EPSG:4326"),
+          ),
+          coordinates = listOf(
+            listOf(
+              listOf(-0.136755, 51.510818),
+              listOf(-0.136567, 51.510913),
+              listOf(-0.136337, 51.510509),
+              listOf(-0.136589, 51.510527),
+              listOf(-0.136728, 51.510704),
+              listOf(-0.136691, 51.510651),
+              listOf(-0.136798, 51.510811),
+              listOf(-0.136755, 51.510818),
+            ),
+          ),
+        ),
+      ),
     )
   }
 
