@@ -121,6 +121,9 @@ slack:
 status-alert:
   enabled: ${STATUS_ALERT_ENABLED:false}
 
+timeline-events-report:
+  enabled: ${TIMELINE_EVENTS_REPORT_ENABLED:false}
+
 apis:
   person-record-api:
     url: ${PERSON_RECORD_API_URL}
