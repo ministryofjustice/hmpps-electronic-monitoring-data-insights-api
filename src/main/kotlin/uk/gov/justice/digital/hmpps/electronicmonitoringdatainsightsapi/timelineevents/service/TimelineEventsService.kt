@@ -19,17 +19,13 @@ class TimelineEventsService(
   fun record(
     startedAt: Long,
     userName: String,
-    crn: String,
+    crn: String?,
     eventType: EventType,
     results: Int?,
     detail: Map<String, Any?> = emptyMap(),
   ) {
     require(userName.isNotBlank()) {
       "userName must not be blank"
-    }
-
-    require(crn.isNotBlank()) {
-      "crn must not be blank"
     }
 
     val durationMs = TimeUnit.NANOSECONDS.toMillis(
@@ -40,7 +36,7 @@ class TimelineEventsService(
       id = UUID.randomUUID(),
       occurredAt = Instant.now(),
       userName = userName,
-      crn = crn,
+      crn = crn ?: "UNKNOWN",
       eventType = eventType,
       results = results,
       durationMs = durationMs,

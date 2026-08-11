@@ -7,6 +7,8 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.Mock
 import org.mockito.junit.jupiter.MockitoExtension
+import org.mockito.kotlin.any
+import org.mockito.kotlin.eq
 import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.verifyNoInteractions
@@ -25,6 +27,8 @@ import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.m
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.model.Person
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.model.RawCaseload
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.service.PersonService
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.timelineevents.EventType
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.timelineevents.service.TimelineEventsService
 import java.time.LocalDate
 
 @ExtendWith(MockitoExtension::class)
@@ -48,6 +52,9 @@ class PersonControllerTest {
   @Mock
   private lateinit var accessControlApiClient: AccessControlApiClient
 
+  @Mock
+  private lateinit var timelineEventsService: TimelineEventsService
+
   private lateinit var controller: PersonController
 
   @BeforeEach
@@ -61,6 +68,7 @@ class PersonControllerTest {
       accessControlApiClient = accessControlApiClient,
       devStubEnabled = false,
       cprEnabled = false,
+      timelineEventsService = timelineEventsService,
     )
   }
 
@@ -143,8 +151,11 @@ class PersonControllerTest {
       accessControlApiClient = accessControlApiClient,
       devStubEnabled = false,
       cprEnabled = true,
+      timelineEventsService = timelineEventsService,
     )
     val pagedPeople = PagedPeople(listOf(Person(personId = "123456")), null)
+
+    whenever(currentUserService.username()).thenReturn("TEST_USER")
 
     whenever(cprApiClient.getIdentifiersByCrn(crn)).thenReturn(
       CprIdentifiers(
@@ -178,6 +189,17 @@ class PersonControllerTest {
     assertThat(result.statusCode).isEqualTo(HttpStatus.OK)
     assertThat(result.body).isEqualTo(PersonResponse(pagedPeople.persons, pagedPeople.nextToken))
     verify(cprApiClient, times(1)).getIdentifiersByCrn(crn)
+
+    verify(timelineEventsService).record(
+      startedAt = any(),
+      userName = eq("TEST_USER"),
+      crn = eq(crn),
+      eventType = eq(EventType.SEARCH_PERSON_BY_ID),
+      results = eq(1),
+      detail = eq(
+        emptyMap(),
+      ),
+    )
   }
 
   @Test
@@ -290,6 +312,7 @@ class PersonControllerTest {
     devStubEnabled = false,
     cprEnabled = false,
     accessControlEnabled = true,
+    timelineEventsService = timelineEventsService,
   )
 
   @Test
@@ -335,6 +358,7 @@ class PersonControllerTest {
       accessControlApiClient = accessControlApiClient,
       devStubEnabled = false,
       cprEnabled = true,
+      timelineEventsService = timelineEventsService,
     )
 
     whenever(cprApiClient.getIdentifiersByCrn(crn)).thenReturn(
