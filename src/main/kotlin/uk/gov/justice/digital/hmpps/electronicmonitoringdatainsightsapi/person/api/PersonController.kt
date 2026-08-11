@@ -26,6 +26,8 @@ import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.config.S
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.model.PeopleQueryCriteria
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.model.Person
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.service.PersonService
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.timelineevents.EventType
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.timelineevents.service.TimelineEventsService
 import java.net.URI
 import kotlin.collections.contains
 import kotlin.time.ExperimentalTime
@@ -42,6 +44,7 @@ class PersonController(
   private val devPersonProvider: ObjectProvider<DevPersonProvider>,
   private val cprApiClient: CprApiClient,
   private val accessControlApiClient: AccessControlApiClient,
+  private val timelineEventsService: TimelineEventsService,
   @Value("\${dev.stub.enabled:false}")
   private val devStubEnabled: Boolean,
   @Value("\${cpr.enabled:false}")
@@ -82,17 +85,34 @@ class PersonController(
       )
     }
 
-    if (accessControlEnabled) {
-      val username = currentUserService.username()
-      if (username != "SYSTEM") {
-        val crn = peopleQueryCriteria.deliusId?.trim()?.takeIf(String::isNotEmpty)
-          ?: throw AccessDeniedException("A CRN is required when access control is enabled")
-        checkUserAccess(username, crn)
+    val username = currentUserService.username()
+    val crn = peopleQueryCriteria.deliusId
+      ?.trim()
+      ?.takeIf(String::isNotEmpty)
+
+    if (accessControlEnabled && username != "SYSTEM") {
+      if (crn == null) {
+        throw AccessDeniedException(
+          "A CRN is required when access control is enabled",
+        )
       }
+      checkUserAccess(username, crn)
     }
 
+    val startedAt = System.nanoTime()
     val pagedPeople = personService.searchPeople(enrichPeopleQueryCriteria(peopleQueryCriteria))
-
+    timelineEventsService.record(
+      startedAt = startedAt,
+      userName = username,
+      crn = crn,
+      eventType = EventType.SEARCH_PERSON_BY_ID,
+      pagedPeople.persons.distinctBy(Person::personId).size,
+      detail = buildMap {
+        peopleQueryCriteria.orderIds
+          .takeIf { it.isNotEmpty() }
+          ?.let { put("orderIds", it) }
+      },
+    )
     return ResponseEntity.ok(
       PersonResponse(
         persons = pagedPeople.persons.distinctBy(Person::personId),
