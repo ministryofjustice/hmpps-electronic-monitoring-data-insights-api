@@ -27,6 +27,7 @@ generic-service:
     DEV_STUB_ENABLED: "true"
     DEV_TEST_DATA_REFRESH_ENABLED: "true"
     STATUS_ALERT_ENABLED: "true"
+    TIMELINE_EVENTS_REPORT_ENABLED: "true"
 
   namespace_secrets:
     slack-webhook:
