@@ -4,6 +4,7 @@ import mu.KotlinLogging
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.timelineevents.EventType
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.timelineevents.entity.TimelineEventEntity
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.timelineevents.model.TimelineEventsStatisticsResponse
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.timelineevents.repository.TimelineEventsRepository
 import java.time.Instant
 import java.time.LocalDate
@@ -18,6 +19,26 @@ private val log = KotlinLogging.logger {}
 class TimelineEventsService(
   private val timelineEventsRepository: TimelineEventsRepository,
 ) {
+
+  fun getStatisticsSummary(
+    today: LocalDate = LocalDate.now(REPORTING_TIME_ZONE),
+  ): TimelineEventsStatisticsResponse {
+    val to = today.atStartOfDay(REPORTING_TIME_ZONE).toInstant()
+
+    fun statisticsFrom(from: Instant) = timelineEventsRepository
+      .getStatistics(from, to)
+
+    fun statisticsFrom(from: LocalDate) = statisticsFrom(
+      from.atStartOfDay(REPORTING_TIME_ZONE).toInstant(),
+    )
+
+    return TimelineEventsStatisticsResponse(
+      daily = statisticsFrom(today.minusDays(1)),
+      weekly = statisticsFrom(today.minusDays(7)),
+      monthly = statisticsFrom(today.minusDays(30)),
+      allTime = statisticsFrom(Instant.EPOCH),
+    )
+  }
 
   fun getStatistics(
     fromDate: LocalDate = DEFAULT_FROM_DATE,
@@ -80,7 +101,7 @@ class TimelineEventsService(
     }
   }
 
-  private companion object {
+  companion object {
     val REPORTING_TIME_ZONE: ZoneId = ZoneId.of("Europe/London")
     val DEFAULT_FROM_DATE: LocalDate = LocalDate.of(2026, 7, 8) // this is the date the service went into prod trial testing
     const val MILLIS_PER_SECOND = 1000.0

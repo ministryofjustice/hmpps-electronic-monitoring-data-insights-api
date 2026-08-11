@@ -13,6 +13,8 @@ import org.springframework.test.web.client.match.MockRestRequestMatchers.method
 import org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo
 import org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess
 import org.springframework.web.client.RestClient
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.timelineevents.model.TimelineEventsStatisticsResponse
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.timelineevents.repository.TimelineEventStatistics
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.timelineevents.service.TimelineEventsService
 import java.time.LocalDate
 import java.time.ZoneId
@@ -32,15 +34,31 @@ class TimelineEventsReportSchedulerTest {
     val yesterday = LocalDate.now(ZoneId.of("Europe/London")).minusDays(1)
     val statistics = "222 users, 2991 searches, relating to 279 PoPs. " +
       "Average time to load results 5.5 seconds (Max 59.1 seconds)"
+    val summary = TimelineEventsStatisticsResponse(
+      daily = statistics(20, 63, 19),
+      weekly = statistics(80, 374, 88),
+      monthly = statistics(215, 2643, 263),
+      allTime = statistics(222, 2989, 280),
+    )
     every { timelineEventsService.getStatistics(toDate = yesterday) } returns statistics
+    every { timelineEventsService.getStatisticsSummary() } returns summary
     server.expect(requestTo("https://hooks.slack.test/services/test"))
       .andExpect(method(HttpMethod.POST))
-      .andExpect(content().json("""{"text":"$statistics"}"""))
+      .andExpect(
+        content().json(
+          """
+          {
+            "text": "$statistics\n```\n+----------+-----------+-------------+--------------+----------+\n| Metric   | Yesterday | Last 7 days | Last 30 days | All time |\n+----------+-----------+-------------+--------------+----------+\n| Users    |        20 |          80 |          215 |      222 |\n| Searches |        63 |         374 |         2643 |     2989 |\n| PoPs     |        19 |          88 |          263 |      280 |\n+----------+-----------+-------------+--------------+----------+\n```"
+          }
+          """.trimIndent(),
+        ),
+      )
       .andRespond(withSuccess())
 
     scheduler.sendDailyReport()
 
     verify { timelineEventsService.getStatistics(toDate = yesterday) }
+    verify { timelineEventsService.getStatisticsSummary() }
     server.verify()
   }
 
@@ -52,5 +70,15 @@ class TimelineEventsReportSchedulerTest {
 
     assertThat(scheduled.cron).isEqualTo("0 0 8 * * *")
     assertThat(scheduled.zone).isEqualTo("Europe/London")
+  }
+
+  private fun statistics(
+    users: Long,
+    searches: Long,
+    pops: Long,
+  ) = mockk<TimelineEventStatistics> {
+    every { this@mockk.users } returns users
+    every { this@mockk.searches } returns searches
+    every { this@mockk.pops } returns pops
   }
 }
