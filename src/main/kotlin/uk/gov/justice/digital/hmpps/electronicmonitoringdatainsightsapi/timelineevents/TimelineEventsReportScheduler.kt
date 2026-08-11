@@ -47,7 +47,7 @@ class TimelineEventsReportScheduler(
   ): String {
     fun row(label: String, daily: Any, weekly: Any, monthly: Any, allTime: Any) = String.format(
       Locale.UK,
-      "| %-8s | %9s | %11s | %12s | %8s |",
+      "| %-16s | %9s | %11s | %12s | %8s |",
       label,
       daily,
       weekly,
@@ -55,7 +55,13 @@ class TimelineEventsReportScheduler(
       allTime,
     )
 
-    val border = "+----------+-----------+-------------+--------------+----------+"
+    fun duration(durationMs: Number?) = String.format(
+      Locale.UK,
+      "%.1fs",
+      (durationMs?.toDouble() ?: 0.0) / MILLIS_PER_SECOND,
+    )
+
+    val border = "+------------------+-----------+-------------+--------------+----------+"
     val table = listOf(
       border,
       row("Metric", "Yesterday", "Last 7 days", "Last 30 days", "All time"),
@@ -63,6 +69,20 @@ class TimelineEventsReportScheduler(
       row("Users", summary.daily.users, summary.weekly.users, summary.monthly.users, summary.allTime.users),
       row("Searches", summary.daily.searches, summary.weekly.searches, summary.monthly.searches, summary.allTime.searches),
       row("PoPs", summary.daily.pops, summary.weekly.pops, summary.monthly.pops, summary.allTime.pops),
+      row(
+        "Average duration",
+        duration(summary.daily.averageDurationMs),
+        duration(summary.weekly.averageDurationMs),
+        duration(summary.monthly.averageDurationMs),
+        duration(summary.allTime.averageDurationMs),
+      ),
+      row(
+        "Max duration",
+        duration(summary.daily.maximumDurationMs),
+        duration(summary.weekly.maximumDurationMs),
+        duration(summary.monthly.maximumDurationMs),
+        duration(summary.allTime.maximumDurationMs),
+      ),
       border,
     ).joinToString("\n")
 
@@ -71,5 +91,6 @@ class TimelineEventsReportScheduler(
 
   private companion object {
     val LONDON_TIME_ZONE: ZoneId = ZoneId.of("Europe/London")
+    const val MILLIS_PER_SECOND = 1000.0
   }
 }
