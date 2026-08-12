@@ -20,6 +20,7 @@ interface TimelineEventsRepository : JpaRepository<TimelineEventEntity, UUID> {
       FROM TimelineEventEntity event
       WHERE event.occurredAt >= :from
         AND event.occurredAt < :to
+        AND event.userName NOT IN ('AUTH_ADM', 'SYS') 
     """,
   )
   fun getStatistics(from: Instant, to: Instant): TimelineEventStatistics
