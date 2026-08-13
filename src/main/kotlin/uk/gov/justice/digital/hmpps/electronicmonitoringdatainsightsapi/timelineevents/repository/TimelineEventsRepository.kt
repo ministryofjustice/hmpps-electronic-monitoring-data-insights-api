@@ -53,7 +53,7 @@ interface TimelineEventsRepository : JpaRepository<TimelineEventEntity, UUID> {
                SELECT ROUND(AVG(duration_seconds))
                FROM dwell_times
                WHERE duration_seconds > 0
-                 AND duration_seconds <= 300
+                 AND duration_seconds <= 1200
                  AND occurred_at >= :from
                  AND occurred_at < :to
              ) AS "averageTimeSpentSeconds"
