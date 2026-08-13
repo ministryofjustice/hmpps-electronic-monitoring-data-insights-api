@@ -48,18 +48,19 @@ class TimelineEventsStatisticsTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `calculates rounded average time spent from page views up to five minutes`() {
+  fun `calculates rounded average time spent from page views up to twenty minutes`() {
+    val fiveMinutes = 300L
+    val twentyMinutes = 1200L
+    val twentyOneMinutes = 1260L
+    val oneMinuteFortyOneSeconds = 101L
+
     timelineEventsRepository.saveAll(
       listOf(
-        event("2026-08-11T10:00:00Z", "USER_1", "X123456", 1000),
-        event("2026-08-11T10:05:00Z", "USER_1", "X123456", 1000),
-        event("2026-08-11T10:00:00Z", "USER_2", "X654321", 1000),
-        event("2026-08-11T10:20:00Z", "USER_2", "X654321", 1000),
-        event("2026-08-11T10:00:00Z", "USER_3", "X999999", 1000),
-        event("2026-08-11T10:21:00Z", "USER_3", "X999999", 1000),
-        event("2026-08-11T10:00:00Z", "USER_4", "X111111", 1000),
-        event("2026-08-11T10:01:41Z", "USER_4", "X111111", 1000),
-      ),
+        pageViews("USER_1", "X123456", fiveMinutes),
+        pageViews("USER_2", "X654321", twentyMinutes),
+        pageViews("USER_3", "X999999", twentyOneMinutes),
+        pageViews("USER_4", "X111111", oneMinuteFortyOneSeconds),
+      ).flatten(),
     )
 
     val statistics = timelineEventsRepository.getStatistics(
@@ -67,8 +68,18 @@ class TimelineEventsStatisticsTest : IntegrationTestBase() {
       Instant.parse("2026-08-12T00:00:00Z"),
     )
 
-    assertThat(statistics.averageTimeSpentSeconds).isEqualTo(201.0)
+    // The 21-minute dwell time is excluded: ROUND((300 + 1200 + 101) / 3) = 534.
+    assertThat(statistics.averageTimeSpentSeconds).isEqualTo(534.0)
   }
+
+  private fun pageViews(
+    userName: String,
+    crn: String,
+    dwellTimeSeconds: Long,
+  ) = listOf(
+    event(PAGE_VIEW_START.toString(), userName, crn, 1000),
+    event(PAGE_VIEW_START.plusSeconds(dwellTimeSeconds).toString(), userName, crn, 1000),
+  )
 
   @Test
   fun `uses the next page view outside the reporting window`() {
@@ -101,4 +112,8 @@ class TimelineEventsStatisticsTest : IntegrationTestBase() {
     results = 1,
     durationMs = durationMs,
   )
+
+  private companion object {
+    val PAGE_VIEW_START: Instant = Instant.parse("2026-08-11T10:00:00Z")
+  }
 }
