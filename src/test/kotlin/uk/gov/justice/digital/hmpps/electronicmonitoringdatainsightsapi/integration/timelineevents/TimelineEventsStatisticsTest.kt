@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.integration.timelineevents
 
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -41,8 +42,49 @@ class TimelineEventsStatisticsTest : IntegrationTestBase() {
       .expectBody(String::class.java)
       .isEqualTo(
         "2 users, 3 searches, relating to 2 PoPs. " +
-          "Average time to load results 5.5 seconds (Max 10.0 seconds)",
+          "Average time to load results 5.5 seconds (Max 10.0 seconds). " +
+          "Average time spent on page 0.0 seconds",
       )
+  }
+
+  @Test
+  fun `calculates rounded average time spent from page views up to five minutes`() {
+    timelineEventsRepository.saveAll(
+      listOf(
+        event("2026-08-11T10:00:00Z", "USER_1", "X123456", 1000),
+        event("2026-08-11T10:05:00Z", "USER_1", "X123456", 1000),
+        event("2026-08-11T10:00:00Z", "USER_2", "X654321", 1000),
+        event("2026-08-11T10:20:00Z", "USER_2", "X654321", 1000),
+        event("2026-08-11T10:00:00Z", "USER_3", "X999999", 1000),
+        event("2026-08-11T10:21:00Z", "USER_3", "X999999", 1000),
+        event("2026-08-11T10:00:00Z", "USER_4", "X111111", 1000),
+        event("2026-08-11T10:01:41Z", "USER_4", "X111111", 1000),
+      ),
+    )
+
+    val statistics = timelineEventsRepository.getStatistics(
+      Instant.parse("2026-08-11T00:00:00Z"),
+      Instant.parse("2026-08-12T00:00:00Z"),
+    )
+
+    assertThat(statistics.averageTimeSpentSeconds).isEqualTo(201.0)
+  }
+
+  @Test
+  fun `uses the next page view outside the reporting window`() {
+    timelineEventsRepository.saveAll(
+      listOf(
+        event("2026-08-11T11:59:00Z", "USER_1", "X123456", 1000),
+        event("2026-08-11T12:01:00Z", "USER_1", "X654321", 1000),
+      ),
+    )
+
+    val statistics = timelineEventsRepository.getStatistics(
+      Instant.parse("2026-08-11T11:00:00Z"),
+      Instant.parse("2026-08-11T12:00:00Z"),
+    )
+
+    assertThat(statistics.averageTimeSpentSeconds).isEqualTo(120.0)
   }
 
   private fun event(

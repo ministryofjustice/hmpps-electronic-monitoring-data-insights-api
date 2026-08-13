@@ -54,15 +54,18 @@ class TimelineEventsService(
 
     val averageSeconds = (statistics.averageDurationMs ?: 0.0) / MILLIS_PER_SECOND
     val maximumSeconds = (statistics.maximumDurationMs ?: 0L).toDouble() / MILLIS_PER_SECOND
+    val averageTimeSpentSeconds = statistics.averageTimeSpentSeconds ?: 0.0
 
     return String.format(
       Locale.UK,
-      "%d users, %d searches, relating to %d PoPs. Average time to load results %.1f seconds (Max %.1f seconds)",
+      "%d users, %d searches, relating to %d PoPs. Average time to load results %.1f seconds " +
+        "(Max %.1f seconds). Average time spent on page %.1f seconds",
       statistics.users,
       statistics.searches,
       statistics.pops,
       averageSeconds,
       maximumSeconds,
+      averageTimeSpentSeconds,
     )
   }
 

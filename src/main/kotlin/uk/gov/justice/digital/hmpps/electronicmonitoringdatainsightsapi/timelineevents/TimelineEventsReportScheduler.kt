@@ -61,6 +61,12 @@ class TimelineEventsReportScheduler(
       (durationMs?.toDouble() ?: 0.0) / MILLIS_PER_SECOND,
     )
 
+    fun seconds(durationSeconds: Number?) = String.format(
+      Locale.UK,
+      "%.1fs",
+      durationSeconds?.toDouble() ?: 0.0,
+    )
+
     val border = "+------------------+-----------+-------------+--------------+----------+"
     val table = listOf(
       border,
@@ -82,6 +88,13 @@ class TimelineEventsReportScheduler(
         duration(summary.weekly.maximumDurationMs),
         duration(summary.monthly.maximumDurationMs),
         duration(summary.allTime.maximumDurationMs),
+      ),
+      row(
+        "Avg time on page",
+        seconds(summary.daily.averageTimeSpentSeconds),
+        seconds(summary.weekly.averageTimeSpentSeconds),
+        seconds(summary.monthly.averageTimeSpentSeconds),
+        seconds(summary.allTime.averageTimeSpentSeconds),
       ),
       border,
     ).joinToString("\n")

@@ -33,12 +33,13 @@ class TimelineEventsReportSchedulerTest {
   fun `sends the previous day's statistics to Slack`() {
     val yesterday = LocalDate.now(ZoneId.of("Europe/London")).minusDays(1)
     val statistics = "222 users, 2991 searches, relating to 279 PoPs. " +
-      "Average time to load results 5.5 seconds (Max 59.1 seconds)"
+      "Average time to load results 5.5 seconds (Max 59.1 seconds). " +
+      "Average time spent on page 245.6 seconds"
     val summary = TimelineEventsStatisticsResponse(
-      daily = statistics(20, 63, 19, 5500.0, 59100),
-      weekly = statistics(80, 374, 88, 4800.0, 59100),
-      monthly = statistics(215, 2643, 263, 4200.0, 70200),
-      allTime = statistics(222, 2989, 280, 4300.0, 70200),
+      daily = statistics(20, 63, 19, 5500.0, 59100, 245.6),
+      weekly = statistics(80, 374, 88, 4800.0, 59100, 230.1),
+      monthly = statistics(215, 2643, 263, 4200.0, 70200, 220.8),
+      allTime = statistics(222, 2989, 280, 4300.0, 70200, 225.4),
     )
     every { timelineEventsService.getStatistics(toDate = yesterday) } returns statistics
     every { timelineEventsService.getStatisticsSummary() } returns summary
@@ -48,7 +49,7 @@ class TimelineEventsReportSchedulerTest {
         content().json(
           """
           {
-            "text": "$statistics\n```\n+------------------+-----------+-------------+--------------+----------+\n| Metric           | Yesterday | Last 7 days | Last 30 days | All time |\n+------------------+-----------+-------------+--------------+----------+\n| Users            |        20 |          80 |          215 |      222 |\n| Searches         |        63 |         374 |         2643 |     2989 |\n| PoPs             |        19 |          88 |          263 |      280 |\n| Average duration |      5.5s |        4.8s |         4.2s |     4.3s |\n| Max duration     |     59.1s |       59.1s |        70.2s |    70.2s |\n+------------------+-----------+-------------+--------------+----------+\n```"
+            "text": "$statistics\n```\n+------------------+-----------+-------------+--------------+----------+\n| Metric           | Yesterday | Last 7 days | Last 30 days | All time |\n+------------------+-----------+-------------+--------------+----------+\n| Users            |        20 |          80 |          215 |      222 |\n| Searches         |        63 |         374 |         2643 |     2989 |\n| PoPs             |        19 |          88 |          263 |      280 |\n| Average duration |      5.5s |        4.8s |         4.2s |     4.3s |\n| Max duration     |     59.1s |       59.1s |        70.2s |    70.2s |\n| Avg time on page |    245.6s |      230.1s |       220.8s |   225.4s |\n+------------------+-----------+-------------+--------------+----------+\n```"
           }
           """.trimIndent(),
         ),
@@ -78,11 +79,13 @@ class TimelineEventsReportSchedulerTest {
     pops: Long,
     averageDurationMs: Double,
     maximumDurationMs: Long,
+    averageTimeSpentSeconds: Double,
   ) = mockk<TimelineEventStatistics> {
     every { this@mockk.users } returns users
     every { this@mockk.searches } returns searches
     every { this@mockk.pops } returns pops
     every { this@mockk.averageDurationMs } returns averageDurationMs
     every { this@mockk.maximumDurationMs } returns maximumDurationMs
+    every { this@mockk.averageTimeSpentSeconds } returns averageTimeSpentSeconds
   }
 }

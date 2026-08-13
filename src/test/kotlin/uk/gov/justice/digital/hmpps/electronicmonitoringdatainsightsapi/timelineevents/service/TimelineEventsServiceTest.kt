@@ -65,6 +65,7 @@ class TimelineEventsServiceTest {
       every { pops } returns 279
       every { averageDurationMs } returns 5_500.0
       every { maximumDurationMs } returns 59_100
+      every { averageTimeSpentSeconds } returns 245.6
     }
     every {
       repository.getStatistics(
@@ -77,7 +78,8 @@ class TimelineEventsServiceTest {
 
     assertThat(result).isEqualTo(
       "222 users, 2991 searches, relating to 279 PoPs. " +
-        "Average time to load results 5.5 seconds (Max 59.1 seconds)",
+        "Average time to load results 5.5 seconds (Max 59.1 seconds). " +
+        "Average time spent on page 245.6 seconds",
     )
   }
 
@@ -89,6 +91,7 @@ class TimelineEventsServiceTest {
       every { pops } returns 0
       every { averageDurationMs } returns null
       every { maximumDurationMs } returns null
+      every { averageTimeSpentSeconds } returns null
     }
     every { repository.getStatistics(any(), any()) } returns statistics
 
@@ -99,7 +102,8 @@ class TimelineEventsServiceTest {
 
     assertThat(result).isEqualTo(
       "0 users, 0 searches, relating to 0 PoPs. " +
-        "Average time to load results 0.0 seconds (Max 0.0 seconds)",
+        "Average time to load results 0.0 seconds (Max 0.0 seconds). " +
+        "Average time spent on page 0.0 seconds",
     )
     verify {
       repository.getStatistics(
