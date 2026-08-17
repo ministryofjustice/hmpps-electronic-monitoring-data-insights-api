@@ -100,7 +100,12 @@ class PersonController(
     }
 
     val startedAt = System.nanoTime()
-    val pagedPeople = personService.searchPeople(enrichPeopleQueryCriteria(peopleQueryCriteria))
+    val enrichedPeopleQueryCriteria = enrichPeopleQueryCriteria(peopleQueryCriteria)
+    val pagedPeople = personService.searchPeople(enrichedPeopleQueryCriteria)
+    if (pagedPeople.persons.isNotEmpty() && enrichedPeopleQueryCriteria.person != null) {
+      personService.personMatchScore(enrichedPeopleQueryCriteria.person, pagedPeople.persons.first())
+    }
+
     timelineEventsService.record(
       startedAt = startedAt,
       userName = username,
@@ -244,6 +249,7 @@ class PersonController(
       pncId = peopleQueryCriteria.pncId ?: enrichedPeopleQueryCriteria.pncId,
       orderIds = peopleQueryCriteria.orderIds.ifEmpty { enrichedPeopleQueryCriteria.orderIds },
       enhancedPeopleSearch = true,
+      person = enrichedPeopleQueryCriteria.person,
     )
   }
 
@@ -256,7 +262,9 @@ class PersonController(
       return PeopleQueryCriteria(deliusId = crn)
     }
 
-    val identifiers = cprApiClient.getIdentifiersByCrn(crn)
+    val person = cprApiClient.getPersonByCrn(crn)
+
+    val identifiers = person.identifiers
     log.info(
       "CPR returned identifiers for CRN {}: prisonNumbers={}, pncs={}, otherIdentifiers={}",
       crn,
@@ -270,6 +278,7 @@ class PersonController(
       pncId = identifiers.pncs.firstOrNull(),
       nomisId = identifiers.prisonNumbers.firstOrNull(),
       orderIds = identifiers.otherIdentifiers.filter { it.startsWith("MON") },
+      person = person,
     )
   }
 }

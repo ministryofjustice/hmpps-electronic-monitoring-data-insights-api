@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.model
 
 import jakarta.validation.constraints.AssertTrue
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.client.cpr.CprPerson
 
 data class PeopleQueryCriteria(
   val nomisId: String? = null,
@@ -12,6 +13,7 @@ data class PeopleQueryCriteria(
   val orderIds: List<String> = emptyList(),
   val enrichIds: Boolean = true,
   val enhancedPeopleSearch: Boolean = false,
+  val person: CprPerson? = null,
 ) {
   @AssertTrue(message = "At least one of the following must be provided: nomisId, pncId, deliusId, horId, ceprId, prisonId, orderIds")
   fun isValid(): Boolean = !(

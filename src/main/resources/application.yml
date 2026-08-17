@@ -115,6 +115,16 @@ cpr:
 access-control:
   enabled: ${ACCESS_CONTROL_ENABLED:false}
 
+person-matching:
+  name-weight: ${PERSON_MATCHING_NAME_WEIGHT:0.4}
+  postcode-weight: ${PERSON_MATCHING_POSTCODE_WEIGHT:0.3}
+  date-of-birth-weight: ${PERSON_MATCHING_DOB_WEIGHT:0.3}
+  minimum-string-similarity: ${PERSON_MATCHING_MINIMUM_STRING_SIMILARITY:0.5}
+  date-of-birth-tolerance-days: ${PERSON_MATCHING_DOB_TOLERANCE_DAYS:366}
+
+person-match-alert:
+  enabled: ${PERSON_MATCH_ALERT_ENABLED:false}
+
 slack:
   webhook-url: ${SLACK_WEBHOOK_URL:}
 

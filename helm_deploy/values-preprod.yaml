@@ -25,6 +25,7 @@ generic-service:
     ATHENA_OUTPUT_BUCKET: "s3://emds-preprod-athena-query-results-20241105110923178000000003/output"
     WORKGROUP: "443370694497-default"
     TIMELINE_EVENTS_REPORT_ENABLED: "false"
+    PERSON_MATCH_ALERT_ENABLED: "false"
 
 generic-prometheus-alerts:
   alertSeverity: hmpps-electronic-monitoring-data-insights-preprod

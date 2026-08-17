@@ -20,6 +20,7 @@ import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.client.a
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.client.accesscontrol.AccessResponse
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.client.cpr.CprApiClient
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.client.cpr.CprIdentifiers
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.client.cpr.CprPerson
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.service.CurrentUserService
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.config.ServiceProperties
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.model.PagedPeople
@@ -157,14 +158,15 @@ class PersonControllerTest {
 
     whenever(currentUserService.username()).thenReturn("TEST_USER")
 
-    whenever(cprApiClient.getIdentifiersByCrn(crn)).thenReturn(
-      CprIdentifiers(
+    val cprPerson = CprPerson(
+      identifiers = CprIdentifiers(
         crns = listOf(crn),
         pncs = listOf("2012/0052494Q"),
         prisonNumbers = listOf("G5555TT"),
         otherIdentifiers = listOf("MON12345", "mon67890", "OTHER-1"),
       ),
     )
+    whenever(cprApiClient.getPersonByCrn(crn)).thenReturn(cprPerson)
     whenever(
       personService.searchPeople(
         personsQueryCriteria = PeopleQueryCriteria(
@@ -173,6 +175,7 @@ class PersonControllerTest {
           nomisId = "G5555TT",
           orderIds = listOf("MON12345"),
           enhancedPeopleSearch = true,
+          person = cprPerson,
         ),
       ),
     ).thenReturn(pagedPeople)
@@ -188,7 +191,8 @@ class PersonControllerTest {
 
     assertThat(result.statusCode).isEqualTo(HttpStatus.OK)
     assertThat(result.body).isEqualTo(PersonResponse(pagedPeople.persons, pagedPeople.nextToken))
-    verify(cprApiClient, times(1)).getIdentifiersByCrn(crn)
+    verify(cprApiClient, times(1)).getPersonByCrn(crn)
+    verify(personService).personMatchScore(cprPerson, pagedPeople.persons.first())
 
     verify(timelineEventsService).record(
       startedAt = any(),
@@ -361,14 +365,15 @@ class PersonControllerTest {
       timelineEventsService = timelineEventsService,
     )
 
-    whenever(cprApiClient.getIdentifiersByCrn(crn)).thenReturn(
-      CprIdentifiers(
+    val cprPerson = CprPerson(
+      identifiers = CprIdentifiers(
         crns = listOf(crn),
         pncs = listOf("2012/0052494Q"),
         prisonNumbers = listOf("G5555TT"),
         otherIdentifiers = listOf("MON12345", "MON67890", "mon99999", "OTHER-1"),
       ),
     )
+    whenever(cprApiClient.getPersonByCrn(crn)).thenReturn(cprPerson)
     whenever(
       personService.searchPeople(
         personsQueryCriteria = PeopleQueryCriteria(
@@ -376,6 +381,7 @@ class PersonControllerTest {
           pncId = "2012/0052494Q",
           nomisId = "G5555TT",
           orderIds = listOf("MON12345", "MON67890"),
+          person = cprPerson,
         ),
       ),
     ).thenReturn(mockPeople)
@@ -385,7 +391,7 @@ class PersonControllerTest {
     assertThat(result.statusCode).isEqualTo(HttpStatus.OK)
     assertThat(result.body).isNotNull()
     assertThat(result.body!!.uri.toString()).contains(crn)
-    verify(cprApiClient, times(1)).getIdentifiersByCrn(crn)
+    verify(cprApiClient, times(1)).getPersonByCrn(crn)
   }
 
   @Test
