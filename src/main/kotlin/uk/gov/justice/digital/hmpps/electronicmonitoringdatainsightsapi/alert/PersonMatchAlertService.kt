@@ -14,13 +14,15 @@ private val log = KotlinLogging.logger {}
 class PersonMatchAlertService(
   @param:Value("\${person-match-alert.enabled:false}")
   private val enabled: Boolean,
+  @param:Value("\${person-match-alert.score-threshold:100}")
+  private val scoreThreshold: Double,
   @param:Value("\${slack.webhook-url}")
   private val slackWebhookUrl: String,
   @param:Qualifier("slackRestClient")
   private val restClient: RestClient,
 ) {
-  fun alertIfNonExact(match: PersonMatchScoreEntity) {
-    if (!enabled || match.isExactMatch()) return
+  fun alertIfBelowThreshold(match: PersonMatchScoreEntity) {
+    if (!enabled || match.overallMatchScore >= scoreThreshold) return
 
     try {
       restClient.post()
@@ -31,12 +33,10 @@ class PersonMatchAlertService(
         .toBodilessEntity()
     } catch (exception: Exception) {
       log.error(exception) {
-        "Failed to send non-exact person match alert for crn=${match.crn}, personId=${match.personId}"
+        "Failed to send person match score alert for crn=${match.crn}, personId=${match.personId}"
       }
     }
   }
-
-  private fun PersonMatchScoreEntity.isExactMatch(): Boolean = exactNameMatch && exactPostcodeMatch && exactDobMatch
 
   private fun formatMessage(match: PersonMatchScoreEntity): String = with(match) {
     """

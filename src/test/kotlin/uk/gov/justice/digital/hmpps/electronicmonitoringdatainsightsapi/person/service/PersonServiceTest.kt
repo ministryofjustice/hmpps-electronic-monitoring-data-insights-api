@@ -4,6 +4,7 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.alert.PersonMatchAlertService
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.client.cpr.CprAddress
@@ -12,6 +13,7 @@ import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.client.c
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.client.cpr.CprIdentifiers
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.client.cpr.CprPerson
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.api.PersonSearchRequest
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.entity.PersonMatchScoreEntity
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.model.Person
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.model.PersonalDetailsSearchCriteria
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.model.RawCaseload
@@ -19,6 +21,7 @@ import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.r
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.repository.PersonRepository
 import java.time.Instant
 import java.time.LocalDate
+import java.util.UUID
 
 class PersonServiceTest {
 
@@ -33,6 +36,11 @@ class PersonServiceTest {
     PersonMatchingProperties(),
     personMatchAlertService,
   )
+
+  @BeforeEach
+  fun setUpMatchScoreRepository() {
+    every { personMatchScoreRepository.findFirstByCrnAndPersonIdOrderByCreatedAtDesc(any(), any()) } returns null
+  }
 
   @Test
   fun `personMatchScore should persist a score of 100 when all details match`() {
@@ -62,7 +70,7 @@ class PersonServiceTest {
     assertThat(result.exactDobMatch).isTrue()
     assertThat(result.overallMatchScore).isEqualTo(100.0)
     verify(exactly = 1) { personMatchScoreRepository.save(result) }
-    verify(exactly = 1) { personMatchAlertService.alertIfNonExact(result) }
+    verify(exactly = 1) { personMatchAlertService.alertIfBelowThreshold(result) }
   }
 
   @Test
@@ -111,6 +119,58 @@ class PersonServiceTest {
     assertThat(result.exactNameMatch).isFalse()
     assertThat(result.nameScore).isEqualTo(100.0)
   }
+
+  @Test
+  fun `personMatchScore should not alert when the latest score is unchanged`() {
+    every { personMatchScoreRepository.findFirstByCrnAndPersonIdOrderByCreatedAtDesc("X123456", "41593") } returns previousMatch(96.0)
+    every { personMatchScoreRepository.save(any()) } answers { firstArg() }
+
+    val result = personService.personMatchScore(nonExactCprPerson(), emPerson())
+
+    assertThat(result.overallMatchScore).isEqualTo(96.0)
+    verify(exactly = 1) { personMatchScoreRepository.save(result) }
+    verify(exactly = 0) { personMatchAlertService.alertIfBelowThreshold(any()) }
+  }
+
+  @Test
+  fun `personMatchScore should alert when the latest score has changed`() {
+    every { personMatchScoreRepository.findFirstByCrnAndPersonIdOrderByCreatedAtDesc("X123456", "41593") } returns previousMatch(95.0)
+    every { personMatchScoreRepository.save(any()) } answers { firstArg() }
+
+    val result = personService.personMatchScore(nonExactCprPerson(), emPerson())
+
+    assertThat(result.overallMatchScore).isEqualTo(96.0)
+    verify(exactly = 1) { personMatchAlertService.alertIfBelowThreshold(result) }
+  }
+
+  private fun nonExactCprPerson() = CprPerson(
+    firstName = "Jon",
+    lastName = "Smith",
+    dateOfBirth = "1990-08-21",
+    addresses = listOf(CprAddress(postcode = "SW1H 9AJ", status = CprAddressStatus(code = "M"))),
+    identifiers = CprIdentifiers(crns = listOf("X123456")),
+  )
+
+  private fun emPerson() = Person(
+    personId = "41593",
+    personName = "John Smith",
+    dob = LocalDate.of(1990, 8, 21),
+    zip = "SW1H9AJ",
+  )
+
+  private fun previousMatch(overallMatchScore: Double) = PersonMatchScoreEntity(
+    id = UUID.randomUUID(),
+    crn = "X123456",
+    personId = "41593",
+    exactNameMatch = false,
+    exactPostcodeMatch = true,
+    exactDobMatch = true,
+    nameScore = 90.0,
+    postcodeScore = 100.0,
+    dobScore = 100.0,
+    overallMatchScore = overallMatchScore,
+    createdAt = Instant.parse("2026-08-16T10:00:00Z"),
+  )
 
   @Test
   fun `getPersonById should call repository and return the result`() {
