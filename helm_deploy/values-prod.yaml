@@ -24,7 +24,7 @@ generic-service:
     RESPONSIBLE_ORGANISATIONS: "Probation London Community/Suspended Sentence,Probation London Licences"
     STATUS_ALERT_ENABLED: "true"
     TIMELINE_EVENTS_REPORT_ENABLED: "true"
-    PERSON_MATCH_ALERT_ENABLED: "false"
+    PERSON_MATCH_ALERT_ENABLED: "true"
 
   namespace_secrets:
     slack-webhook-prod:
