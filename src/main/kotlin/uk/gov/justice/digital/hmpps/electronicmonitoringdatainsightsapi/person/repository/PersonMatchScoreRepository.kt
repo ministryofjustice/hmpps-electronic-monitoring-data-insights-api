@@ -6,4 +6,6 @@ import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.e
 import java.util.UUID
 
 @Repository
-interface PersonMatchScoreRepository : JpaRepository<PersonMatchScoreEntity, UUID>
+interface PersonMatchScoreRepository : JpaRepository<PersonMatchScoreEntity, UUID> {
+  fun findFirstByCrnAndPersonIdOrderByCreatedAtDesc(crn: String, personId: String): PersonMatchScoreEntity?
+}

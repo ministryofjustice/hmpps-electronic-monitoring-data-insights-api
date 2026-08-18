@@ -116,22 +116,24 @@ class PersonService(
         dobScore * properties.dateOfBirthWeight
       ) / totalWeight
 
-    val savedMatch = personMatchScoreRepository.save(
-      PersonMatchScoreEntity(
-        id = UUID.randomUUID(),
-        crn = crn!!,
-        personId = personId!!,
-        exactNameMatch = exactNameMatch,
-        exactPostcodeMatch = exactPostcodeMatch,
-        exactDobMatch = exactDobMatch,
-        nameScore = percentage(nameScore),
-        postcodeScore = percentage(postcodeScore),
-        dobScore = percentage(dobScore),
-        overallMatchScore = percentage(overallScore),
-        createdAt = Instant.now(),
-      ),
+    val match = PersonMatchScoreEntity(
+      id = UUID.randomUUID(),
+      crn = crn!!,
+      personId = personId!!,
+      exactNameMatch = exactNameMatch,
+      exactPostcodeMatch = exactPostcodeMatch,
+      exactDobMatch = exactDobMatch,
+      nameScore = percentage(nameScore),
+      postcodeScore = percentage(postcodeScore),
+      dobScore = percentage(dobScore),
+      overallMatchScore = percentage(overallScore),
+      createdAt = Instant.now(),
     )
-    personMatchAlertService.alertIfNonExact(savedMatch)
+    val previousMatch = personMatchScoreRepository.findFirstByCrnAndPersonIdOrderByCreatedAtDesc(crn, personId)
+    val savedMatch = personMatchScoreRepository.save(match)
+    if (previousMatch?.overallMatchScore != savedMatch.overallMatchScore) {
+      personMatchAlertService.alertIfBelowThreshold(savedMatch)
+    }
     return savedMatch
   }
 

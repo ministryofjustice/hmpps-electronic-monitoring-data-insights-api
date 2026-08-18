@@ -18,7 +18,7 @@ class PersonMatchAlertServiceTest {
   private val restClient = restClientBuilder.build()
 
   @Test
-  fun `sends match details when any field is not an exact match`() {
+  fun `sends match details when the overall score is below the threshold`() {
     val service = service(enabled = true)
     val match = match(exactNameMatch = false)
     server.expect(requestTo(WEBHOOK_URL))
@@ -34,27 +34,35 @@ class PersonMatchAlertServiceTest {
       )
       .andRespond(withSuccess())
 
-    service.alertIfNonExact(match)
+    service.alertIfBelowThreshold(match)
 
     server.verify()
   }
 
   @Test
   fun `does not send an alert when disabled`() {
-    service(enabled = false).alertIfNonExact(match(exactNameMatch = false))
+    service(enabled = false).alertIfBelowThreshold(match(exactNameMatch = false))
 
     server.verify()
   }
 
   @Test
-  fun `does not send an alert for an exact match`() {
-    service(enabled = true).alertIfNonExact(match())
+  fun `does not send an alert when the overall score equals the threshold`() {
+    service(enabled = true).alertIfBelowThreshold(match())
 
     server.verify()
   }
 
-  private fun service(enabled: Boolean) = PersonMatchAlertService(
+  @Test
+  fun `does not send an alert when the overall score is above a configured threshold`() {
+    service(enabled = true, scoreThreshold = 90.0).alertIfBelowThreshold(match(exactNameMatch = false))
+
+    server.verify()
+  }
+
+  private fun service(enabled: Boolean, scoreThreshold: Double = 100.0) = PersonMatchAlertService(
     enabled = enabled,
+    scoreThreshold = scoreThreshold,
     slackWebhookUrl = WEBHOOK_URL,
     restClient = restClient,
   )
