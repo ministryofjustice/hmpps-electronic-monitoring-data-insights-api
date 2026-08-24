@@ -6,6 +6,8 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.MediaType
 import org.springframework.stereotype.Service
 import org.springframework.web.client.RestClient
+import org.springframework.web.util.UriComponentsBuilder
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.config.ServiceProperties
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.entity.PersonMatchScoreEntity
 
 private val log = KotlinLogging.logger {}
@@ -20,6 +22,7 @@ class PersonMatchAlertService(
   private val slackWebhookUrl: String,
   @param:Qualifier("slackRestClient")
   private val restClient: RestClient,
+  private val serviceProperties: ServiceProperties,
 ) {
   fun alertIfBelowThreshold(match: PersonMatchScoreEntity) {
     if (!enabled || match.overallMatchScore >= scoreThreshold) return
@@ -39,6 +42,15 @@ class PersonMatchAlertService(
   }
 
   private fun formatMessage(match: PersonMatchScoreEntity): String = with(match) {
+    val compareUrl = UriComponentsBuilder
+      .fromUriString(serviceProperties.baseUrl)
+      .path("/people/em-compare")
+      .queryParam("crn", crn)
+      .queryParam("personId", personId)
+      .build()
+      .encode()
+      .toUriString()
+
     """
     Non exact search result returned from EM for CRN: $crn EMPersonId: $personId
 
@@ -49,6 +61,8 @@ class PersonMatchAlertService(
     postcodeScore: $postcodeScore
     dobScore: $dobScore
     overallMatchScore: $overallMatchScore
+
+    <$compareUrl|Compare CPR and EM data DEVs only>
     """.trimIndent()
   }
 }

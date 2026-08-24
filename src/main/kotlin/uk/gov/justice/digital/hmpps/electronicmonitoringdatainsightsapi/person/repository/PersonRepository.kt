@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.repository
 
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.model.EmPersonDetails
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.model.PagedPeople
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.model.PeopleQueryCriteria
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.model.Person
@@ -11,4 +12,5 @@ interface PersonRepository {
   fun findByPersonById(personId: String): Person?
   fun findRawCaseloadByDeliusId(deliusId: String): List<RawCaseload>
   fun findByPersonalDetails(criteria: PersonalDetailsSearchCriteria): List<Person>
+  fun findEmPersonDetails(personId: String): EmPersonDetails?
 }
