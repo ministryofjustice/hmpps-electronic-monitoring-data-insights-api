@@ -13,6 +13,7 @@ import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.athena.A
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.athena.AwsProperties
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.exception.DataIntegrityException
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.model.PaginatedResult
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.model.EmPersonDetails
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.model.PeopleQueryCriteria
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.model.Person
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.model.PersonalDetailsSearchCriteria
@@ -64,6 +65,31 @@ class AthenaPersonRepositoryTest {
     // Assert (SQL now parameterised)
     assertThat(sqlSlot.captured).contains("WHERE c.mdss_person_id = CAST(? AS BIGINT)")
     assertThat(sqlSlot.captured).contains("LIMIT 1")
+  }
+
+  @Test
+  fun `findEmPersonDetails should query by mdss person id and map comparison fields`() {
+    val sqlSlot = slot<String>()
+    val row = listOf(datum("John"), datum("Smith"), datum("1990-08-21"), datum("SW1H 9AJ"))
+    every {
+      runner.run<EmPersonDetails>(
+        sql = capture(sqlSlot),
+        database = eq(properties.athena.mdssDatabase),
+        skipHeaderRow = eq(true),
+        mapper = any(),
+        params = eq(listOf("41593")),
+      )
+    } answers {
+      val mapper = invocation.args[3] as (List<Datum>) -> EmPersonDetails
+      listOf(mapper(row))
+    }
+
+    val result = repository.findEmPersonDetails("41593")
+
+    assertThat(sqlSlot.captured).contains("WHERE c.mdss_person_id = CAST(? AS BIGINT)")
+    assertThat(result).isEqualTo(
+      EmPersonDetails("John", "Smith", LocalDate.of(1990, 8, 21), "SW1H 9AJ"),
+    )
   }
 
   @Test

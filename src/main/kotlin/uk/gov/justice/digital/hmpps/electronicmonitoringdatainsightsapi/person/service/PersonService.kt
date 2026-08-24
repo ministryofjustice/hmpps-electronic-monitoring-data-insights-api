@@ -1,11 +1,16 @@
 package uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.service
 
 import org.apache.commons.text.similarity.LevenshteinDistance
+import org.springframework.http.HttpStatus.NOT_FOUND
 import org.springframework.stereotype.Service
+import org.springframework.web.server.ResponseStatusException
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.alert.PersonMatchAlertService
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.client.cpr.CprApiClient
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.client.cpr.CprPerson
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.api.ComparedValue
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.api.EmCompareResponse
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.api.PersonSearchRequest
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.api.PostcodeComparedValue
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.entity.PersonMatchScoreEntity
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.model.PagedPeople
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.model.PeopleQueryCriteria
@@ -36,6 +41,57 @@ class PersonService(
   fun getPersonById(personId: String): Person? = personRepository.findByPersonById(personId)
 
   fun getRawCaseloadByDeliusId(deliusId: String): List<RawCaseload> = personRepository.findRawCaseloadByDeliusId(deliusId)
+
+  fun compareEmPerson(crn: String, personId: String): EmCompareResponse {
+    val cprPerson = cprApiClient.getPersonByCrn(crn)
+    val emPerson = personRepository.findEmPersonDetails(personId)
+      ?: throw ResponseStatusException(NOT_FOUND, "Athena person $personId not found")
+    val mainAddressIndex = cprPerson.addresses
+      .indexOfFirst { it.status?.code.equals("M", ignoreCase = true) }
+    val cprPostcode = cprPerson.addresses.getOrNull(mainAddressIndex)?.postcode
+    val otherPostcodes = cprPerson.addresses
+      .filterIndexed { index, _ -> index != mainAddressIndex }
+      .mapNotNull { it.postcode }
+
+    return EmCompareResponse(
+      crn = crn,
+      personId = personId,
+      forename = compared(cprPerson.firstName, emPerson.forename),
+      surname = compared(cprPerson.lastName, emPerson.surname),
+      dateOfBirth = compared(cprPerson.dateOfBirth, emPerson.dateOfBirth?.toString()),
+      postcode = comparePostcode(cprPostcode, otherPostcodes, emPerson.postcode),
+    )
+  }
+
+  private fun compared(cpr: String?, athena: String?, removeSpaces: Boolean = false): ComparedValue {
+    val normalisedCpr = normalise(cpr, removeSpaces)
+    val normalisedAthena = normalise(athena, removeSpaces)
+    return ComparedValue(
+      cpr = cpr,
+      athena = athena,
+      matches = normalisedCpr != null && normalisedCpr == normalisedAthena,
+    )
+  }
+
+  private fun comparePostcode(cpr: String?, otherCprPostcodes: List<String>, athena: String?): PostcodeComparedValue {
+    val normalisedCpr = normalise(cpr, removeSpaces = true)
+    val normalisedAthena = normalise(athena, removeSpaces = true)
+    return PostcodeComparedValue(
+      cpr = cpr,
+      athena = athena,
+      matches = normalisedCpr != null && normalisedCpr == normalisedAthena,
+      matchesPreviousAddress = normalisedAthena != null &&
+        otherCprPostcodes.any {
+          normalise(it, removeSpaces = true) == normalisedAthena
+        },
+    )
+  }
+
+  private fun normalise(value: String?, removeSpaces: Boolean): String? = value
+    ?.trim()
+    ?.lowercase(Locale.UK)
+    ?.let { if (removeSpaces) it.replace(" ", "") else it.replace(Regex("\\s+"), " ") }
+    ?.takeIf(String::isNotEmpty)
 
   fun searchPeopleByPersonalDetails(request: PersonSearchRequest): List<Person> = personRepository.findByPersonalDetails(resolveSearchCriteria(request))
     .distinctBy(Person::personId)

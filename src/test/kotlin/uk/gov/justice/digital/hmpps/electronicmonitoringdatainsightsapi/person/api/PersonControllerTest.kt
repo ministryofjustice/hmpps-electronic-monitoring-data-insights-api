@@ -103,6 +103,25 @@ class PersonControllerTest {
   }
 
   @Test
+  fun `compareEmPerson should return CPR and Athena values side by side`() {
+    val response = EmCompareResponse(
+      crn = "X123456",
+      personId = "41593",
+      forename = ComparedValue("John", "JOHN", true),
+      surname = ComparedValue("Smith", "Smith", true),
+      dateOfBirth = ComparedValue("1990-08-21", "1990-08-21", true),
+      postcode = PostcodeComparedValue("SW1H 9AJ", "SW1H9AJ", true, false),
+    )
+    whenever(personService.compareEmPerson("X123456", "41593")).thenReturn(response)
+
+    val result = controller.compareEmPerson("X123456", "41593")
+
+    assertThat(result.statusCode).isEqualTo(HttpStatus.OK)
+    assertThat(result.body).isEqualTo(response)
+    verify(personService).compareEmPerson("X123456", "41593")
+  }
+
+  @Test
   fun `getRawCaseload should return raw caseload rows for delius id`() {
     val deliusId = "E643189"
     val rawCaseload = listOf(

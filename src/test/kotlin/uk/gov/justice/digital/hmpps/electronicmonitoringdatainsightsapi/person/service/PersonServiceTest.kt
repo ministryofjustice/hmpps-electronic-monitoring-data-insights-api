@@ -14,6 +14,7 @@ import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.client.c
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.client.cpr.CprPerson
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.api.PersonSearchRequest
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.entity.PersonMatchScoreEntity
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.model.EmPersonDetails
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.model.Person
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.model.PersonalDetailsSearchCriteria
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.model.RawCaseload
@@ -201,6 +202,55 @@ class PersonServiceTest {
 
     assertThat(result).isEqualTo(rawCaseload)
     verify(exactly = 1) { personRepository.findRawCaseloadByDeliusId(deliusId) }
+  }
+
+  @Test
+  fun `compareEmPerson should compare CPR and Athena details`() {
+    every { cprApiClient.getPersonByCrn("X123456") } returns CprPerson(
+      firstName = " John ",
+      lastName = "Smith",
+      dateOfBirth = "1990-08-21",
+      addresses = listOf(CprAddress(postcode = "SW1H 9AJ", status = CprAddressStatus(code = "M"))),
+      identifiers = CprIdentifiers(crns = listOf("X123456")),
+    )
+    every { personRepository.findEmPersonDetails("41593") } returns EmPersonDetails(
+      forename = "JOHN",
+      surname = "Smyth",
+      dateOfBirth = LocalDate.of(1990, 8, 21),
+      postcode = "sw1h9aj",
+    )
+
+    val result = personService.compareEmPerson("X123456", "41593")
+
+    assertThat(result.forename.matches).isTrue()
+    assertThat(result.surname.matches).isFalse()
+    assertThat(result.dateOfBirth.matches).isTrue()
+    assertThat(result.postcode.matches).isTrue()
+    assertThat(result.postcode.matchesPreviousAddress).isFalse()
+    assertThat(result.surname.cpr).isEqualTo("Smith")
+    assertThat(result.surname.athena).isEqualTo("Smyth")
+  }
+
+  @Test
+  fun `compareEmPerson should identify a postcode matching another CPR address`() {
+    every { cprApiClient.getPersonByCrn("X123456") } returns CprPerson(
+      addresses = listOf(
+        CprAddress(postcode = "SW1H 9AJ", status = CprAddressStatus(code = "M")),
+        CprAddress(postcode = "LS1 1AA", status = CprAddressStatus(code = "P")),
+      ),
+      identifiers = CprIdentifiers(crns = listOf("X123456")),
+    )
+    every { personRepository.findEmPersonDetails("41593") } returns EmPersonDetails(
+      forename = null,
+      surname = null,
+      dateOfBirth = null,
+      postcode = "ls11aa",
+    )
+
+    val result = personService.compareEmPerson("X123456", "41593")
+
+    assertThat(result.postcode.matches).isFalse()
+    assertThat(result.postcode.matchesPreviousAddress).isTrue()
   }
 
   @Test
