@@ -8,6 +8,7 @@ import org.springframework.test.web.client.match.MockRestRequestMatchers.method
 import org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo
 import org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess
 import org.springframework.web.client.RestClient
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.config.ServiceProperties
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.entity.PersonMatchScoreEntity
 import java.time.Instant
 import java.util.UUID
@@ -27,7 +28,7 @@ class PersonMatchAlertServiceTest {
         content().json(
           """
           {
-            "text": "Non exact search result returned from EM for CRN: X123456 EMPersonId: 41593\n\nexactNameMatch: false\nexactPostcodeMatch: true\nexactDobMatch: true\nnameScore: 85.5\npostcodeScore: 100.0\ndobScore: 100.0\noverallMatchScore: 94.2"
+            "text": "Non exact search result returned from EM for CRN: X123456 EMPersonId: 41593\n\nexactNameMatch: false\nexactPostcodeMatch: true\nexactDobMatch: true\nnameScore: 85.5\npostcodeScore: 100.0\ndobScore: 100.0\noverallMatchScore: 94.2\n\n<https://emd-api.test/people/em-compare?crn=X123456&personId=41593|Compare CPR and EM data DEVs only>"
           }
           """.trimIndent(),
         ),
@@ -65,6 +66,10 @@ class PersonMatchAlertServiceTest {
     scoreThreshold = scoreThreshold,
     slackWebhookUrl = WEBHOOK_URL,
     restClient = restClient,
+    serviceProperties = ServiceProperties(
+      baseUrl = "https://emd-api.test",
+      uiBaseUrl = "https://emd-ui.test",
+    ),
   )
 
   private fun match(exactNameMatch: Boolean = true) = PersonMatchScoreEntity(

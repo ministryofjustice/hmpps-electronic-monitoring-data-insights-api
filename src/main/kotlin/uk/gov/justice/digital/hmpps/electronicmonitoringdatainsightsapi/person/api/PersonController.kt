@@ -162,6 +162,22 @@ class PersonController(
   @PreAuthorize(HAS_VIEW_ROLE)
   @Operation(
     tags = ["People"],
+    summary = "Compare CPR and Athena person details",
+    description = "Compares forename, surname, date of birth and postcode from CPR and Athena.",
+  )
+  @RequestMapping(
+    method = [RequestMethod.GET],
+    path = ["/em-compare"],
+    produces = [MediaType.APPLICATION_JSON_VALUE],
+  )
+  fun compareEmPerson(
+    @RequestParam crn: String,
+    @RequestParam personId: String,
+  ): ResponseEntity<EmCompareResponse> = ResponseEntity.ok(personService.compareEmPerson(crn, personId))
+
+  @PreAuthorize(HAS_VIEW_ROLE)
+  @Operation(
+    tags = ["People"],
     summary = "Get raw caseload data",
     description = "Returns raw caseload rows for a Delius ID.",
   )

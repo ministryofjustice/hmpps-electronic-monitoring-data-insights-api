@@ -8,6 +8,7 @@ import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.athena.A
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.exception.DataIntegrityException
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.jpa.Constants
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.util.DateTimeConstants
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.model.EmPersonDetails
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.model.PagedPeople
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.model.PeopleQueryCriteria
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.model.Person
@@ -233,6 +234,29 @@ class AthenaPersonRepository(
       skipHeaderRow = true,
       mapper = ::mapRow,
       params = built.params,
+    ).firstOrNull()
+  }
+
+  override fun findEmPersonDetails(personId: String): EmPersonDetails? {
+    val validatedPersonId = validatePersonId(personId)
+    val sql = """
+      SELECT
+        c.first_name,
+        c.last_name,
+        c.date_of_birth,
+        c.postcode
+      FROM ${properties.athena.mdssDatabase}.caseload c
+      WHERE c.mdss_person_id = CAST(? AS BIGINT)
+      ORDER BY c.grouped_date DESC
+      LIMIT 1
+    """.trimIndent()
+
+    return runner.run(
+      sql = sql,
+      database = properties.athena.mdssDatabase,
+      skipHeaderRow = true,
+      mapper = ::mapEmPersonDetails,
+      params = listOf(validatedPersonId.trim()),
     ).firstOrNull()
   }
 
@@ -466,6 +490,20 @@ class AthenaPersonRepository(
       isMonitored = v(COL_RAW_IS_MONITORED),
       enforceableCondition = v(COL_RAW_ENFORCEABLE_CONDITION),
       datetimeAdded = v(COL_RAW_DATETIME_ADDED),
+    )
+  }
+
+  private fun mapEmPersonDetails(cols: List<Datum>): EmPersonDetails {
+    fun value(index: Int): String? = cols.getOrNull(index)
+      ?.varCharValue()
+      ?.trim()
+      ?.takeIf(String::isNotEmpty)
+
+    return EmPersonDetails(
+      forename = value(0),
+      surname = value(1),
+      dateOfBirth = value(2)?.let(LocalDate::parse),
+      postcode = value(3),
     )
   }
 
