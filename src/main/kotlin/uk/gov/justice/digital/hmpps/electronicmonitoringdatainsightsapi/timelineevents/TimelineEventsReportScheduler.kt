@@ -28,7 +28,7 @@ class TimelineEventsReportScheduler(
   private val restClient: RestClient,
 ) {
 
-  @Scheduled(cron = "0 0 12 * * *", zone = "Europe/London")
+  @Scheduled(cron = "0 0 8 * * *", zone = "Europe/London")
   @SchedulerLock(
     name = "dailyStatsLock",
     lockAtMostFor = "15m", // Keeps lock if pod crashes
