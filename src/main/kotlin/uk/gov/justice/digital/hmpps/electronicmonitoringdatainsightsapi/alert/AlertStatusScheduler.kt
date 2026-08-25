@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.alert
 
+import net.javacrumbs.shedlock.spring.annotation.SchedulerLock
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
@@ -33,6 +34,11 @@ class AlertStatusScheduler(
   private val outOfSyncAlertActive = AtomicBoolean(false)
 
   @Scheduled(cron = "0 */5 * * * *", zone = "UTC")
+  @SchedulerLock(
+    name = "dataSyncLock",
+    lockAtMostFor = "10m", // Keeps lock if pod crashes
+    lockAtLeastFor = "5m", // Prevents execution overlap if clocks drift
+  )
   fun checkStatus() {
     val outOfSyncStatus = serviceStatusService.getStatus()
       .statuses
