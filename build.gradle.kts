@@ -16,6 +16,7 @@ val hmppsKotlinSpringBootStarterVersion = "3.0.0"
 val kotlinLoggingVersion = "3.0.5"
 val commonsTextVersion = "1.15.0"
 val athenaVersion = "2.54.2"
+val shedlockVersion = "6.2.0"
 
 dependencies {
   implementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter:$hmppsKotlinSpringBootStarterVersion")
@@ -25,6 +26,8 @@ dependencies {
   implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:$springdocOpenapiVersion")
   implementation("io.github.microutils:kotlin-logging:$kotlinLoggingVersion")
   implementation("org.apache.commons:commons-text:$commonsTextVersion")
+  implementation("net.javacrumbs.shedlock:shedlock-spring:$shedlockVersion")
+  implementation("net.javacrumbs.shedlock:shedlock-provider-jdbc-template:$shedlockVersion")
 
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core")
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor")
