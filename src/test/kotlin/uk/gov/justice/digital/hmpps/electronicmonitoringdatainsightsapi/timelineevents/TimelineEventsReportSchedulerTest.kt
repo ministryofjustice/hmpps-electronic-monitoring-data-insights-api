@@ -69,7 +69,7 @@ class TimelineEventsReportSchedulerTest {
       .getMethod("sendDailyReport")
       .getAnnotation(Scheduled::class.java)
 
-    assertThat(scheduled.cron).isEqualTo("0 0 8 * * *")
+    assertThat(scheduled.cron).isEqualTo("0 0 12 * * *") //This is temp while testing in dev
     assertThat(scheduled.zone).isEqualTo("Europe/London")
   }
 
