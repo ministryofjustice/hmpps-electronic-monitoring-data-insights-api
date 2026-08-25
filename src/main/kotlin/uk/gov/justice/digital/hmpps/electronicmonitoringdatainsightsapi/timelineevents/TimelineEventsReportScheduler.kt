@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.timelineevents
 
+import net.javacrumbs.shedlock.spring.annotation.SchedulerLock
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
@@ -27,7 +28,12 @@ class TimelineEventsReportScheduler(
   private val restClient: RestClient,
 ) {
 
-  @Scheduled(cron = "0 0 8 * * *", zone = "Europe/London")
+  @Scheduled(cron = "0 0 12 * * *", zone = "Europe/London")
+  @SchedulerLock(
+    name = "dailyStatsLock",
+    lockAtMostFor = "15m", // Keeps lock if pod crashes
+    lockAtLeastFor = "5m", // Prevents execution overlap if clocks drift
+  )
   fun sendDailyReport() {
     val reportToDate = LocalDate.now(LONDON_TIME_ZONE).minusDays(1)
     val statistics = timelineEventsService.getStatistics(toDate = reportToDate)
