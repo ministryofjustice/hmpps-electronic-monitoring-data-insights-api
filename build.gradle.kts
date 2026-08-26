@@ -16,7 +16,7 @@ val hmppsKotlinSpringBootStarterVersion = "3.0.0"
 val kotlinLoggingVersion = "3.0.5"
 val commonsTextVersion = "1.15.0"
 val athenaVersion = "2.54.2"
-val shedlockVersion = "6.2.0"
+val shedlockVersion = "7.9.0"
 
 dependencies {
   implementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter:$hmppsKotlinSpringBootStarterVersion")
