@@ -23,11 +23,24 @@ class StatusAlertSchedulerTest {
   private val restClientBuilder = RestClient.builder()
   private val server = MockRestServiceServer.bindTo(restClientBuilder).build()
   private val restClient = restClientBuilder.build()
+  private var alertActive = false
+  private val alertStateRepository = mockk<StatusAlertStateRepository> {
+    every { updateIfChanged(any()) } answers {
+      val requestedState = firstArg<Boolean>()
+      if (requestedState == alertActive) {
+        false
+      } else {
+        alertActive = requestedState
+        true
+      }
+    }
+  }
   private val scheduler = AlertStatusScheduler(
     serviceStatusService = serviceStatusService,
     slackWebhookUrl = "https://hooks.slack.test/services/test",
     serviceBaseUrl = "https://example.test/",
     restClient = restClient,
+    alertStateRepository = alertStateRepository,
   )
 
   @Test
@@ -48,6 +61,25 @@ class StatusAlertSchedulerTest {
 
     scheduler.checkStatus()
     scheduler.checkStatus()
+
+    server.verify()
+  }
+
+  @Test
+  fun `checkStatus sends only one alert across scheduler instances`() {
+    every { serviceStatusService.getStatus() } returns outOfSyncResponse()
+    server.expect(requestTo("https://hooks.slack.test/services/test"))
+      .andRespond(withSuccess())
+    val anotherSchedulerInstance = AlertStatusScheduler(
+      serviceStatusService = serviceStatusService,
+      slackWebhookUrl = "https://hooks.slack.test/services/test",
+      serviceBaseUrl = "https://example.test/",
+      restClient = restClient,
+      alertStateRepository = alertStateRepository,
+    )
+
+    scheduler.checkStatus()
+    anotherSchedulerInstance.checkStatus()
 
     server.verify()
   }
