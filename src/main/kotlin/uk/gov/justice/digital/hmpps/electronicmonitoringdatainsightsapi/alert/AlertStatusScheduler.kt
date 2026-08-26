@@ -14,7 +14,6 @@ import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
-import java.util.concurrent.atomic.AtomicBoolean
 
 @Component
 @ConditionalOnProperty(
@@ -30,9 +29,8 @@ class AlertStatusScheduler(
   private val serviceBaseUrl: String,
   @param:Qualifier("slackRestClient")
   private val restClient: RestClient,
+  private val alertStateRepository: StatusAlertStateRepository,
 ) {
-  private val outOfSyncAlertActive = AtomicBoolean(false)
-
   @Scheduled(cron = "0 */5 * * * *", zone = "UTC")
   @SchedulerLock(
     name = "dataSyncLock",
@@ -45,7 +43,7 @@ class AlertStatusScheduler(
       .firstOrNull { it.code == ServiceStatusCode.DATA_OUT_OF_SYNC }
 
     when {
-      outOfSyncStatus != null && outOfSyncAlertActive.compareAndSet(false, true) -> {
+      outOfSyncStatus != null && alertStateRepository.updateIfChanged(true) -> {
         try {
           sendSlackMessage(
             "🚨 EM Data Insights API is reporting ${outOfSyncStatus.code}.\n" +
@@ -53,19 +51,19 @@ class AlertStatusScheduler(
               "<$statusUrl|View service status>",
           )
         } catch (exception: Exception) {
-          outOfSyncAlertActive.set(false)
+          alertStateRepository.updateIfChanged(false)
           throw exception
         }
       }
 
-      outOfSyncStatus == null && outOfSyncAlertActive.compareAndSet(true, false) -> {
+      outOfSyncStatus == null && alertStateRepository.updateIfChanged(false) -> {
         try {
           sendSlackMessage(
             "✅ EM Data Insights API data is back in sync.\n" +
               "<$statusUrl|View service status>",
           )
         } catch (exception: Exception) {
-          outOfSyncAlertActive.set(true)
+          alertStateRepository.updateIfChanged(true)
           throw exception
         }
       }
