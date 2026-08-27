@@ -4,7 +4,6 @@ object Constants {
   val ENFORCEABLE_CONDITIONS = listOf(
     "location_monitoring",
     "Location Monitoring (Fitted Device)",
-    "aml",
   )
 
   val ENFORCEABLE_CONDITIONS_SQL =
