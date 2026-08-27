@@ -51,18 +51,17 @@ class PersonMatchAlertService(
       .encode()
       .toUriString()
 
-    """
-    Non exact search result returned from EM for CRN: $crn EMPersonId: $personId
+    val lowerComponentScores = listOf(
+      "name: $nameScore%" to nameScore,
+      (
+        "postcode: $postcodeScore%" +
+          if (postcodeMatchedPreviousAddress == true) " (matched on a previous address)" else ""
+        ) to postcodeScore,
+      "date of birth: $dobScore%" to dobScore,
+    ).filter { (_, score) -> score < 100.0 }
+      .joinToString(", ") { (message, _) -> message }
 
-    exactNameMatch: $exactNameMatch
-    exactPostcodeMatch: $exactPostcodeMatch
-    exactDobMatch: $exactDobMatch
-    nameScore: $nameScore
-    postcodeScore: $postcodeScore
-    dobScore: $dobScore
-    overallMatchScore: $overallMatchScore
-
-    <$compareUrl|Compare CPR and EM data DEVs only>
-    """.trimIndent()
+    "Non-exact EM match — CRN: $crn · EM person: $personId · Overall: $overallMatchScore% · " +
+      "$lowerComponentScores · <$compareUrl|Compare CPR and EM data (Need auth token)>"
   }
 }

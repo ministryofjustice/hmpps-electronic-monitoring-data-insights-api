@@ -21,4 +21,5 @@ class PersonMatchScoreEntity(
   val dobScore: Double,
   val overallMatchScore: Double,
   val createdAt: Instant,
+  val postcodeMatchedPreviousAddress: Boolean? = null,
 )

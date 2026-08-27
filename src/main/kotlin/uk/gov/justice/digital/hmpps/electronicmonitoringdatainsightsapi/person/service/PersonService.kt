@@ -150,10 +150,9 @@ class PersonService(
     val cprNames = nameCandidates(cprPerson.firstName, cprPerson.lastName)
     val cprName = cprNames.firstOrNull()
     val emName = emPerson.personName.normaliseText()
-    val cprPostcode = cprPerson.addresses
-      .firstOrNull { it.status?.code.equals("M", ignoreCase = true) }
-      ?.postcode
-      .normalisePostcode()
+    val mainAddressIndex = cprPerson.addresses
+      .indexOfFirst { it.status?.code.equals("M", ignoreCase = true) }
+    val cprPostcode = cprPerson.addresses.getOrNull(mainAddressIndex)?.postcode.normalisePostcode()
     val emPostcode = emPerson.zip.normalisePostcode()
     val cprDob = cprPerson.dateOfBirth?.let { runCatching { LocalDate.parse(it) }.getOrNull() }
     val emDob = emPerson.dob
@@ -163,6 +162,11 @@ class PersonService(
     val exactDobMatch = cprDob != null && cprDob == emDob
     val nameScore = cprNames.maxOfOrNull { stringSimilarity(it, emName) } ?: 0.0
     val postcodeScore = stringSimilarity(cprPostcode, emPostcode)
+    val postcodeMatchedPreviousAddress = postcodeScore < 1.0 &&
+      emPostcode != null &&
+      cprPerson.addresses
+        .filterIndexed { index, _ -> index != mainAddressIndex }
+        .any { it.postcode.normalisePostcode() == emPostcode }
     val dobScore = dateSimilarity(cprDob, emDob)
     val properties = personMatchingProperties
     val totalWeight = properties.nameWeight + properties.postcodeWeight + properties.dateOfBirthWeight
@@ -184,6 +188,7 @@ class PersonService(
       dobScore = percentage(dobScore),
       overallMatchScore = percentage(overallScore),
       createdAt = Instant.now(),
+      postcodeMatchedPreviousAddress = postcodeMatchedPreviousAddress,
     )
     val previousMatch = personMatchScoreRepository.findFirstByCrnAndPersonIdOrderByCreatedAtDesc(crn, personId)
     val savedMatch = personMatchScoreRepository.save(match)

@@ -28,7 +28,29 @@ class PersonMatchAlertServiceTest {
         content().json(
           """
           {
-            "text": "Non exact search result returned from EM for CRN: X123456 EMPersonId: 41593\n\nexactNameMatch: false\nexactPostcodeMatch: true\nexactDobMatch: true\nnameScore: 85.5\npostcodeScore: 100.0\ndobScore: 100.0\noverallMatchScore: 94.2\n\n<https://emd-api.test/people/em-compare?crn=X123456&personId=41593|Compare CPR and EM data DEVs only>"
+            "text": "Non-exact EM match — CRN: X123456 · EM person: 41593 · Overall: 94.2% · name: 85.5% · <https://emd-api.test/people/em-compare?crn=X123456&personId=41593|Compare CPR and EM data (Need auth token)>"
+          }
+          """.trimIndent(),
+        ),
+      )
+      .andRespond(withSuccess())
+
+    service.alertIfBelowThreshold(match)
+
+    server.verify()
+  }
+
+  @Test
+  fun `identifies when the postcode matched a previous CPR address`() {
+    val service = service(enabled = true)
+    val match = match(exactPostcodeMatch = false, postcodeMatchedPreviousAddress = true)
+    server.expect(requestTo(WEBHOOK_URL))
+      .andExpect(method(HttpMethod.POST))
+      .andExpect(
+        content().json(
+          """
+          {
+            "text": "Non-exact EM match — CRN: X123456 · EM person: 41593 · Overall: 94.2% · postcode: 50.0% (matched on a previous address) · <https://emd-api.test/people/em-compare?crn=X123456&personId=41593|Compare CPR and EM data (Need auth token)>"
           }
           """.trimIndent(),
         ),
@@ -72,18 +94,23 @@ class PersonMatchAlertServiceTest {
     ),
   )
 
-  private fun match(exactNameMatch: Boolean = true) = PersonMatchScoreEntity(
+  private fun match(
+    exactNameMatch: Boolean = true,
+    exactPostcodeMatch: Boolean = true,
+    postcodeMatchedPreviousAddress: Boolean? = null,
+  ) = PersonMatchScoreEntity(
     id = UUID.randomUUID(),
     crn = "X123456",
     personId = "41593",
     exactNameMatch = exactNameMatch,
-    exactPostcodeMatch = true,
+    exactPostcodeMatch = exactPostcodeMatch,
     exactDobMatch = true,
     nameScore = if (exactNameMatch) 100.0 else 85.5,
-    postcodeScore = 100.0,
+    postcodeScore = if (exactPostcodeMatch) 100.0 else 50.0,
     dobScore = 100.0,
-    overallMatchScore = if (exactNameMatch) 100.0 else 94.2,
+    overallMatchScore = if (exactNameMatch && exactPostcodeMatch) 100.0 else 94.2,
     createdAt = Instant.parse("2026-08-14T10:00:00Z"),
+    postcodeMatchedPreviousAddress = postcodeMatchedPreviousAddress,
   )
 
   private companion object {
