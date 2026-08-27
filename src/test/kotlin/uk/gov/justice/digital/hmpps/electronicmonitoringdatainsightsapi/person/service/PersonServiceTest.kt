@@ -68,6 +68,7 @@ class PersonServiceTest {
     assertThat(result.personId).isEqualTo("41593")
     assertThat(result.exactNameMatch).isTrue()
     assertThat(result.exactPostcodeMatch).isTrue()
+    assertThat(result.postcodeMatchedPreviousAddress).isFalse()
     assertThat(result.exactDobMatch).isTrue()
     assertThat(result.overallMatchScore).isEqualTo(100.0)
     verify(exactly = 1) { personMatchScoreRepository.save(result) }
@@ -100,6 +101,33 @@ class PersonServiceTest {
     assertThat(result.postcodeScore).isZero()
     assertThat(result.dobScore).isGreaterThan(99.0)
     assertThat(result.overallMatchScore).isBetween(60.0, 70.0)
+  }
+
+  @Test
+  fun `personMatchScore should identify an EM postcode matching a previous CPR address`() {
+    every { personMatchScoreRepository.save(any()) } answers { firstArg() }
+    val cprPerson = CprPerson(
+      firstName = "John",
+      lastName = "Smith",
+      dateOfBirth = "1990-08-21",
+      addresses = listOf(
+        CprAddress(postcode = "SW1H 9AJ", status = CprAddressStatus(code = "M")),
+        CprAddress(postcode = "LS1 1AA", status = CprAddressStatus(code = "P")),
+      ),
+      identifiers = CprIdentifiers(crns = listOf("X123456")),
+    )
+    val emPerson = Person(
+      personId = "41593",
+      personName = "John Smith",
+      dob = LocalDate.of(1990, 8, 21),
+      zip = "ls11aa",
+    )
+
+    val result = personService.personMatchScore(cprPerson, emPerson)
+
+    assertThat(result.exactPostcodeMatch).isFalse()
+    assertThat(result.postcodeMatchedPreviousAddress).isTrue()
+    verify(exactly = 1) { personMatchAlertService.alertIfBelowThreshold(result) }
   }
 
   @Test
