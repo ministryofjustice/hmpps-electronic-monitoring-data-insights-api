@@ -236,10 +236,15 @@ class PersonService(
   private fun String?.normaliseText(): String? = this
     ?.trim()
     ?.lowercase(Locale.UK)
-    ?.replace(Regex("\\s+"), " ")
+    ?.replace(Regex("[^\\p{L}\\s-]"), "")
+    ?.replace(Regex("[\\s-]+"), " ")
     ?.takeIf(String::isNotEmpty)
 
-  private fun String?.normalisePostcode(): String? = normaliseText()?.replace(" ", "")
+  private fun String?.normalisePostcode(): String? = this
+    ?.trim()
+    ?.lowercase(Locale.UK)
+    ?.replace(Regex("\\s+"), "")
+    ?.takeIf(String::isNotEmpty)
 
   private fun percentage(score: Double): Double = round(score * 10_000) / 100
 }
