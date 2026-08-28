@@ -76,6 +76,63 @@ class PersonServiceTest {
   }
 
   @Test
+  fun `personMatchScore should ignore punctuation when matching names`() {
+    every { personMatchScoreRepository.save(any()) } answers { firstArg() }
+    val cprPerson = CprPerson(
+      firstName = "John",
+      lastName = "O'BRIEN",
+      identifiers = CprIdentifiers(crns = listOf("X123456")),
+    )
+    val emPerson = Person(
+      personId = "41593",
+      personName = "John OBRIEN",
+    )
+
+    val result = personService.personMatchScore(cprPerson, emPerson)
+
+    assertThat(result.exactNameMatch).isTrue()
+    assertThat(result.nameScore).isEqualTo(100.0)
+  }
+
+  @Test
+  fun `personMatchScore should treat hyphens and spaces equally when matching names`() {
+    every { personMatchScoreRepository.save(any()) } answers { firstArg() }
+    val cprPerson = CprPerson(
+      firstName = "John",
+      lastName = "Hyde-da-Silva",
+      identifiers = CprIdentifiers(crns = listOf("X123456")),
+    )
+    val emPerson = Person(
+      personId = "41593",
+      personName = "John HYDE-Da SILVA",
+    )
+
+    val result = personService.personMatchScore(cprPerson, emPerson)
+
+    assertThat(result.exactNameMatch).isTrue()
+    assertThat(result.nameScore).isEqualTo(100.0)
+  }
+
+  @Test
+  fun `personMatchScore should ignore numbers when matching names`() {
+    every { personMatchScoreRepository.save(any()) } answers { firstArg() }
+    val cprPerson = CprPerson(
+      firstName = "John2",
+      lastName = "Smith3",
+      identifiers = CprIdentifiers(crns = listOf("X123456")),
+    )
+    val emPerson = Person(
+      personId = "41593",
+      personName = "John Smith",
+    )
+
+    val result = personService.personMatchScore(cprPerson, emPerson)
+
+    assertThat(result.exactNameMatch).isTrue()
+    assertThat(result.nameScore).isEqualTo(100.0)
+  }
+
+  @Test
   fun `personMatchScore should fuzzy match differences and tolerate missing main address`() {
     every { personMatchScoreRepository.save(any()) } answers { firstArg() }
     val cprPerson = CprPerson(
