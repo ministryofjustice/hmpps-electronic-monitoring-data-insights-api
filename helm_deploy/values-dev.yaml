@@ -22,8 +22,8 @@ generic-service:
     ROW_LIMIT: 1000
     MDSS_DB: "data_insights_dev_dbt"
     FMS_DB: "serco_fms_curated_dev_dbt"
-    ATHENA_OUTPUT_BUCKET: "s3://emds-dev-athena-query-results-20240917144028307600000004/output"
-    WORKGROUP: "800964199911_default"
+    ATHENA_OUTPUT_BUCKET: "s3://emds-test-athena-query-results-20240923095933297100000013/output"
+    WORKGROUP: "396913731313-default"
     DEV_STUB_ENABLED: "true"
     DEV_TEST_DATA_REFRESH_ENABLED: "true"
     STATUS_ALERT_ENABLED: "true"
