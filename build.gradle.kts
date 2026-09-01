@@ -15,7 +15,7 @@ val springdocOpenapiVersion = "3.1.0"
 val hmppsKotlinSpringBootStarterVersion = "3.0.1"
 val kotlinLoggingVersion = "3.0.5"
 val commonsTextVersion = "1.15.0"
-val athenaVersion = "2.54.6"
+val athenaVersion = "2.54.9"
 val shedlockVersion = "7.9.0"
 
 dependencies {
@@ -62,7 +62,7 @@ dependencies {
   testImplementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter-test:3.0.1")
   testImplementation("org.wiremock:wiremock-standalone:3.13.2")
   testImplementation("com.ninja-squad:springmockk:5.0.1")
-  testImplementation("io.swagger.parser.v3:swagger-parser:2.1.47") {
+  testImplementation("io.swagger.parser.v3:swagger-parser:2.1.48") {
     exclude(group = "io.swagger.core.v3")
   }
   testImplementation("com.h2database:h2:2.4.240")
