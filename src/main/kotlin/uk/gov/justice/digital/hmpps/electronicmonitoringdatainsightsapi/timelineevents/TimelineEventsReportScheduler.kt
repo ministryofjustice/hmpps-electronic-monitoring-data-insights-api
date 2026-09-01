@@ -53,7 +53,7 @@ class TimelineEventsReportScheduler(
   ): String {
     fun row(label: String, daily: Any, weekly: Any, monthly: Any, allTime: Any) = String.format(
       Locale.UK,
-      "| %-16s | %9s | %11s | %12s | %8s |",
+      "| %-30s | %9s | %11s | %12s | %8s |",
       label,
       daily,
       weekly,
@@ -73,7 +73,7 @@ class TimelineEventsReportScheduler(
       durationSeconds?.toDouble() ?: 0.0,
     )
 
-    val border = "+------------------+-----------+-------------+--------------+----------+"
+    val border = "+--------------------------------+-----------+-------------+--------------+----------+"
     val table = listOf(
       border,
       row("Metric", "Yesterday", "Last 7 days", "Last 30 days", "All time"),
@@ -82,11 +82,25 @@ class TimelineEventsReportScheduler(
       row("Searches", summary.daily.searches, summary.weekly.searches, summary.monthly.searches, summary.allTime.searches),
       row("PoPs", summary.daily.pops, summary.weekly.pops, summary.monthly.pops, summary.allTime.pops),
       row(
-        "Average duration",
-        duration(summary.daily.averageDurationMs),
-        duration(summary.weekly.averageDurationMs),
-        duration(summary.monthly.averageDurationMs),
-        duration(summary.allTime.averageDurationMs),
+        "Average person load duration",
+        duration(summary.daily.averagePersonLoadDurationMs),
+        duration(summary.weekly.averagePersonLoadDurationMs),
+        duration(summary.monthly.averagePersonLoadDurationMs),
+        duration(summary.allTime.averagePersonLoadDurationMs),
+      ),
+      row(
+        "Average location load duration",
+        duration(summary.daily.averageLocationLoadDurationMs),
+        duration(summary.weekly.averageLocationLoadDurationMs),
+        duration(summary.monthly.averageLocationLoadDurationMs),
+        duration(summary.allTime.averageLocationLoadDurationMs),
+      ),
+      row(
+        "Average load duration",
+        duration(summary.daily.averageLoadDurationMs),
+        duration(summary.weekly.averageLoadDurationMs),
+        duration(summary.monthly.averageLoadDurationMs),
+        duration(summary.allTime.averageLoadDurationMs),
       ),
       row(
         "Max duration",

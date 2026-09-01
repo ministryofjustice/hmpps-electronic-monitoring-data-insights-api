@@ -13,8 +13,8 @@ import org.springframework.test.web.client.match.MockRestRequestMatchers.method
 import org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo
 import org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess
 import org.springframework.web.client.RestClient
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.timelineevents.model.TimelineEventStatisticsResponse
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.timelineevents.model.TimelineEventsStatisticsResponse
-import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.timelineevents.repository.TimelineEventStatistics
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.timelineevents.service.TimelineEventsService
 import java.time.LocalDate
 import java.time.ZoneId
@@ -36,10 +36,10 @@ class TimelineEventsReportSchedulerTest {
       "Average time to load results 5.5 seconds (Max 59.1 seconds). " +
       "Average time spent on page 245.6 seconds"
     val summary = TimelineEventsStatisticsResponse(
-      daily = statistics(20, 63, 19, 5500.0, 59100, 245.6),
-      weekly = statistics(80, 374, 88, 4800.0, 59100, 230.1),
-      monthly = statistics(215, 2643, 263, 4200.0, 70200, 220.8),
-      allTime = statistics(222, 2989, 280, 4300.0, 70200, 225.4),
+      daily = statistics(20, 63, 19, 5500.0, 4000.0, 7000.0, 59100, 245.6),
+      weekly = statistics(80, 374, 88, 4800.0, 3600.0, 6000.0, 59100, 230.1),
+      monthly = statistics(215, 2643, 263, 4200.0, 3200.0, 5200.0, 70200, 220.8),
+      allTime = statistics(222, 2989, 280, 4300.0, 3300.0, 5300.0, 70200, 225.4),
     )
     every { timelineEventsService.getStatistics(toDate = yesterday) } returns statistics
     every { timelineEventsService.getStatisticsSummary() } returns summary
@@ -49,7 +49,7 @@ class TimelineEventsReportSchedulerTest {
         content().json(
           """
           {
-            "text": "$statistics\n```\n+------------------+-----------+-------------+--------------+----------+\n| Metric           | Yesterday | Last 7 days | Last 30 days | All time |\n+------------------+-----------+-------------+--------------+----------+\n| Users            |        20 |          80 |          215 |      222 |\n| Searches         |        63 |         374 |         2643 |     2989 |\n| PoPs             |        19 |          88 |          263 |      280 |\n| Average duration |      5.5s |        4.8s |         4.2s |     4.3s |\n| Max duration     |     59.1s |       59.1s |        70.2s |    70.2s |\n| Avg time on page |    245.6s |      230.1s |       220.8s |   225.4s |\n+------------------+-----------+-------------+--------------+----------+\n```"
+            "text": "$statistics\n```\n+--------------------------------+-----------+-------------+--------------+----------+\n| Metric                         | Yesterday | Last 7 days | Last 30 days | All time |\n+--------------------------------+-----------+-------------+--------------+----------+\n| Users                          |        20 |          80 |          215 |      222 |\n| Searches                       |        63 |         374 |         2643 |     2989 |\n| PoPs                           |        19 |          88 |          263 |      280 |\n| Average person load duration   |      4.0s |        3.6s |         3.2s |     3.3s |\n| Average location load duration |      7.0s |        6.0s |         5.2s |     5.3s |\n| Average load duration          |      5.5s |        4.8s |         4.2s |     4.3s |\n| Max duration                   |     59.1s |       59.1s |        70.2s |    70.2s |\n| Avg time on page               |    245.6s |      230.1s |       220.8s |   225.4s |\n+--------------------------------+-----------+-------------+--------------+----------+\n```"
           }
           """.trimIndent(),
         ),
@@ -77,15 +77,19 @@ class TimelineEventsReportSchedulerTest {
     users: Long,
     searches: Long,
     pops: Long,
-    averageDurationMs: Double,
+    averageLoadDurationMs: Double,
+    averagePersonLoadDurationMs: Double,
+    averageLocationLoadDurationMs: Double,
     maximumDurationMs: Long,
     averageTimeSpentSeconds: Double,
-  ) = mockk<TimelineEventStatistics> {
-    every { this@mockk.users } returns users
-    every { this@mockk.searches } returns searches
-    every { this@mockk.pops } returns pops
-    every { this@mockk.averageDurationMs } returns averageDurationMs
-    every { this@mockk.maximumDurationMs } returns maximumDurationMs
-    every { this@mockk.averageTimeSpentSeconds } returns averageTimeSpentSeconds
-  }
+  ) = TimelineEventStatisticsResponse(
+    users = users,
+    searches = searches,
+    pops = pops,
+    averageLoadDurationMs = averageLoadDurationMs,
+    averagePersonLoadDurationMs = averagePersonLoadDurationMs,
+    averageLocationLoadDurationMs = averageLocationLoadDurationMs,
+    maximumDurationMs = maximumDurationMs,
+    averageTimeSpentSeconds = averageTimeSpentSeconds,
+  )
 }

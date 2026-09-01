@@ -21,7 +21,14 @@ class TimelineEventsServiceTest {
         Instant.parse("2026-08-09T23:00:00Z"),
         Instant.parse("2026-08-10T23:00:00Z"),
       )
-    } returns statistics(users = 20, searches = 63, pops = 19)
+    } returns statistics(
+      users = 20,
+      searches = 63,
+      pops = 19,
+      averageLoadDurationMs = 5_500.0,
+      averagePersonLoadDurationMs = 4_000.0,
+      averageLocationLoadDurationMs = 7_000.0,
+    )
     every {
       repository.getStatistics(
         Instant.parse("2026-08-03T23:00:00Z"),
@@ -46,6 +53,9 @@ class TimelineEventsServiceTest {
     assertThat(result.daily.users).isEqualTo(20)
     assertThat(result.daily.searches).isEqualTo(63)
     assertThat(result.daily.pops).isEqualTo(19)
+    assertThat(result.daily.averageLoadDurationMs).isEqualTo(5_500.0)
+    assertThat(result.daily.averagePersonLoadDurationMs).isEqualTo(4_000.0)
+    assertThat(result.daily.averageLocationLoadDurationMs).isEqualTo(7_000.0)
     assertThat(result.weekly.users).isEqualTo(80)
     assertThat(result.weekly.searches).isEqualTo(374)
     assertThat(result.weekly.pops).isEqualTo(88)
@@ -63,7 +73,9 @@ class TimelineEventsServiceTest {
       every { users } returns 222
       every { searches } returns 2991
       every { pops } returns 279
-      every { averageDurationMs } returns 5_500.0
+      every { averageLoadDurationMs } returns 5_500.0
+      every { averagePersonLoadDurationMs } returns 4_000.0
+      every { averageLocationLoadDurationMs } returns 7_000.0
       every { maximumDurationMs } returns 59_100
       every { averageTimeSpentSeconds } returns 245.6
     }
@@ -78,7 +90,8 @@ class TimelineEventsServiceTest {
 
     assertThat(result).isEqualTo(
       "222 users, 2991 searches, relating to 279 PoPs. " +
-        "Average time to load results 5.5 seconds (Max 59.1 seconds). " +
+        "Average time to load results 5.5 seconds " +
+        "(Person 4.0 seconds, Location 7.0 seconds, Max 59.1 seconds). " +
         "Average time spent on page 245.6 seconds",
     )
   }
@@ -89,7 +102,9 @@ class TimelineEventsServiceTest {
       every { users } returns 0
       every { searches } returns 0
       every { pops } returns 0
-      every { averageDurationMs } returns null
+      every { averageLoadDurationMs } returns null
+      every { averagePersonLoadDurationMs } returns null
+      every { averageLocationLoadDurationMs } returns null
       every { maximumDurationMs } returns null
       every { averageTimeSpentSeconds } returns null
     }
@@ -102,7 +117,8 @@ class TimelineEventsServiceTest {
 
     assertThat(result).isEqualTo(
       "0 users, 0 searches, relating to 0 PoPs. " +
-        "Average time to load results 0.0 seconds (Max 0.0 seconds). " +
+        "Average time to load results 0.0 seconds " +
+        "(Person 0.0 seconds, Location 0.0 seconds, Max 0.0 seconds). " +
         "Average time spent on page 0.0 seconds",
     )
     verify {
@@ -117,9 +133,17 @@ class TimelineEventsServiceTest {
     users: Long,
     searches: Long,
     pops: Long,
+    averageLoadDurationMs: Double? = null,
+    averagePersonLoadDurationMs: Double? = null,
+    averageLocationLoadDurationMs: Double? = null,
   ) = mockk<TimelineEventStatistics> {
     every { this@mockk.users } returns users
     every { this@mockk.searches } returns searches
     every { this@mockk.pops } returns pops
+    every { this@mockk.averageLoadDurationMs } returns averageLoadDurationMs
+    every { this@mockk.averagePersonLoadDurationMs } returns averagePersonLoadDurationMs
+    every { this@mockk.averageLocationLoadDurationMs } returns averageLocationLoadDurationMs
+    every { this@mockk.maximumDurationMs } returns null
+    every { this@mockk.averageTimeSpentSeconds } returns null
   }
 }

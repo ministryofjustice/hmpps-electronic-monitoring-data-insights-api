@@ -4,7 +4,9 @@ import mu.KotlinLogging
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.timelineevents.EventType
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.timelineevents.entity.TimelineEventEntity
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.timelineevents.model.TimelineEventStatisticsResponse
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.timelineevents.model.TimelineEventsStatisticsResponse
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.timelineevents.repository.TimelineEventStatistics
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.timelineevents.repository.TimelineEventsRepository
 import java.time.Instant
 import java.time.LocalDate
@@ -27,6 +29,7 @@ class TimelineEventsService(
 
     fun statisticsFrom(from: Instant) = timelineEventsRepository
       .getStatistics(from, to)
+      .toResponse()
 
     fun statisticsFrom(from: LocalDate) = statisticsFrom(
       from.atStartOfDay(REPORTING_TIME_ZONE).toInstant(),
@@ -52,18 +55,23 @@ class TimelineEventsService(
     val to = toDate.plusDays(1).atStartOfDay(REPORTING_TIME_ZONE).toInstant()
     val statistics = timelineEventsRepository.getStatistics(from, to)
 
-    val averageSeconds = (statistics.averageDurationMs ?: 0.0) / MILLIS_PER_SECOND
+    val averageSeconds = (statistics.averageLoadDurationMs ?: 0.0) / MILLIS_PER_SECOND
+    val averagePersonLoadSeconds = (statistics.averagePersonLoadDurationMs ?: 0.0) / MILLIS_PER_SECOND
+    val averageLocationLoadSeconds = (statistics.averageLocationLoadDurationMs ?: 0.0) / MILLIS_PER_SECOND
     val maximumSeconds = (statistics.maximumDurationMs ?: 0L).toDouble() / MILLIS_PER_SECOND
     val averageTimeSpentSeconds = statistics.averageTimeSpentSeconds ?: 0.0
 
     return String.format(
       Locale.UK,
       "%d users, %d searches, relating to %d PoPs. Average time to load results %.1f seconds " +
-        "(Max %.1f seconds). Average time spent on page %.1f seconds",
+        "(Person %.1f seconds, Location %.1f seconds, Max %.1f seconds). " +
+        "Average time spent on page %.1f seconds",
       statistics.users,
       statistics.searches,
       statistics.pops,
       averageSeconds,
+      averagePersonLoadSeconds,
+      averageLocationLoadSeconds,
       maximumSeconds,
       averageTimeSpentSeconds,
     )
@@ -110,3 +118,14 @@ class TimelineEventsService(
     const val MILLIS_PER_SECOND = 1000.0
   }
 }
+
+private fun TimelineEventStatistics.toResponse() = TimelineEventStatisticsResponse(
+  users = users,
+  searches = searches,
+  pops = pops,
+  averageLoadDurationMs = averageLoadDurationMs,
+  averagePersonLoadDurationMs = averagePersonLoadDurationMs,
+  averageLocationLoadDurationMs = averageLocationLoadDurationMs,
+  maximumDurationMs = maximumDurationMs,
+  averageTimeSpentSeconds = averageTimeSpentSeconds,
+)
