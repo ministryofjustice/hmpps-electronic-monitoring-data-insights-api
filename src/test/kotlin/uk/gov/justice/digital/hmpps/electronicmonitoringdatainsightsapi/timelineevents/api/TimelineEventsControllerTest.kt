@@ -5,8 +5,8 @@ import io.mockk.mockk
 import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.timelineevents.model.TimelineEventStatisticsResponse
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.timelineevents.model.TimelineEventsStatisticsResponse
-import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.timelineevents.repository.TimelineEventStatistics
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.timelineevents.service.TimelineEventsService
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.timelineevents.service.TimelineEventsService.Companion.DEFAULT_FROM_DATE
 import java.time.LocalDate
@@ -53,9 +53,14 @@ class TimelineEventsControllerTest {
     users: Long,
     searches: Long,
     pops: Long,
-  ) = mockk<TimelineEventStatistics> {
-    every { this@mockk.users } returns users
-    every { this@mockk.searches } returns searches
-    every { this@mockk.pops } returns pops
-  }
+  ) = TimelineEventStatisticsResponse(
+    users = users,
+    searches = searches,
+    pops = pops,
+    averageLoadDurationMs = null,
+    averagePersonLoadDurationMs = null,
+    averageLocationLoadDurationMs = null,
+    maximumDurationMs = null,
+    averageTimeSpentSeconds = null,
+  )
 }

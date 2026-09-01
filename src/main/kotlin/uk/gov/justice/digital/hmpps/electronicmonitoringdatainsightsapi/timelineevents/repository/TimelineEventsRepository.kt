@@ -47,7 +47,13 @@ interface TimelineEventsRepository : JpaRepository<TimelineEventEntity, UUID> {
       SELECT COUNT(DISTINCT user_name) AS users,
              COUNT(*) AS searches,
              COUNT(DISTINCT crn) AS pops,
-             AVG(duration_ms) AS "averageDurationMs",
+             AVG(duration_ms) AS "averageLoadDurationMs",
+             AVG(CASE
+                   WHEN event_type = 'SEARCH_PERSON_BY_ID' THEN duration_ms
+                 END) AS "averagePersonLoadDurationMs",
+             AVG(CASE
+                   WHEN event_type = 'VIEW_PERSON_LOCATIONS' THEN duration_ms
+                 END) AS "averageLocationLoadDurationMs",
              MAX(duration_ms) AS "maximumDurationMs",
              (
                SELECT ROUND(AVG(duration_seconds))
@@ -68,7 +74,9 @@ interface TimelineEventStatistics {
   val users: Long
   val searches: Long
   val pops: Long
-  val averageDurationMs: Double?
+  val averageLoadDurationMs: Double?
+  val averagePersonLoadDurationMs: Double?
+  val averageLocationLoadDurationMs: Double?
   val maximumDurationMs: Long?
   val averageTimeSpentSeconds: Double?
 }
