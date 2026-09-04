@@ -94,7 +94,7 @@ class PersonService(
     ?.takeIf(String::isNotEmpty)
 
   fun searchPeopleByPersonalDetails(request: PersonSearchRequest): List<Person> = personRepository.findByPersonalDetails(resolveSearchCriteria(request))
-    .distinctBy(Person::personId)
+    .distinctBy(Person::enforceableCondition)
     .updateOutsidePeriodFlag()
 
   private fun List<Person>.updateOutsidePeriodFlag(): List<Person> {
