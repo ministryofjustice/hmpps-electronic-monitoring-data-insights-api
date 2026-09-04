@@ -1,9 +1,17 @@
 package uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.model
 
+import com.fasterxml.jackson.annotation.JsonPropertyOrder
 import java.time.Instant
 import java.time.LocalDate
 import kotlin.time.ExperimentalTime
 
+@JsonPropertyOrder(
+  "personId",
+  "missingDeliusIdsInEM",
+  "outsideOrderPeriod",
+  "enforceableCondition",
+  "positionData",
+)
 data class Person
 @OptIn(ExperimentalTime::class)
 constructor(
@@ -27,4 +35,7 @@ constructor(
   val orderStartDate: Instant? = null,
   val orderEndDate: Instant? = null,
   var outsideOrderPeriod: Boolean = false,
-)
+) {
+  val missingDeliusIdsInEM: Boolean
+    get() = nomisId == null && pncId == null && deliusId == null
+}

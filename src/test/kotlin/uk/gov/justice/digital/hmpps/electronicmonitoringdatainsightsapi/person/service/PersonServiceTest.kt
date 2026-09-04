@@ -17,6 +17,7 @@ import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.e
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.model.EmPersonDetails
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.model.Person
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.model.PersonalDetailsSearchCriteria
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.model.PositionData
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.model.RawCaseload
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.repository.PersonMatchScoreRepository
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.repository.PersonRepository
@@ -487,6 +488,48 @@ class PersonServiceTest {
     val result = personService.searchPeopleByPersonalDetails(request)
 
     assertThat(result.first().outsideOrderPeriod).isFalse()
+  }
+
+  @Test
+  fun `searchPeopleByPersonalDetails should put active location monitoring records with position data first`() {
+    val request = PersonSearchRequest(
+      forename = "John",
+      surname = "Smith",
+    )
+    val criteria = PersonalDetailsSearchCriteria(
+      forename = "John",
+      surname = "Smith",
+      dateOfBirth = null,
+      postcode = null,
+    )
+    val positionData = PositionData(hasPositionData = true, latestPositionGpsDate = null)
+    val ordinaryFirst = Person(personId = "1", enforceableCondition = "curfew", positionData = positionData)
+    val promotedFirst = Person(personId = "2", enforceableCondition = "location_monitoring", positionData = positionData)
+    val outsidePeriod = Person(
+      personId = "3",
+      enforceableCondition = "location_monitoring",
+      positionData = positionData,
+      orderStartDate = Instant.parse("2000-01-01T00:00:00Z"),
+      orderEndDate = Instant.parse("2000-12-31T23:59:59Z"),
+    )
+    val withoutPositionData = Person(
+      personId = "4",
+      enforceableCondition = "location_monitoring",
+      positionData = PositionData(hasPositionData = false, latestPositionGpsDate = null),
+    )
+    every { personRepository.findByPersonalDetails(criteria) } returns listOf(
+      ordinaryFirst,
+      outsidePeriod,
+      withoutPositionData,
+      promotedFirst,
+    )
+
+    val result = personService.searchPeopleByPersonalDetails(request)
+
+    assertThat(result).containsExactly(
+      promotedFirst,
+      ordinaryFirst,
+    )
   }
 
   @Test

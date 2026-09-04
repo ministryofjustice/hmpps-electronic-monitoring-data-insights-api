@@ -94,8 +94,13 @@ class PersonService(
     ?.takeIf(String::isNotEmpty)
 
   fun searchPeopleByPersonalDetails(request: PersonSearchRequest): List<Person> = personRepository.findByPersonalDetails(resolveSearchCriteria(request))
-    .distinctBy(Person::enforceableCondition)
     .updateOutsidePeriodFlag()
+    .sortedByDescending { it.isActiveLocationMonitoringRecord() }
+    .distinctBy(Person::enforceableCondition)
+
+  private fun Person.isActiveLocationMonitoringRecord(): Boolean = !outsideOrderPeriod &&
+    positionData?.hasPositionData == true &&
+    enforceableCondition == "location_monitoring"
 
   private fun List<Person>.updateOutsidePeriodFlag(): List<Person> {
     val today = LocalDate.now()
