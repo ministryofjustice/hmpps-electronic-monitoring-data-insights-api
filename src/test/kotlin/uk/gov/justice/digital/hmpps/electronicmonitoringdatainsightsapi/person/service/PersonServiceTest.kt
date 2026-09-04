@@ -405,7 +405,7 @@ class PersonServiceTest {
   }
 
   @Test
-  fun `searchPeopleByPersonalDetails should deduplicate people by person id`() {
+  fun `searchPeopleByPersonalDetails should deduplicate people by enforceable condition`() {
     val request = PersonSearchRequest(
       forename = "John",
       surname = "Smith",
@@ -420,15 +420,16 @@ class PersonServiceTest {
     val latestPerson = Person(personId = "41593", orderId = "LATEST")
     every { personRepository.findByPersonalDetails(criteria) } returns listOf(
       latestPerson,
-      Person(personId = "41593", orderId = "OLDER"),
-      Person(personId = "98765", orderId = "OTHER"),
+      Person(personId = "41593", orderId = "OLDER", enforceableCondition = "aml"),
+      Person(personId = "98765", orderId = "OTHER", enforceableCondition = "location_monitoring"),
     )
 
     val result = personService.searchPeopleByPersonalDetails(request)
 
     assertThat(result).containsExactly(
       latestPerson,
-      Person(personId = "98765", orderId = "OTHER"),
+      Person(personId = "41593", orderId = "OLDER", enforceableCondition = "aml"),
+      Person(personId = "98765", orderId = "OTHER", enforceableCondition = "location_monitoring"),
     )
   }
 
