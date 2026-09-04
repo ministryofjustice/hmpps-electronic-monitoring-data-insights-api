@@ -65,7 +65,7 @@ dependencies {
   testImplementation("io.swagger.parser.v3:swagger-parser:2.1.48") {
     exclude(group = "io.swagger.core.v3")
   }
-  testImplementation("com.h2database:h2:2.4.240")
+  testImplementation("com.h2database:h2:2.5.250")
   testImplementation("org.testcontainers:testcontainers-postgresql")
   testImplementation("org.springframework.boot:spring-boot-testcontainers")
 }
