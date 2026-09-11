@@ -1,6 +1,6 @@
 plugins {
-  val kotlinVersion = "2.4.10"
-  id("uk.gov.justice.hmpps.gradle-spring-boot") version "11.0.7"
+  val kotlinVersion = "2.4.20"
+  id("uk.gov.justice.hmpps.gradle-spring-boot") version "11.0.8"
   id("io.gatling.gradle") version "3.15.1.3"
   kotlin("plugin.spring") version kotlinVersion
   kotlin("plugin.serialization") version kotlinVersion
@@ -11,12 +11,12 @@ configurations {
   testImplementation { exclude(group = "org.junit.vintage") }
 }
 
-val springdocOpenapiVersion = "3.1.0"
+val springdocOpenapiVersion = "3.1.1"
 val hmppsKotlinSpringBootStarterVersion = "3.0.1"
 val kotlinLoggingVersion = "3.0.5"
 val commonsTextVersion = "1.15.0"
-val athenaVersion = "2.54.12"
-val shedlockVersion = "7.9.0"
+val athenaVersion = "2.54.17"
+val shedlockVersion = "7.10.1"
 
 dependencies {
   implementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter:$hmppsKotlinSpringBootStarterVersion")
@@ -65,7 +65,7 @@ dependencies {
   testImplementation("io.swagger.parser.v3:swagger-parser:2.1.48") {
     exclude(group = "io.swagger.core.v3")
   }
-  testImplementation("com.h2database:h2:2.4.240")
+  testImplementation("com.h2database:h2:2.5.250")
   testImplementation("org.testcontainers:testcontainers-postgresql")
   testImplementation("org.springframework.boot:spring-boot-testcontainers")
 }
