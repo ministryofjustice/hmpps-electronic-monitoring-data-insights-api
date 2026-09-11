@@ -6,12 +6,6 @@ data class ExclusionZone(
   val geometry: Geometry,
 )
 
-data class Geometry(
-  val type: String,
-  val crs: CoordinateReferenceSystem,
-  val coordinates: List<List<List<Double>>>,
-)
-
 data class CoordinateReferenceSystem(
   val type: String,
   val properties: CoordinateReferenceSystemProperties,

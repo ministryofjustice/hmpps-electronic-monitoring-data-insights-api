@@ -4,6 +4,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.springframework.test.web.reactive.server.expectBody
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.exclusionzone.api.ExclusionZoneResponse
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.exclusionzone.model.PolygonGeometry
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.integration.IntegrationTestBase
 
 class PersonExclusionZoneTest : IntegrationTestBase() {
@@ -19,15 +20,19 @@ class PersonExclusionZoneTest : IntegrationTestBase() {
       .returnResult()
       .responseBody!!
 
-    assertThat(response.exclusionZones).hasSize(2)
-    val exclusionZone = response.exclusionZones.first { it.name == "St James Park" }
-    assertThat(exclusionZone.name).isEqualTo("St James Park")
-    assertThat(exclusionZone.address).isEqualTo("St. James's Park in London SW1A 2BJ")
-    assertThat(exclusionZone.geometry.type).isEqualTo("Polygon")
-    assertThat(exclusionZone.geometry.crs.type).isEqualTo("name")
-    assertThat(exclusionZone.geometry.crs.properties.name).isEqualTo("EPSG:4326")
-    assertThat(exclusionZone.geometry.coordinates).hasSize(1)
-    assertThat(exclusionZone.geometry.coordinates.first()).containsExactly(
+    assertThat(response.exclusionZones).hasSize(3)
+    val exclusionZoneI = response.exclusionZones.first { it.name == "St James Park" }
+    assertThat(exclusionZoneI.name).isEqualTo("St James Park")
+    assertThat(exclusionZoneI.address).isEqualTo("St. James's Park in London SW1A 2BJ")
+
+    assertThat(exclusionZoneI.geometry).isInstanceOf(PolygonGeometry::class.java)
+    val geometry = exclusionZoneI.geometry as PolygonGeometry
+
+    assertThat(geometry.type).isEqualTo("Polygon")
+    assertThat(geometry.crs.type).isEqualTo("name")
+    assertThat(geometry.crs.properties.name).isEqualTo("EPSG:4326")
+    assertThat(geometry.coordinates).hasSize(1)
+    assertThat(geometry.coordinates.first()).containsExactly(
       listOf(-0.132646597116215, 51.50525361293847),
       listOf(-0.129900015084965, 51.50620856945221),
       listOf(-0.127829349725468, 51.50148033725193),
@@ -49,6 +54,9 @@ class PersonExclusionZoneTest : IntegrationTestBase() {
       .jsonPath("$.exclusionZones[0].geometry.crs.properties.name").isEqualTo("EPSG:4326")
       .jsonPath("$.exclusionZones[0].geometry.coordinates[0][0][0]").isEqualTo(-0.132646597116215)
       .jsonPath("$.exclusionZones[0].geometry.coordinates[0][0][1]").isEqualTo(51.50525361293847)
+      .jsonPath("$.exclusionZones[2].geometry.type").isEqualTo("Point")
+      .jsonPath("$.exclusionZones[2].geometry.coordinates").isEqualTo(listOf(-0.091249, 51.505444))
+      .jsonPath("$.exclusionZones[2].geometry.radiusMetres").isEqualTo(500.0)
   }
 
   @Test
