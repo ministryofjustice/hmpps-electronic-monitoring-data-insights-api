@@ -12,7 +12,8 @@ import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.H
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.exclusionzone.model.CoordinateReferenceSystem
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.exclusionzone.model.CoordinateReferenceSystemProperties
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.exclusionzone.model.ExclusionZone
-import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.exclusionzone.model.Geometry
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.exclusionzone.model.PointGeometry
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.exclusionzone.model.PolygonGeometry
 
 @RestController
 @RequestMapping("/people/{personId}/exclusion-zones")
@@ -27,8 +28,7 @@ class ExclusionZoneController {
       ExclusionZone(
         name = "St James Park",
         address = "St. James's Park in London SW1A 2BJ",
-        geometry = Geometry(
-          type = "Polygon",
+        geometry = PolygonGeometry(
           crs = CoordinateReferenceSystem(
             type = "name",
             properties = CoordinateReferenceSystemProperties(name = "EPSG:4326"),
@@ -48,8 +48,7 @@ class ExclusionZoneController {
       ExclusionZone(
         name = "Rapha London",
         address = "85 Brewer Street, London W1F 9ZN",
-        geometry = Geometry(
-          type = "Polygon",
+        geometry = PolygonGeometry(
           crs = CoordinateReferenceSystem(
             type = "name",
             properties = CoordinateReferenceSystemProperties(name = "EPSG:4326"),
@@ -66,6 +65,18 @@ class ExclusionZoneController {
               listOf(-0.136755, 51.510818),
             ),
           ),
+        ),
+      ),
+      ExclusionZone(
+        name = "Borough Market",
+        address = "8 Southwark Street, London, SE1 1TL",
+        geometry = PointGeometry(
+          crs = CoordinateReferenceSystem(
+            type = "name",
+            properties = CoordinateReferenceSystemProperties(name = "EPSG:4326"),
+          ),
+          coordinates = listOf(-0.091249, 51.505444),
+          radiusMetres = 500.0,
         ),
       ),
     )
