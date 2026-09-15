@@ -51,6 +51,8 @@ class PersonController(
   private val cprEnabled: Boolean,
   @Value("\${access-control.enabled:false}")
   private val accessControlEnabled: Boolean = false,
+  @Value("\${service.offline:false}")
+  private val serviceOffline: Boolean = false,
 ) {
 
   companion object {
@@ -220,6 +222,10 @@ class PersonController(
   fun existsInEMDI(
     @PathVariable @Parameter(description = "The crn of the person", required = true) crn: String,
   ): ResponseEntity<ExistsInEMDI> {
+    if (serviceOffline) {
+      return ResponseEntity.internalServerError().build()
+    }
+
     val provider = devPersonProvider.ifAvailable
 
     val exists = if (

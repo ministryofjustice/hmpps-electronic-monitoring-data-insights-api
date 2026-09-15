@@ -103,6 +103,7 @@ springdoc:
     enabled: true
 
 service:
+  offline: ${SERVICE_OFFLINE:false}
   base-url: ${SERVICE_BASE_URL}
   ui-base-url: ${UI_SERVICE_BASE_URL}
   status:
