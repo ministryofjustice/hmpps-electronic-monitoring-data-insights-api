@@ -339,6 +339,30 @@ class PersonControllerTest {
   )
 
   @Test
+  fun `exists endpoint should return 500 without lookups when service is offline`() {
+    val controller = PersonController(
+      personService = personService,
+      devPersonProvider = devPersonProvider,
+      currentUserService = currentUserService,
+      serviceProperties = serviceProperties,
+      cprApiClient = cprApiClient,
+      accessControlApiClient = accessControlApiClient,
+      devStubEnabled = true,
+      cprEnabled = true,
+      timelineEventsService = timelineEventsService,
+      serviceOffline = true,
+    )
+
+    listOf("X123456", "X777777").forEach { crn ->
+      val result = controller.existsInEMDI(crn)
+
+      assertThat(result.statusCode).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR)
+      assertThat(result.body).isNull()
+    }
+    verifyNoInteractions(personService, cprApiClient, devPersonProvider, accessControlApiClient)
+  }
+
+  @Test
   fun `exists endpoint should return 200 and person when they exist`() {
     val crn = "X123456"
     val mockPeople = PagedPeople(listOf(Person(personId = "123456")), null)
