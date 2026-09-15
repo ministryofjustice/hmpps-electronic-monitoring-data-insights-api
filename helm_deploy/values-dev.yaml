@@ -11,7 +11,7 @@ generic-service:
 
   env:
     # Set to "true" to return HTTP 500 from /people/exists/{crn}.
-    SERVICE_OFFLINE: "false"
+    SERVICE_OFFLINE: "true"
     APPLICATIONINSIGHTS_CONFIGURATION_FILE: "applicationinsights.dev.json"
     HMPPS_AUTH_URL: "https://sign-in-dev.hmpps.service.justice.gov.uk/auth"
     PERSON_RECORD_API_URL: "https://hmpps-person-record-dev.hmpps.service.justice.gov.uk"
