@@ -49,7 +49,7 @@ class WebClientConfiguration(
   ): WebClient = builder.authorisedWebClient(
     authorizedClientManager,
     registrationId = "probation-search-api",
-    url = apisProperties.personRecordApi.url,
+    url = apisProperties.probationSearchApi.url,
     timeout = apiProperties.timeout,
   )
 }
