@@ -21,4 +21,6 @@ data class ServiceProperties(
    */
   @field:NotBlank(message = "UI Base URL must not be blank")
   val uiBaseUrl: String,
+
+  val deliusResponsibleOrganisations: List<String> = emptyList(),
 )

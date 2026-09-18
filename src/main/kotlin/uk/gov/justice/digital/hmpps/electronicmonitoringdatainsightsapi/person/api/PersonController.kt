@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.RestController
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.client.accesscontrol.AccessControlApiClient
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.client.accesscontrol.AccessResponse
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.client.cpr.CprApiClient
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.client.probationsearch.ProbationSearchApiClient
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.HAS_VIEW_ROLE
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.service.CurrentUserService
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.config.ServiceProperties
@@ -29,7 +30,6 @@ import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.s
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.timelineevents.EventType
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.timelineevents.service.TimelineEventsService
 import java.net.URI
-import kotlin.collections.contains
 import kotlin.time.ExperimentalTime
 
 private val log = KotlinLogging.logger {}
@@ -39,6 +39,7 @@ private val log = KotlinLogging.logger {}
 @Tag(name = "People", description = "Endpoints for person details")
 class PersonController(
   private val personService: PersonService,
+  private val probationSearchApiClient: ProbationSearchApiClient,
   private val serviceProperties: ServiceProperties,
   private val currentUserService: CurrentUserService,
   private val devPersonProvider: ObjectProvider<DevPersonProvider>,
@@ -236,12 +237,7 @@ class PersonController(
       log.info("Using hardcoded dev person in existsInEMDI endpoint")
       true
     } else {
-      val peopleQueryCriteria = findPerson(crn)
-
-      personService
-        .searchPeople(peopleQueryCriteria)
-        .persons
-        .isNotEmpty()
+      personInPilotArea(crn)
     }
 
     return if (exists) {
@@ -253,6 +249,23 @@ class PersonController(
     } else {
       ResponseEntity.notFound().build()
     }
+  }
+
+  private fun personInPilotArea(crn: String): Boolean {
+    require(CRN_PATTERN.matches(crn)) {
+      "The CRN provided ($crn) must be one uppercase letter followed by six digits"
+    }
+
+    val pilotAreas = serviceProperties.deliusResponsibleOrganisations
+      .map(String::trim)
+      .filter(String::isNotEmpty)
+      .toSet()
+    if (pilotAreas.isEmpty()) return true
+
+    return probationSearchApiClient.getOffendersByCrn(crn)
+      .filter { it.otherIds?.crn == crn }
+      .flatMap { it.offenderManagers }
+      .any { it.active && !it.softDeleted && it.probationArea?.description in pilotAreas }
   }
 
   private fun enrichPeopleQueryCriteria(peopleQueryCriteria: PeopleQueryCriteria): PeopleQueryCriteria {
