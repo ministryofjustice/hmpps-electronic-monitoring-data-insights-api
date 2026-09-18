@@ -14,7 +14,7 @@ generic-service:
     PROBATION_SEARCH_API_URL: "https://probation-offender-search.hmpps.service.justice.gov.uk"
     PROBATION_SEARCH_ENABLED: "true"
     ACCESS_CONTROL_API_URL: "https://probation-access-control.hmpps.service.justice.gov.uk"
-    ACCESS_CONTROL_ENABLED: "false"
+    ACCESS_CONTROL_ENABLED: "true"
     UI_SERVICE_BASE_URL: "https://electronic-monitoring-data-insights-ui.hmpps.service.justice.gov.uk"
     SERVICE_BASE_URL: "https://electronic-monitoring-data-insights-api.hmpps.service.justice.gov.uk"
     MFA_REQUIRED: "false"
