@@ -9,6 +9,7 @@ import org.mockito.Mock
 import org.mockito.junit.jupiter.MockitoExtension
 import org.mockito.kotlin.any
 import org.mockito.kotlin.eq
+import org.mockito.kotlin.mock
 import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.verifyNoInteractions
@@ -21,6 +22,12 @@ import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.client.a
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.client.cpr.CprApiClient
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.client.cpr.CprIdentifiers
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.client.cpr.CprPerson
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.client.probationsearch.OffenderManager
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.client.probationsearch.OtherIds
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.client.probationsearch.ProbationArea
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.client.probationsearch.ProbationSearchApiClient
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.client.probationsearch.ProbationSearchApiException
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.client.probationsearch.ProbationSearchOffender
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.service.CurrentUserService
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.config.ServiceProperties
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.model.PagedPeople
@@ -37,6 +44,9 @@ class PersonControllerTest {
 
   @Mock
   private lateinit var personService: PersonService
+
+  @Mock
+  private lateinit var probationSearchApiClient: ProbationSearchApiClient
 
   @Mock
   private lateinit var serviceProperties: ServiceProperties
@@ -62,6 +72,7 @@ class PersonControllerTest {
   fun setUp() {
     controller = PersonController(
       personService = personService,
+      probationSearchApiClient = probationSearchApiClient,
       devPersonProvider = devPersonProvider,
       currentUserService = currentUserService,
       serviceProperties = serviceProperties,
@@ -164,6 +175,7 @@ class PersonControllerTest {
     val crn = "X123456"
     val controller = PersonController(
       personService = personService,
+      probationSearchApiClient = probationSearchApiClient,
       devPersonProvider = devPersonProvider,
       currentUserService = currentUserService,
       serviceProperties = serviceProperties,
@@ -327,6 +339,7 @@ class PersonControllerTest {
 
   private fun accessControlledController() = PersonController(
     personService = personService,
+    probationSearchApiClient = probationSearchApiClient,
     devPersonProvider = devPersonProvider,
     currentUserService = currentUserService,
     serviceProperties = serviceProperties,
@@ -342,6 +355,7 @@ class PersonControllerTest {
   fun `exists endpoint should return 500 without lookups when service is offline`() {
     val controller = PersonController(
       personService = personService,
+      probationSearchApiClient = probationSearchApiClient,
       devPersonProvider = devPersonProvider,
       currentUserService = currentUserService,
       serviceProperties = serviceProperties,
@@ -359,101 +373,98 @@ class PersonControllerTest {
       assertThat(result.statusCode).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR)
       assertThat(result.body).isNull()
     }
-    verifyNoInteractions(personService, cprApiClient, devPersonProvider, accessControlApiClient)
+    verifyNoInteractions(personService, cprApiClient, devPersonProvider, accessControlApiClient, probationSearchApiClient)
   }
 
   @Test
-  fun `exists endpoint should return 200 and person when they exist`() {
-    val crn = "X123456"
-    val mockPeople = PagedPeople(listOf(Person(personId = "123456")), null)
+  fun `exists endpoint returns the UI link for an active manager in a pilot area`() {
+    whenever(serviceProperties.deliusResponsibleOrganisations).thenReturn(listOf("Other pilot", " Pilot area "))
+    whenever(serviceProperties.uiBaseUrl).thenReturn("https://example.test")
+    whenever(probationSearchApiClient.getOffendersByCrn("X123456")).thenReturn(
+      listOf(offender(managers = listOf(manager("Other area"), manager("Pilot area")))),
+    )
 
-    whenever(
-      personService.searchPeople(
-        personsQueryCriteria = PeopleQueryCriteria(deliusId = crn),
-      ),
-    ).thenReturn(mockPeople)
-
-    val result = controller.existsInEMDI(crn)
+    val result = controller.existsInEMDI("X123456")
 
     assertThat(result.statusCode).isEqualTo(HttpStatus.OK)
-    assertThat(result.body).isNotNull()
-    assertThat(result.body!!.uri.toString()).contains(crn)
-    verifyNoInteractions(cprApiClient)
+    assertThat(result.body!!.uri.toString()).isEqualTo("https://example.test/people/X123456/locations")
+    verifyNoInteractions(personService, cprApiClient)
   }
 
   @Test
-  fun `exists endpoint should reject an invalid CRN`() {
-    val crn = "invalid"
-
-    assertThatThrownBy { controller.existsInEMDI(crn) }
+  fun `exists endpoint rejects an invalid CRN before calling probation search`() {
+    assertThatThrownBy { controller.existsInEMDI("invalid") }
       .isInstanceOf(IllegalArgumentException::class.java)
-      .hasMessage("The CRN provided ($crn) must be one uppercase letter followed by six digits")
-
-    verifyNoInteractions(cprApiClient, personService)
+      .hasMessage("The CRN provided (invalid) must be one uppercase letter followed by six digits")
+    verifyNoInteractions(probationSearchApiClient, cprApiClient, personService)
   }
 
   @Test
-  fun `exists endpoint should use CPR identifiers when enrichment is enabled`() {
-    val crn = "X123456"
-    val mockPeople = PagedPeople(listOf(Person(personId = "123456")), null)
-    val controller = PersonController(
+  fun `exists endpoint returns 404 for absent or ineligible managers`() {
+    whenever(serviceProperties.deliusResponsibleOrganisations).thenReturn(listOf("Pilot area"))
+    val cases = listOf(
+      emptyList(),
+      listOf(offender(managers = emptyList())),
+      listOf(offender(managers = listOf(manager("Other area")))),
+      listOf(offender(managers = listOf(manager("Pilot area").copy(active = false)))),
+      listOf(offender(managers = listOf(manager("Pilot area").copy(softDeleted = true)))),
+      listOf(offender(managers = listOf(OffenderManager(active = true)))),
+      listOf(offender(crn = "X999999")),
+      listOf(offender().copy(otherIds = null)),
+    )
+    cases.forEach { offenders ->
+      whenever(probationSearchApiClient.getOffendersByCrn("X123456")).thenReturn(offenders)
+      val result = controller.existsInEMDI("X123456")
+      assertThat(result.statusCode).isEqualTo(HttpStatus.NOT_FOUND)
+      assertThat(result.body).isNull()
+    }
+  }
+
+  @Test
+  fun `exists endpoint returns 200 without lookup when pilot areas are empty`() {
+    whenever(serviceProperties.uiBaseUrl).thenReturn("https://example.test")
+    listOf(emptyList(), listOf("", " ")).forEach { areas ->
+      whenever(serviceProperties.deliusResponsibleOrganisations).thenReturn(areas)
+      val result = controller.existsInEMDI("X123456")
+      assertThat(result.statusCode).isEqualTo(HttpStatus.OK)
+      assertThat(result.body!!.uri.toString()).isEqualTo("https://example.test/people/X123456/locations")
+    }
+    verifyNoInteractions(probationSearchApiClient)
+  }
+
+  @Test
+  fun `exists endpoint propagates probation search failures`() {
+    whenever(serviceProperties.deliusResponsibleOrganisations).thenReturn(listOf("Pilot area"))
+    val failure = ProbationSearchApiException("Unavailable", RuntimeException())
+    whenever(probationSearchApiClient.getOffendersByCrn("X123456")).thenThrow(failure)
+    assertThatThrownBy { controller.existsInEMDI("X123456") }.isSameAs(failure)
+  }
+
+  @Test
+  fun `exists endpoint retains the dev stub without probation lookup`() {
+    val devController = PersonController(
       personService = personService,
-      devPersonProvider = devPersonProvider,
-      currentUserService = currentUserService,
+      probationSearchApiClient = probationSearchApiClient,
       serviceProperties = serviceProperties,
+      currentUserService = currentUserService,
+      devPersonProvider = devPersonProvider,
       cprApiClient = cprApiClient,
       accessControlApiClient = accessControlApiClient,
-      devStubEnabled = false,
-      cprEnabled = true,
       timelineEventsService = timelineEventsService,
+      devStubEnabled = true,
+      cprEnabled = false,
     )
+    whenever(devPersonProvider.ifAvailable).thenReturn(mock<DevPersonProvider>())
+    whenever(serviceProperties.uiBaseUrl).thenReturn("https://example.test")
 
-    val cprPerson = CprPerson(
-      identifiers = CprIdentifiers(
-        crns = listOf(crn),
-        pncs = listOf("2012/0052494Q"),
-        prisonNumbers = listOf("G5555TT"),
-        otherIdentifiers = listOf("MON12345", "MON67890", "mon99999", "OTHER-1"),
-      ),
-    )
-    whenever(cprApiClient.getPersonByCrn(crn)).thenReturn(cprPerson)
-    whenever(
-      personService.searchPeople(
-        personsQueryCriteria = PeopleQueryCriteria(
-          deliusId = crn,
-          pncId = "2012/0052494Q",
-          nomisId = "G5555TT",
-          orderIds = listOf("MON12345", "MON67890"),
-          person = cprPerson,
-        ),
-      ),
-    ).thenReturn(mockPeople)
-
-    val result = controller.existsInEMDI(crn)
-
-    assertThat(result.statusCode).isEqualTo(HttpStatus.OK)
-    assertThat(result.body).isNotNull()
-    assertThat(result.body!!.uri.toString()).contains(crn)
-    verify(cprApiClient, times(1)).getPersonByCrn(crn)
+    assertThat(devController.existsInEMDI("X777777").statusCode).isEqualTo(HttpStatus.OK)
+    verifyNoInteractions(probationSearchApiClient, personService, cprApiClient)
   }
 
-  @Test
-  fun `exists endpoint should return 404 when person does not exist`() {
-    // Arrange
-    val crn = "X123456"
-    val mockPeople = PagedPeople(emptyList(), null)
+  private fun manager(area: String) = OffenderManager(
+    probationArea = ProbationArea(description = area),
+    active = true,
+  )
 
-    whenever(
-      personService.searchPeople(
-        personsQueryCriteria = PeopleQueryCriteria(deliusId = crn),
-      ),
-    ).thenReturn(mockPeople)
-
-    // Act
-    val result = controller.existsInEMDI(crn)
-
-    // Assert
-    assertThat(result.statusCode).isEqualTo(HttpStatus.NOT_FOUND)
-    assertThat(result.body).isNull()
-  }
+  private fun offender(crn: String = "X123456", managers: List<OffenderManager> = listOf(manager("Pilot area"))) = ProbationSearchOffender(otherIds = OtherIds(crn = crn), offenderManagers = managers)
 }

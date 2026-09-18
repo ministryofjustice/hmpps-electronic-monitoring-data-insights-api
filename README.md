@@ -240,3 +240,17 @@ POSITIONS_TO=2026-04-02T00:00:00Z \
 **If you want to run against preprod or prod the get EMDI token script will need to be updated.**
 
 After running the test, the Gatling report is written to `build/reports/gatling/`. Open the latest simulation folder's `index.html` to view the results.
+
+### Delius pilot areas
+
+`GET /people/exists/{crn}` uses Probation Search to check whether the person's
+active, non-deleted offender managers include a pilot probation area. Configure
+`DELIUS_RESPONSIBLE_ORGANISATIONS` as a comma-separated list of exact
+`offenderManagers[].probationArea.description` values. Whitespace around configured
+entries is trimmed. An unset, empty or whitespace-only list disables pilot-area
+restrictions and returns HTTP 200 for valid CRNs without a Probation Search lookup.
+
+A match returns HTTP 200 with the person's UI locations URI; no match returns 404.
+This check replaces the Athena person-existence lookup for this endpoint. The
+service-offline response and configured development stubs retain their behaviour.
+Probation Search failures propagate as errors rather than being treated as no match.

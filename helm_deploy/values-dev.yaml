@@ -16,6 +16,8 @@ generic-service:
     HMPPS_AUTH_URL: "https://sign-in-dev.hmpps.service.justice.gov.uk/auth"
     PERSON_RECORD_API_URL: "https://hmpps-person-record-dev.hmpps.service.justice.gov.uk"
     CPR_ENABLED: "true"
+    PROBATION_SEARCH_API_URL: "https://probation-offender-search-dev.hmpps.service.justice.gov.uk"
+    PROBATION_SEARCH_ENABLED: "true"
     ACCESS_CONTROL_API_URL: "https://probation-access-control-dev.hmpps.service.justice.gov.uk"
     ACCESS_CONTROL_ENABLED: "true"
     UI_SERVICE_BASE_URL: "https://electronic-monitoring-data-insights-ui-dev.hmpps.service.justice.gov.uk"
@@ -31,6 +33,7 @@ generic-service:
     STATUS_ALERT_ENABLED: "true"
     TIMELINE_EVENTS_REPORT_ENABLED: "true"
     PERSON_MATCH_ALERT_ENABLED: "true"
+    DELIUS_RESPONSIBLE_ORGANISATIONS: "West Midlands Region,London,East of England"
 
   namespace_secrets:
     slack-webhook:
