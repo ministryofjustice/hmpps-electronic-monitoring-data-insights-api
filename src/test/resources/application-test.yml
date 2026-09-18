@@ -18,6 +18,11 @@ access-control-api:
     id: access-control-api-client
     secret: client-secret
 
+probation-search-api:
+  client:
+    id: probation-search-api-client
+    secret: client-secret
+
 aws:
   region: eu-west-2
   endpoint-url: http://localhost:8091
@@ -42,5 +47,7 @@ apis:
   person-record-api:
     url: http://localhost:8090
   access-control-api:
+    url: http://localhost:8090
+  probation-search-api:
     url: http://localhost:8090
 

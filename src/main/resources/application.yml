@@ -38,6 +38,12 @@ spring:
             client-secret: ${person-record-api.client.secret}
             authorization-grant-type: client_credentials
             scope: read
+          probation-search-api:
+            provider: hmpps-auth
+            client-id: ${probation-search-api.client.id}
+            client-secret: ${probation-search-api.client.secret}
+            authorization-grant-type: client_credentials
+            scope: read
           access-control-api:
             provider: hmpps-auth
             client-id: ${probation-access-control-api.client.id}
@@ -103,6 +109,7 @@ springdoc:
     enabled: true
 
 service:
+  delius-responsible-organisations: ${DELIUS_RESPONSIBLE_ORGANISATIONS:}
   offline: ${SERVICE_OFFLINE:false}
   base-url: ${SERVICE_BASE_URL}
   ui-base-url: ${UI_SERVICE_BASE_URL}
@@ -112,6 +119,10 @@ service:
 
 cpr:
   enabled: ${CPR_ENABLED:false}
+
+probation:
+  search:
+    enabled: ${PROBATION_SEARCH_ENABLED:false}
 
 access-control:
   enabled: ${ACCESS_CONTROL_ENABLED:false}
@@ -141,3 +152,5 @@ apis:
     url: ${PERSON_RECORD_API_URL}
   access-control-api:
     url: ${ACCESS_CONTROL_API_URL}
+  probation-search-api:
+    url: ${PROBATION_SEARCH_API_URL}

@@ -41,4 +41,15 @@ class WebClientConfiguration(
     url = apisProperties.accessControlApi.url,
     timeout = apiProperties.timeout,
   )
+
+  @Bean(name = ["probationSearchApiWebClient"])
+  fun probationSearchApiWebClient(
+    authorizedClientManager: OAuth2AuthorizedClientManager,
+    builder: WebClient.Builder,
+  ): WebClient = builder.authorisedWebClient(
+    authorizedClientManager,
+    registrationId = "probation-search-api",
+    url = apisProperties.personRecordApi.url,
+    timeout = apiProperties.timeout,
+  )
 }

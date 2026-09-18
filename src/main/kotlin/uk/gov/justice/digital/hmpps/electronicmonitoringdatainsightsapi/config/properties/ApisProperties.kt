@@ -20,6 +20,9 @@ data class ApisProperties(
   @field:Valid
   val accessControlApi: ApiEndpoint,
 
+  @field:Valid
+  val probationSearchApi: ApiEndpoint,
+
 ) {
   /**
    * Configuration for an individual API endpoint.
