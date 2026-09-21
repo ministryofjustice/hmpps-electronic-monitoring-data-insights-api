@@ -133,9 +133,20 @@ class PersonController(
     log.info("Checking user {} has access to CRN {}", username, crn)
 
     val access = accessControlApiClient.getUserAccess(username, crn)
+
     if (access.userExcluded || access.userRestricted) {
       val message = access.denialMessage(username)
       log.info(message)
+      val startedAt = System.nanoTime()
+      timelineEventsService.record(
+        startedAt = startedAt,
+        userName = username,
+        crn = crn,
+        eventType = EventType.SEARCH_PERSON_BY_ID_LAO_RESTRICTION,
+        results = null,
+        detail = mapOf(Pair("message", message)),
+      )
+
       throw AccessDeniedException(message)
     }
 
