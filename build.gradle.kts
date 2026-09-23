@@ -12,10 +12,10 @@ configurations {
 }
 
 val springdocOpenapiVersion = "3.1.1"
-val hmppsKotlinSpringBootStarterVersion = "3.0.1"
+val hmppsKotlinSpringBootStarterVersion = "3.0.2"
 val kotlinLoggingVersion = "3.0.5"
 val commonsTextVersion = "1.15.0"
-val athenaVersion = "2.55.1"
+val athenaVersion = "2.55.3"
 val shedlockVersion = "7.10.1"
 
 dependencies {
@@ -59,7 +59,7 @@ dependencies {
   testImplementation("org.springframework.boot:spring-boot-webflux-test")
   testImplementation("org.springframework.boot:spring-boot-webmvc-test")
   testImplementation("org.springframework.boot:spring-boot-starter-webclient-test")
-  testImplementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter-test:3.0.1")
+  testImplementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter-test:3.0.2")
   testImplementation("org.wiremock:wiremock-standalone:3.13.2")
   testImplementation("com.ninja-squad:springmockk:5.0.1")
   testImplementation("io.swagger.parser.v3:swagger-parser:2.1.48") {
