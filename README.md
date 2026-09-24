@@ -223,18 +223,41 @@ To run the Gatling suite against dev with a specific CRN:
 
 ```bash
 BASE_URL=https://electronic-monitoring-data-insights-api-dev.hmpps.service.justice.gov.uk \
-CRN=X994316 \
+CRN=X972696 \
 ./scripts/run-gatling-suite.sh
 ```
 
 The positions real-data test uses person ID `10001` and the window `2026-04-01T00:00:00Z` to
-`2026-04-02T00:00:00Z` by default. These can be overridden:
+`2026-04-02T00:00:00Z` by default. It also sends `CRN` as the required `crn` query parameter.
+The suite script defaults `CRN` to `X994316`; set it explicitly when running the simulation directly.
+Use the CRN corresponding to the selected person ID. These can be overridden:
 
 ```bash
+CRN=X994316 \
 PERSON_ID=10001 \
 POSITIONS_FROM=2026-04-01T00:00:00Z \
 POSITIONS_TO=2026-04-02T00:00:00Z \
 ./scripts/run-gatling-suite.sh
+```
+
+To cycle positions requests through multiple people, set `POSITIONS_PEOPLE` to comma-separated
+`CRN/personId` pairs. This overrides `CRN` and `PERSON_ID` for the positions simulation only.
+A shared circular feeder selects the next pair before each request, wrapping back to the first;
+concurrent users share the sequence, so requests can complete out of order.
+
+For example, run only the positions simulation against dev from 15 August 2026 00:00 UTC
+to 16 August 2026 00:00 UTC:
+
+```bash
+BASE_URL=https://electronic-monitoring-data-insights-api-dev.hmpps.service.justice.gov.uk \
+AUTH_TOKEN="$(bash ./scripts/getEMDIDEVToken.sh | awk '/^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/ { token=$0 } END { print token }')" \
+AUTH_URL=https://sign-in-dev.hmpps.service.justice.gov.uk/auth/oauth/token \
+CLIENT_ID=unused \
+CLIENT_SECRET=unused \
+POSITIONS_PEOPLE='X972696/42730,X777878/43327' \
+POSITIONS_FROM=2026-08-15T00:00:00Z \
+POSITIONS_TO=2026-08-16T00:00:00Z \
+./gradlew gatlingRun --simulation uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.PositionsRealData
 ```
 
 **If you want to run against preprod or prod the get EMDI token script will need to be updated.**
