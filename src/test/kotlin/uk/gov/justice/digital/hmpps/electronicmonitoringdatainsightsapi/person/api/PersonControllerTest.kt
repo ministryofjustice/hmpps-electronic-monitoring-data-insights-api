@@ -8,6 +8,7 @@ import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.Mock
 import org.mockito.junit.jupiter.MockitoExtension
 import org.mockito.kotlin.any
+import org.mockito.kotlin.anyOrNull
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.times
@@ -234,6 +235,7 @@ class PersonControllerTest {
       detail = eq(
         emptyMap(),
       ),
+      crnProbationAreas = anyOrNull(),
     )
   }
 
@@ -380,8 +382,8 @@ class PersonControllerTest {
   fun `exists endpoint returns the UI link for an active manager in a pilot area`() {
     whenever(serviceProperties.deliusResponsibleOrganisations).thenReturn(listOf("Other pilot", " Pilot area "))
     whenever(serviceProperties.uiBaseUrl).thenReturn("https://example.test")
-    whenever(probationSearchApiClient.getOffendersByCrn("X123456")).thenReturn(
-      listOf(offender(managers = listOf(manager("Other area"), manager("Pilot area")))),
+    whenever(probationSearchApiClient.getProbationAreas("X123456")).thenReturn(
+      listOf("Other area", "Pilot area"),
     )
 
     val result = controller.existsInEMDI("X123456")
@@ -404,16 +406,12 @@ class PersonControllerTest {
     whenever(serviceProperties.deliusResponsibleOrganisations).thenReturn(listOf("Pilot area"))
     val cases = listOf(
       emptyList(),
-      listOf(offender(managers = emptyList())),
-      listOf(offender(managers = listOf(manager("Other area")))),
-      listOf(offender(managers = listOf(manager("Pilot area").copy(active = false)))),
-      listOf(offender(managers = listOf(manager("Pilot area").copy(softDeleted = true)))),
-      listOf(offender(managers = listOf(OffenderManager(active = true)))),
-      listOf(offender(crn = "X999999")),
-      listOf(offender().copy(otherIds = null)),
+      listOf("Other area"),
+      listOf("X999999"),
+      listOf(""),
     )
     cases.forEach { offenders ->
-      whenever(probationSearchApiClient.getOffendersByCrn("X123456")).thenReturn(offenders)
+      whenever(probationSearchApiClient.getProbationAreas("X123456")).thenReturn(offenders)
       val result = controller.existsInEMDI("X123456")
       assertThat(result.statusCode).isEqualTo(HttpStatus.NOT_FOUND)
       assertThat(result.body).isNull()
@@ -436,7 +434,7 @@ class PersonControllerTest {
   fun `exists endpoint propagates probation search failures`() {
     whenever(serviceProperties.deliusResponsibleOrganisations).thenReturn(listOf("Pilot area"))
     val failure = ProbationSearchApiException("Unavailable", RuntimeException())
-    whenever(probationSearchApiClient.getOffendersByCrn("X123456")).thenThrow(failure)
+    whenever(probationSearchApiClient.getProbationAreas("X123456")).thenThrow(failure)
     assertThatThrownBy { controller.existsInEMDI("X123456") }.isSameAs(failure)
   }
 

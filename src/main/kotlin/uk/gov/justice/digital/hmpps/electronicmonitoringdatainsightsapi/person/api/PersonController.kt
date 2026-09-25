@@ -109,6 +109,7 @@ class PersonController(
       personService.personMatchScore(enrichedPeopleQueryCriteria.person, pagedPeople.persons.first())
     }
 
+    val probationAreas = probationSearchApiClient.getProbationAreas(crn)
     timelineEventsService.record(
       startedAt = startedAt,
       userName = username,
@@ -120,6 +121,7 @@ class PersonController(
           .takeIf { it.isNotEmpty() }
           ?.let { put("orderIds", it) }
       },
+      crnProbationAreas = probationAreas.joinToString(", "),
     )
     return ResponseEntity.ok(
       PersonResponse(
@@ -273,10 +275,13 @@ class PersonController(
       .toSet()
     if (pilotAreas.isEmpty()) return true
 
-    return probationSearchApiClient.getOffendersByCrn(crn)
-      .filter { it.otherIds?.crn == crn }
-      .flatMap { it.offenderManagers }
-      .any { it.active && !it.softDeleted && it.probationArea?.description in pilotAreas }
+    val probationAreas = probationSearchApiClient.getProbationAreas(crn)
+    probationAreas.forEach {
+      if (it in pilotAreas) {
+        return true
+      }
+    }
+    return false
   }
 
   private fun enrichPeopleQueryCriteria(peopleQueryCriteria: PeopleQueryCriteria): PeopleQueryCriteria {

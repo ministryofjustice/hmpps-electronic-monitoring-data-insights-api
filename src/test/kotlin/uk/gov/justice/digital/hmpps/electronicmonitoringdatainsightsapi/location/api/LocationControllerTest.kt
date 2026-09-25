@@ -7,10 +7,12 @@ import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.Mock
 import org.mockito.junit.jupiter.MockitoExtension
 import org.mockito.kotlin.any
+import org.mockito.kotlin.anyOrNull
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import org.springframework.beans.factory.ObjectProvider
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.client.probationsearch.ProbationSearchApiClient
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.service.CurrentUserService
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.location.model.Location
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.location.model.PagedLocations
@@ -34,6 +36,9 @@ class LocationControllerTest {
   @Mock
   private lateinit var currentUserService: CurrentUserService
 
+  @Mock
+  private lateinit var probationSearchApiClient: ProbationSearchApiClient
+
   private lateinit var locationController: LocationController
 
   @BeforeEach
@@ -44,6 +49,7 @@ class LocationControllerTest {
       currentUserService = currentUserService,
       devLocationProvider = devLocationProvider,
       devStubEnabled = false,
+      probationSearchApiClient = probationSearchApiClient,
     )
   }
 
@@ -104,6 +110,7 @@ class LocationControllerTest {
           "personId" to personId,
         ),
       ),
+      crnProbationAreas = anyOrNull(),
     )
   }
 

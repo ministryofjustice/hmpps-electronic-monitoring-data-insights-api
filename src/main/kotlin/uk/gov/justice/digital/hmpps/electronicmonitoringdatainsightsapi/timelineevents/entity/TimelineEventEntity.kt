@@ -33,4 +33,6 @@ class TimelineEventEntity(
 
   @JdbcTypeCode(SqlTypes.JSON)
   val detail: Map<String, Any?> = emptyMap(),
+
+  val crnProbationAreas: String? = null,
 )

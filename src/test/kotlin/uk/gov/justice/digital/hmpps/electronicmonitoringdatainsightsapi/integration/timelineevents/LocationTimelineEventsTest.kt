@@ -24,6 +24,18 @@ class LocationTimelineEventsTest : IntegrationTestBase() {
 
   @Test
   fun `location search persists a timeline event`() {
+    stubProbationSearch(
+      "X123456",
+      """
+      [{
+        "otherIds": {"crn": "X123456"},
+        "offenderManagers": [
+          {"active": true, "probationArea": {"description": "London"}},
+          {"active": true, "probationArea": {"description": "South East"}}
+        ]
+      }]
+      """.trimIndent(),
+    )
     stubQueryExecution(
       "123",
       1,
@@ -43,6 +55,7 @@ class LocationTimelineEventsTest : IntegrationTestBase() {
     val event = events.single()
     assertThat(event.userName).isEqualTo("TEST_USER")
     assertThat(event.crn).isEqualTo("X123456")
+    assertThat(event.crnProbationAreas).isEqualTo("London, South East")
     assertThat(event.eventType).isEqualTo(EventType.VIEW_PERSON_LOCATIONS)
     assertThat(event.results).isEqualTo(4)
     assertThat(event.durationMs).isGreaterThanOrEqualTo(0)

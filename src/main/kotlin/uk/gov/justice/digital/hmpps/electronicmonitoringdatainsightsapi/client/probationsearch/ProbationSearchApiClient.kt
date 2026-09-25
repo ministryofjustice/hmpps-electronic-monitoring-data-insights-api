@@ -30,4 +30,13 @@ class ProbationSearchApiClient(
       Mono.error(ProbationSearchApiException("Error searching Probation Search API by CRN $crn", it))
     }
     .block()!!
+
+  fun getProbationAreas(crn: String?): List<String> {
+    if (crn == null) return emptyList()
+    return getOffendersByCrn(crn)
+      .filter { it.otherIds?.crn == crn }
+      .flatMap { it.offenderManagers }
+      .filter { it.active && !it.softDeleted }
+      .map { it.probationArea?.description ?: "Not Found" }
+  }
 }
