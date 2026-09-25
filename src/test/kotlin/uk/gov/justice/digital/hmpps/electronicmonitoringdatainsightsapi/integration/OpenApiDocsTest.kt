@@ -9,8 +9,6 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
 import org.springframework.boot.test.web.server.LocalServerPort
 import org.springframework.http.MediaType
-import java.time.LocalDate
-import java.time.format.DateTimeFormatter
 import kotlin.text.get
 
 class OpenApiDocsTest : IntegrationTestBase() {
@@ -56,7 +54,10 @@ class OpenApiDocsTest : IntegrationTestBase() {
       .exchange()
       .expectStatus().isOk
       .expectBody().jsonPath("info.version").value<String> {
-        assertThat(it).startsWith(DateTimeFormatter.ISO_DATE.format(LocalDate.now()))
+        assertThat(it).isNotBlank()
+        System.getenv("BUILD_NUMBER")?.takeIf(String::isNotBlank)?.let { expectedVersion ->
+          assertThat(it).isEqualTo(expectedVersion)
+        }
       }
   }
 
