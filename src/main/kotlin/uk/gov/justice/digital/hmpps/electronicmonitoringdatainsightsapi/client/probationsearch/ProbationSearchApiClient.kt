@@ -1,11 +1,14 @@
 package uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.client.probationsearch
 
+import mu.KotlinLogging
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.http.MediaType
 import org.springframework.stereotype.Component
 import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.bodyToFlux
 import reactor.core.publisher.Mono
+
+private val log = KotlinLogging.logger {}
 
 @Component
 class ProbationSearchApiClient(
@@ -30,4 +33,18 @@ class ProbationSearchApiClient(
       Mono.error(ProbationSearchApiException("Error searching Probation Search API by CRN $crn", it))
     }
     .block()!!
+
+  fun getProbationAreas(crn: String?): List<String> {
+    if (crn == null) return emptyList()
+    try {
+      return getOffendersByCrn(crn)
+        .filter { it.otherIds?.crn == crn }
+        .flatMap { it.offenderManagers }
+        .filter { it.active && !it.softDeleted }
+        .map { it.probationArea?.description ?: "Not Found" }
+    } catch (e: Exception) {
+      log.error("Error getting probation areas for crn=$crn", e)
+      return emptyList()
+    }
+  }
 }

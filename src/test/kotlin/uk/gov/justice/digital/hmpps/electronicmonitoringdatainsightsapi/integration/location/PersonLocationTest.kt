@@ -11,6 +11,7 @@ class PersonLocationTest : IntegrationTestBase() {
 
   @Test
   fun `Get person locations returns mapped locations`() {
+    stubProbationSearch("X123456")
     stubQueryExecution(
       "123",
       1,
@@ -37,6 +38,7 @@ class PersonLocationTest : IntegrationTestBase() {
 
   @Test
   fun `Get person locations returns empty array when no locations found`() {
+    stubProbationSearch("X123456")
     stubQueryExecution(
       "123",
       1,
