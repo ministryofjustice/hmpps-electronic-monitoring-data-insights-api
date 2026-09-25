@@ -1,6 +1,6 @@
 plugins {
   val kotlinVersion = "2.4.20"
-  id("uk.gov.justice.hmpps.gradle-spring-boot") version "11.0.9"
+  id("uk.gov.justice.hmpps.gradle-spring-boot") version "11.0.10"
   id("io.gatling.gradle") version "3.15.1.3"
   kotlin("plugin.spring") version kotlinVersion
   kotlin("plugin.serialization") version kotlinVersion
@@ -15,7 +15,7 @@ val springdocOpenapiVersion = "3.1.1"
 val hmppsKotlinSpringBootStarterVersion = "3.0.2"
 val kotlinLoggingVersion = "3.0.5"
 val commonsTextVersion = "1.15.0"
-val athenaVersion = "2.55.3"
+val athenaVersion = "2.55.4"
 val shedlockVersion = "7.10.1"
 
 dependencies {
