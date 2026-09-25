@@ -1,0 +1,217 @@
+{
+  "ResultSet": {
+    "Rows": [
+      {
+        "Data": [
+          {
+            "VarCharValue": "curfew_id"
+          },
+          {
+            "VarCharValue": "curfew_rule_name"
+          },
+          {
+            "VarCharValue": "zone_type_name"
+          },
+          {
+            "VarCharValue": "zone_address"
+          },
+          {
+            "VarCharValue": "zone_geometry"
+          },
+          {
+            "VarCharValue": "zone_radius"
+          },
+          {
+            "VarCharValue": "curfew_rule_active_start_date"
+          },
+          {
+            "VarCharValue": "curfew_rule_active_end_date"
+          }
+        ]
+      },
+      {
+        "Data": [
+          {
+            "VarCharValue": "1"
+          },
+          {
+            "VarCharValue": "Exclusion"
+          },
+          {
+            "VarCharValue": "St James Park"
+          },
+          {
+            "VarCharValue": "St. James's Park in London SW1A 2BJ"
+          },
+          {
+            "VarCharValue": "{\"type\":\"Polygon\",\"crs\":{\"type\":\"name\",\"properties\":{\"name\":\"EPSG:4326\"}},\"coordinates\":[[[-0.132646597116215,51.50525361293847],[-0.129900015084965,51.50620856945221],[-0.127829349725468,51.50148033725193],[-0.141090191095097,51.50014458956852],[-0.140909976247892,51.50224330385428],[-0.132646597116215,51.50525361293847]]]}"
+          },
+          {},
+          {
+            "VarCharValue": "2025-01-01 00:00:00.000"
+          },
+          {
+            "VarCharValue": "2027-01-01 00:00:00.000"
+          }
+        ]
+      },
+      {
+        "Data": [
+          {
+            "VarCharValue": "2"
+          },
+          {
+            "VarCharValue": "Exclusion"
+          },
+          {
+            "VarCharValue": "Borough Market"
+          },
+          {
+            "VarCharValue": "8 Southwark Street, London, SE1 1TL"
+          },
+          {
+            "VarCharValue": "{\"type\":\"Point\",\"crs\":{\"type\":\"name\",\"properties\":{\"name\":\"EPSG:4326\"}},\"coordinates\":[-0.091249,51.505444]}"
+          },
+          {
+            "VarCharValue": "500.0"
+          },
+          {
+            "VarCharValue": "2025-01-05 09:00:00.000"
+          },
+          {
+            "VarCharValue": "2025-01-25 17:00:00.000"
+          }
+        ]
+      },
+      {
+        "Data": [
+          {
+            "VarCharValue": "3"
+          },
+          {
+            "VarCharValue": "Exclusion"
+          },
+          {
+            "VarCharValue": "Tower of London"
+          },
+          {
+            "VarCharValue": "Tower of London, London EC3N 4AB"
+          },
+          {
+            "VarCharValue": "{\"type\":\"Point\",\"crs\":{\"type\":\"name\",\"properties\":{\"name\":\"EPSG:4326\"}},\"coordinates\":[-0.07595,51.508112]}"
+          },
+          {
+            "VarCharValue": "250.0"
+          },
+          {
+            "VarCharValue": "2025-01-10 00:00:00.000"
+          },
+          {
+            "VarCharValue": "2027-01-01 00:00:00.000"
+          }
+        ]
+      }
+    ],
+    "ResultSetMetadata": {
+      "ColumnInfo": [
+        {
+          "CatalogName": "hive",
+          "SchemaName": "",
+          "TableName": "",
+          "Name": "curfew_id",
+          "Label": "curfew_id",
+          "Type": "bigint",
+          "Precision": 0,
+          "Scale": 0,
+          "Nullable": "UNKNOWN",
+          "CaseSensitive": false
+        },
+        {
+          "CatalogName": "hive",
+          "SchemaName": "",
+          "TableName": "",
+          "Name": "curfew_rule_name",
+          "Label": "curfew_rule_name",
+          "Type": "varchar",
+          "Precision": 0,
+          "Scale": 0,
+          "Nullable": "UNKNOWN",
+          "CaseSensitive": true
+        },
+        {
+          "CatalogName": "hive",
+          "SchemaName": "",
+          "TableName": "",
+          "Name": "zone_type_name",
+          "Label": "zone_type_name",
+          "Type": "varchar",
+          "Precision": 0,
+          "Scale": 0,
+          "Nullable": "UNKNOWN",
+          "CaseSensitive": true
+        },
+        {
+          "CatalogName": "hive",
+          "SchemaName": "",
+          "TableName": "",
+          "Name": "zone_address",
+          "Label": "zone_address",
+          "Type": "varchar",
+          "Precision": 0,
+          "Scale": 0,
+          "Nullable": "UNKNOWN",
+          "CaseSensitive": true
+        },
+        {
+          "CatalogName": "hive",
+          "SchemaName": "",
+          "TableName": "",
+          "Name": "zone_geometry",
+          "Label": "zone_geometry",
+          "Type": "varchar",
+          "Precision": 0,
+          "Scale": 0,
+          "Nullable": "UNKNOWN",
+          "CaseSensitive": true
+        },
+        {
+          "CatalogName": "hive",
+          "SchemaName": "",
+          "TableName": "",
+          "Name": "zone_radius",
+          "Label": "zone_radius",
+          "Type": "double",
+          "Precision": 0,
+          "Scale": 0,
+          "Nullable": "UNKNOWN",
+          "CaseSensitive": false
+        },
+        {
+          "CatalogName": "hive",
+          "SchemaName": "",
+          "TableName": "",
+          "Name": "curfew_rule_active_start_date",
+          "Label": "curfew_rule_active_start_date",
+          "Type": "timestamp",
+          "Precision": 0,
+          "Scale": 0,
+          "Nullable": "UNKNOWN",
+          "CaseSensitive": false
+        },
+        {
+          "CatalogName": "hive",
+          "SchemaName": "",
+          "TableName": "",
+          "Name": "curfew_rule_active_end_date",
+          "Label": "curfew_rule_active_end_date",
+          "Type": "timestamp",
+          "Precision": 0,
+          "Scale": 0,
+          "Nullable": "UNKNOWN",
+          "CaseSensitive": false
+        }
+      ]
+    }
+  },
+  "UpdateCount": 0
+}
