@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.client.probationsearch.ProbationSearchApiClient
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.HAS_VIEW_ROLE
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.service.CurrentUserService
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.location.model.Location
@@ -33,6 +34,7 @@ class LocationController(
   private val timelineEventsService: TimelineEventsService,
   private val currentUserService: CurrentUserService,
   private val devLocationProvider: ObjectProvider<DevLocationProvider>,
+  private val probationSearchApiClient: ProbationSearchApiClient,
   @Value("\${dev.stub.enabled:false}")
   private val devStubEnabled: Boolean,
 ) {
@@ -83,6 +85,7 @@ class LocationController(
     val startedAt = System.nanoTime()
 
     val pagedLocations = locationService.getLocationsForPerson(personId, from, to, nextToken)
+    val probationAreas = probationSearchApiClient.getProbationAreas(crn)
 
     timelineEventsService.record(
       startedAt = startedAt,
@@ -95,6 +98,7 @@ class LocationController(
         "to" to to.toString(),
         "personId" to personId,
       ),
+      crnProbationAreas = probationAreas.joinToString(", "),
     )
     log.debug("Found {} locations for personId: {}, crn {}", pagedLocations.locations.size, personId, crn)
     return ResponseEntity.ok(

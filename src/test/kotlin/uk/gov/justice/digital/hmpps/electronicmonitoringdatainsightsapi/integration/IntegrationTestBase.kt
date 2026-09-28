@@ -1,8 +1,11 @@
 package uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.integration
 
+import com.github.tomakehurst.wiremock.client.WireMock.aResponse
 import com.github.tomakehurst.wiremock.client.WireMock.containing
 import com.github.tomakehurst.wiremock.client.WireMock.equalTo
+import com.github.tomakehurst.wiremock.client.WireMock.equalToJson
 import com.github.tomakehurst.wiremock.client.WireMock.matchingJsonPath
+import com.github.tomakehurst.wiremock.client.WireMock.post
 import com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo
 import org.junit.jupiter.api.AfterEach
@@ -53,6 +56,15 @@ abstract class IntegrationTestBase {
 
   protected fun stubPingWithResponse(status: Int) {
     hmppsAuth.stubHealthPing(status)
+  }
+
+  protected fun stubProbationSearch(crn: String, responseBody: String = "[]") {
+    hmppsAuth.stubGrantToken()
+    hmppsAuth.stubFor(
+      post(urlPathEqualTo("/search"))
+        .withRequestBody(equalToJson("""{"crn":"$crn"}"""))
+        .willReturn(aResponse().withHeader("Content-Type", "application/json").withBody(responseBody)),
+    )
   }
 
   protected fun stubQueryExecution(

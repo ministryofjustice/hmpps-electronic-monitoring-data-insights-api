@@ -84,6 +84,7 @@ class TimelineEventsService(
     eventType: EventType,
     results: Int?,
     detail: Map<String, Any?> = emptyMap(),
+    crnProbationAreas: String? = null,
   ) {
     require(userName.isNotBlank()) {
       "userName must not be blank"
@@ -102,6 +103,7 @@ class TimelineEventsService(
       results = results,
       durationMs = durationMs,
       detail = detail,
+      crnProbationAreas = crnProbationAreas,
     )
     try {
       timelineEventsRepository.save(event)
