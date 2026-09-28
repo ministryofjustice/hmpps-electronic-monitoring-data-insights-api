@@ -37,11 +37,21 @@ class ProbationSearchApiClient(
   fun getProbationAreas(crn: String?): List<String> {
     if (crn == null) return emptyList()
     try {
-      return getOffendersByCrn(crn)
-        .filter { it.otherIds?.crn == crn }
-        .flatMap { it.offenderManagers }
-        .filter { it.active && !it.softDeleted }
-        .map { it.probationArea?.description ?: "Not Found" }
+      val offenders = getOffendersByCrn(crn)
+      val matchingOffenders = offenders.filter { it.otherIds?.crn == crn }
+      val managers = matchingOffenders.flatMap { it.offenderManagers }
+      val eligibleManagers = managers.filter { it.active && !it.softDeleted }
+      val probationAreas = eligibleManagers.map { it.probationArea?.description ?: "Not Found" }
+
+      if (probationAreas.all { it.isBlank() }) {
+        log.warn {
+          "No non-blank probation areas for crn=$crn, " +
+            "returnedOffenderCount=${offenders.size}, exactMatchCount=${matchingOffenders.size}, " +
+            "managerCount=${managers.size}, eligibleManagerCount=${eligibleManagers.size}, " +
+            "blankDescriptionCount=${probationAreas.count { it.isBlank() }}"
+        }
+      }
+      return probationAreas
     } catch (e: Exception) {
       log.error("Error getting probation areas for crn=$crn", e)
       return emptyList()
