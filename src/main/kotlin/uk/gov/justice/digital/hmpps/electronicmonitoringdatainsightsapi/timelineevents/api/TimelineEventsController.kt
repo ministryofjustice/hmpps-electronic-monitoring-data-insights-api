@@ -8,10 +8,12 @@ import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.timelineevents.model.TimelineEventsMonthlyMetricsResponse
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.timelineevents.model.TimelineEventsStatisticsResponse
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.timelineevents.service.TimelineEventsService
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.timelineevents.service.TimelineEventsService.Companion.DEFAULT_FROM_DATE
 import java.time.LocalDate
+import java.time.YearMonth
 import java.time.ZoneId
 
 @RestController
@@ -38,6 +40,18 @@ class TimelineEventsController(
   @GetMapping("/statistics", produces = [MediaType.APPLICATION_JSON_VALUE])
   @Operation(summary = "Get daily, weekly, monthly and all-time timeline event statistics")
   fun getStatisticsSummary(): TimelineEventsStatisticsResponse = timelineEventsService.getStatisticsSummary()
+
+  @GetMapping("/monthly-metrics", produces = [MediaType.APPLICATION_JSON_VALUE])
+  @Operation(
+    summary = "Get timeline event metrics for a calendar month",
+    description = "Uses Europe/London month boundaries. Excludes null and blank probation areas. " +
+      "Regions are ordered by adoption descending, with the distinct-user TOTAL last.",
+  )
+  fun getMonthlyMetrics(
+    @RequestParam
+    @DateTimeFormat(pattern = "yyyy-MM")
+    month: YearMonth,
+  ): TimelineEventsMonthlyMetricsResponse = timelineEventsService.getMonthlyMetrics(month)
 
   private companion object {
     val REPORTING_TIME_ZONE: ZoneId = ZoneId.of("Europe/London")

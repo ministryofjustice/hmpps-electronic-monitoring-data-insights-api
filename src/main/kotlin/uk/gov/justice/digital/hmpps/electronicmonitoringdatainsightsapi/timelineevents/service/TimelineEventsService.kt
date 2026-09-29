@@ -2,14 +2,18 @@ package uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.timelin
 
 import mu.KotlinLogging
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.config.ServiceProperties
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.timelineevents.EventType
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.timelineevents.entity.TimelineEventEntity
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.timelineevents.model.RegionalAdoptionResponse
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.timelineevents.model.TimelineEventStatisticsResponse
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.timelineevents.model.TimelineEventsMonthlyMetricsResponse
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.timelineevents.model.TimelineEventsStatisticsResponse
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.timelineevents.repository.TimelineEventStatistics
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.timelineevents.repository.TimelineEventsRepository
 import java.time.Instant
 import java.time.LocalDate
+import java.time.YearMonth
 import java.time.ZoneId
 import java.util.Locale
 import java.util.UUID
@@ -20,7 +24,26 @@ private val log = KotlinLogging.logger {}
 @Service
 class TimelineEventsService(
   private val timelineEventsRepository: TimelineEventsRepository,
+  private val serviceProperties: ServiceProperties,
 ) {
+
+  fun getMonthlyMetrics(month: YearMonth): TimelineEventsMonthlyMetricsResponse {
+    val from = month.atDay(1).atStartOfDay(REPORTING_TIME_ZONE).toInstant()
+    val to = month.plusMonths(1).atDay(1).atStartOfDay(REPORTING_TIME_ZONE).toInstant()
+    val regions = serviceProperties.deliusResponsibleOrganisations.map(String::trim).filter(String::isNotEmpty).distinct()
+    val adoption = if (regions.isEmpty()) {
+      listOf(RegionalAdoptionResponse(region = "TOTAL", userCount = 0))
+    } else {
+      timelineEventsRepository.getAdoption(from, to, regions).map {
+        RegionalAdoptionResponse(region = it.region, userCount = it.adoption)
+      }
+    }
+    return TimelineEventsMonthlyMetricsResponse(
+      month = month.toString(),
+      statistics = timelineEventsRepository.getStatistics(from, to).toResponse(),
+      regions = adoption,
+    )
+  }
 
   fun getStatisticsSummary(
     today: LocalDate = LocalDate.now(REPORTING_TIME_ZONE),
