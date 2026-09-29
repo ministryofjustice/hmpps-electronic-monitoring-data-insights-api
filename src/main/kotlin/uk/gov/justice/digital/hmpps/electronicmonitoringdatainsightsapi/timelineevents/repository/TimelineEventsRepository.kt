@@ -18,6 +18,7 @@ interface TimelineEventsRepository : JpaRepository<TimelineEventEntity, UUID> {
         WHERE occurred_at >= :from
           AND occurred_at < :to
           AND user_name NOT IN ('AUTH_ADM', 'SYS')
+          AND event_type IN ('SEARCH_PERSON_BY_ID', 'VIEW_PERSON_LOCATIONS')
       ),
       page_views AS (
         SELECT occurred_at,
@@ -33,6 +34,7 @@ interface TimelineEventsRepository : JpaRepository<TimelineEventEntity, UUID> {
                ) AS next_crn
         FROM timeline_events
         WHERE user_name NOT IN ('AUTH_ADM', 'SYS')
+        AND event_type IN ('SEARCH_PERSON_BY_ID', 'VIEW_PERSON_LOCATIONS')
       ),
       dwell_times AS (
         SELECT occurred_at,
