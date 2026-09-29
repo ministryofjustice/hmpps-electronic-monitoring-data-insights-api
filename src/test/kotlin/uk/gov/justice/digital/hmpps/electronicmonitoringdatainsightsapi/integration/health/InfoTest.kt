@@ -3,8 +3,6 @@ package uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.integra
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.integration.IntegrationTestBase
-import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
 
 class InfoTest : IntegrationTestBase() {
 
@@ -25,7 +23,10 @@ class InfoTest : IntegrationTestBase() {
       .exchange()
       .expectStatus().isOk
       .expectBody().jsonPath("build.version").value<String> {
-        assertThat(it).startsWith(LocalDateTime.now().format(DateTimeFormatter.ISO_DATE))
+        assertThat(it).isNotBlank()
+        System.getenv("BUILD_NUMBER")?.takeIf(String::isNotBlank)?.let { expectedVersion ->
+          assertThat(it).isEqualTo(expectedVersion)
+        }
       }
   }
 }
