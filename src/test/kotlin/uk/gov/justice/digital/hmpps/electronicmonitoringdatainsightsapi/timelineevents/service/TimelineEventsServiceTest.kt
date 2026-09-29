@@ -5,14 +5,59 @@ import io.mockk.mockk
 import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.config.ServiceProperties
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.timelineevents.model.RegionalAdoptionResponse
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.timelineevents.repository.RegionalAdoption
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.timelineevents.repository.TimelineEventStatistics
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.timelineevents.repository.TimelineEventsRepository
 import java.time.Instant
 import java.time.LocalDate
+import java.time.YearMonth
 
 class TimelineEventsServiceTest {
   private val repository = mockk<TimelineEventsRepository>()
-  private val service = TimelineEventsService(repository)
+  private val properties = ServiceProperties("https://api.test", "https://ui.test", listOf(" London ", "", "London"))
+  private val service = TimelineEventsService(repository, properties)
+
+  @Test
+  fun `returns zero regional total without querying adoption when no areas are configured`() {
+    val unconfiguredService = TimelineEventsService(repository, properties.copy(deliusResponsibleOrganisations = listOf(" ")))
+    every { repository.getStatistics(any(), any()) } returns statistics(users = 2, searches = 5, pops = 1)
+
+    val response = unconfiguredService.getMonthlyMetrics(YearMonth.of(2026, 9))
+
+    assertThat(response.regions).containsExactly(RegionalAdoptionResponse("TOTAL", 0))
+    verify(exactly = 0) { repository.getAdoption(any(), any(), any()) }
+  }
+
+  @Test
+  fun `uses London calendar month boundaries including daylight saving and year changes`() {
+    val cases = listOf(
+      Triple("2026-09", "2026-08-31T23:00:00Z", "2026-09-30T23:00:00Z"),
+      Triple("2026-10", "2026-09-30T23:00:00Z", "2026-11-01T00:00:00Z"),
+      Triple("2026-12", "2026-12-01T00:00:00Z", "2027-01-01T00:00:00Z"),
+      Triple("2028-02", "2028-02-01T00:00:00Z", "2028-03-01T00:00:00Z"),
+    )
+    val row = mockk<RegionalAdoption> {
+      every { region } returns "TOTAL"
+      every { adoption } returns 3L
+    }
+    cases.forEach { (month, from, to) ->
+      every { repository.getAdoption(Instant.parse(from), Instant.parse(to), listOf("London")) } returns listOf(row)
+
+      every { repository.getStatistics(Instant.parse(from), Instant.parse(to)) } returns statistics(users = 2, searches = 5, pops = 1)
+
+      val response = service.getMonthlyMetrics(YearMonth.parse(month))
+
+      assertThat(response.statistics.users).isEqualTo(2)
+      assertThat(response.statistics.searches).isEqualTo(5)
+      assertThat(response.statistics.pops).isEqualTo(1)
+      verify { repository.getStatistics(Instant.parse(from), Instant.parse(to)) }
+      assertThat(response.month).isEqualTo(month)
+      assertThat(response.regions).containsExactly(RegionalAdoptionResponse("TOTAL", 3L))
+      verify { repository.getAdoption(Instant.parse(from), Instant.parse(to), listOf("London")) }
+    }
+  }
 
   @Test
   fun `returns statistics for completed daily weekly monthly and all-time periods`() {

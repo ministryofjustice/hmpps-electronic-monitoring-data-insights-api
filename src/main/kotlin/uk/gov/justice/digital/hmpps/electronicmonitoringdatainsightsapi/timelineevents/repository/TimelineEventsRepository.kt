@@ -12,6 +12,23 @@ interface TimelineEventsRepository : JpaRepository<TimelineEventEntity, UUID> {
 
   @Query(
     """
+      SELECT COALESCE(TRIM(area.region), 'TOTAL') AS region,
+             COUNT(DISTINCT user_name) AS adoption
+      FROM timeline_events
+      CROSS JOIN LATERAL unnest(string_to_array(crn_probation_areas, ',')) AS area(region)
+      WHERE occurred_at >= :from
+        AND occurred_at < :to
+        AND TRIM(area.region) IN (:regions)
+      GROUP BY ROLLUP(TRIM(area.region))
+      ORDER BY CASE WHEN TRIM(area.region) IS NULL THEN 1 ELSE 0 END,
+               adoption DESC
+    """,
+    nativeQuery = true,
+  )
+  fun getAdoption(from: Instant, to: Instant, regions: List<String>): List<RegionalAdoption>
+
+  @Query(
+    """
       WITH filtered_events AS (
         SELECT *
         FROM timeline_events
@@ -81,4 +98,9 @@ interface TimelineEventStatistics {
   val averageLocationLoadDurationMs: Double?
   val maximumDurationMs: Long?
   val averageTimeSpentSeconds: Double?
+}
+
+interface RegionalAdoption {
+  val region: String
+  val adoption: Long
 }
