@@ -19,6 +19,7 @@ interface TimelineEventsRepository : JpaRepository<TimelineEventEntity, UUID> {
       WHERE occurred_at >= :from
         AND occurred_at < :to
         AND TRIM(area.region) IN (:regions)
+        AND user_name NOT IN ('AUTH_ADM', 'SYS')
       GROUP BY ROLLUP(TRIM(area.region))
       ORDER BY CASE WHEN TRIM(area.region) IS NULL THEN 1 ELSE 0 END,
                adoption DESC
