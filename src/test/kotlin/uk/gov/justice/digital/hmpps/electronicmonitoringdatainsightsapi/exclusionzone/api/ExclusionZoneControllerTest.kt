@@ -1,61 +1,164 @@
 package uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.exclusionzone.api
 
 import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assertions.assertThatThrownBy
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.extension.ExtendWith
+import org.mockito.Mock
+import org.mockito.junit.jupiter.MockitoExtension
+import org.mockito.kotlin.eq
+import org.mockito.kotlin.whenever
+import org.springframework.beans.factory.ObjectProvider
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.service.CurrentUserService
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.exclusionzone.model.CoordinateReferenceSystem
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.exclusionzone.model.CoordinateReferenceSystemProperties
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.exclusionzone.model.ExclusionZone
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.exclusionzone.model.PointGeometry
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.exclusionzone.model.PolygonGeometry
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.exclusionzone.service.ExclusionZoneService
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.timelineevents.service.TimelineEventsService
+import java.time.Instant
 
+@ExtendWith(MockitoExtension::class)
 class ExclusionZoneControllerTest {
 
-  private val exclusionZoneController = ExclusionZoneController()
+  @Mock
+  private lateinit var exclusionZoneService: ExclusionZoneService
+
+  @Mock
+  private lateinit var devExclusionZoneProvider: ObjectProvider<DevExclusionZoneProvider>
+
+  @Mock
+  private lateinit var timelineEventsService: TimelineEventsService
+
+  @Mock
+  private lateinit var currentUserService: CurrentUserService
+
+  private lateinit var exclusionZoneController: ExclusionZoneController
+
+  private val personId = "88888"
+  private val crn = "X888888"
+  private val from = Instant.parse("2025-01-01T00:00:00Z")
+  private val to = Instant.parse("2025-01-31T23:59:59Z")
+
+  @BeforeEach
+  fun setup() {
+    exclusionZoneController = ExclusionZoneController(
+      exclusionZoneService = exclusionZoneService,
+      timelineEventsService = timelineEventsService,
+      currentUserService = currentUserService,
+      devExclusionZoneProvider = devExclusionZoneProvider,
+      devStubEnabled = false,
+    )
+  }
 
   @Test
-  fun `getExclusionZones should return hardcoded exclusion zone for dev person`() {
-    val result = exclusionZoneController.getExclusionZones("777777")
-
-    assertThat(result.statusCode.value()).isEqualTo(200)
-    assertThat(result.body?.exclusionZones).hasSize(3)
-
-    val exclusionZoneI = result.body?.exclusionZones?.first { it.name == "St James Park" }
-
-    val geometry = exclusionZoneI?.geometry
-    assertThat(geometry).isInstanceOf(PolygonGeometry::class.java)
-    geometry as PolygonGeometry
-
-    assertThat(exclusionZoneI.name).isEqualTo("St James Park")
-    assertThat(exclusionZoneI.address).isEqualTo("St. James's Park in London SW1A 2BJ")
-    assertThat(exclusionZoneI.geometry.type).isEqualTo("Polygon")
-    assertThat(exclusionZoneI.geometry.crs.type).isEqualTo("name")
-    assertThat(exclusionZoneI.geometry.crs.properties.name).isEqualTo("EPSG:4326")
-    assertThat(exclusionZoneI.geometry.coordinates).hasSize(1)
-    assertThat(exclusionZoneI.geometry.coordinates.first()).containsExactly(
-      listOf(-0.132646597116215, 51.50525361293847),
-      listOf(-0.129900015084965, 51.50620856945221),
-      listOf(-0.127829349725468, 51.50148033725193),
-      listOf(-0.141090191095097, 51.50014458956852),
-      listOf(-0.140909976247892, 51.50224330385428),
-      listOf(-0.132646597116215, 51.50525361293847),
+  fun `getExclusionZones should return exclusion zones from the service for that person ID`() {
+    val crs = CoordinateReferenceSystem(
+      type = "name",
+      properties = CoordinateReferenceSystemProperties(name = "EPSG:4326"),
     )
 
-    val exclusionZoneIII = result.body?.exclusionZones?.last { it.name == "Borough Market" }
+    val exclusionZoneA = ExclusionZone(
+      exclusionZoneId = 1,
+      type = "Exclusion",
+      name = "Zone A",
+      address = "1 Test Street, London, SW1A 1AA",
+      geometry = PolygonGeometry(
+        crs = crs,
+        coordinates = listOf(
+          listOf(
+            listOf(-0.1326, 51.5052),
+            listOf(-0.1299, 51.5062),
+            listOf(-0.1278, 51.5014),
+            listOf(-0.1326, 51.5052),
+          ),
+        ),
+      ),
+      activeFrom = Instant.parse("2025-01-01T00:00:00Z"),
+      activeTo = Instant.parse("2025-01-20T00:00:00Z"),
+    )
 
-    val geometryIII = exclusionZoneIII?.geometry
-    assertThat(geometryIII).isInstanceOf(PointGeometry::class.java)
-    geometryIII as PointGeometry
+    val exclusionZoneB = ExclusionZone(
+      exclusionZoneId = 2,
+      type = "Exclusion",
+      name = "Zone B",
+      address = "2 Test Street, London, SE1 1TL",
+      geometry = PointGeometry(
+        crs = crs,
+        coordinates = listOf(-0.091249, 51.505444),
+        radiusMetres = 500.0,
+      ),
+      activeFrom = Instant.parse("2025-01-10T00:00:00Z"),
+      activeTo = Instant.parse("2025-01-20T00:00:00Z"),
+    )
 
-    assertThat(exclusionZoneIII.address).isEqualTo("8 Southwark Street, London, SE1 1TL")
-    assertThat(geometryIII.type).isEqualTo("Point")
-    assertThat(geometryIII.crs.properties.name).isEqualTo("EPSG:4326")
-    assertThat(geometryIII.coordinates).hasSize(2)
-    assertThat(geometryIII.coordinates).containsExactly(-0.091249, 51.505444)
-    assertThat(geometryIII.radiusMetres).isEqualTo(500.0)
+    val zones = listOf(exclusionZoneA, exclusionZoneB)
+    whenever(exclusionZoneService.getAllExclusionZonesForPersonByPersonId(eq(personId), eq(from), eq(to)))
+      .thenReturn(zones)
+
+    val result = exclusionZoneController.getExclusionZonesForPerson(
+      personId,
+      crn = crn,
+      from = from,
+      to = to,
+    )
+
+    assertThat(result.statusCode.value()).isEqualTo(200)
+    assertThat(requireNotNull(result.body).exclusionZones).containsExactlyElementsOf(zones)
   }
 
   @Test
   fun `getExclusionZones should return empty list for other people`() {
-    val result = exclusionZoneController.getExclusionZones("123456")
+    whenever(exclusionZoneService.getAllExclusionZonesForPersonByPersonId(eq(personId), eq(from), eq(to)))
+      .thenReturn(emptyList())
+
+    val result = exclusionZoneController.getExclusionZonesForPerson(
+      personId,
+      crn = crn,
+      from = from,
+      to = to,
+    )
 
     assertThat(result.statusCode.value()).isEqualTo(200)
-    assertThat(result.body?.exclusionZones).isEmpty()
+    assertThat(requireNotNull(result.body).exclusionZones).isEmpty()
+  }
+
+  @Test
+  fun `getExclusionZones should propagate exception when the service fails`() {
+    whenever(exclusionZoneService.getAllExclusionZonesForPersonByPersonId(eq(personId), eq(from), eq(to)))
+      .thenThrow(RuntimeException("Athena query failed"))
+
+    assertThatThrownBy {
+      exclusionZoneController.getExclusionZonesForPerson(
+        personId,
+        crn = crn,
+        from = from,
+        to = to,
+      )
+    }
+      .isInstanceOf(RuntimeException::class.java)
+      .hasMessage("Athena query failed")
+  }
+
+  @Test
+  fun `getExclusionZones should propagate exception when from is after to`() {
+    val from = Instant.parse("2025-02-01T00:00:00Z")
+    val to = Instant.parse("2025-01-01T00:00:00Z")
+
+    whenever(exclusionZoneService.getAllExclusionZonesForPersonByPersonId(eq(personId), eq(from), eq(to)))
+      .thenThrow(IllegalArgumentException("'from' ($from) must not be after 'to' ($to)"))
+
+    assertThatThrownBy {
+      exclusionZoneController.getExclusionZonesForPerson(
+        personId,
+        crn = crn,
+        from = from,
+        to = to,
+      )
+    }
+      .isInstanceOf(IllegalArgumentException::class.java)
+      .hasMessageContaining("must not be after")
   }
 }

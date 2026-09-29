@@ -2,84 +2,40 @@ package uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.exclusi
 
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
+import jakarta.validation.constraints.NotNull
+import mu.KotlinLogging
+import org.springframework.beans.factory.ObjectProvider
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.HAS_VIEW_ROLE
-import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.exclusionzone.model.CoordinateReferenceSystem
-import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.exclusionzone.model.CoordinateReferenceSystemProperties
-import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.exclusionzone.model.ExclusionZone
-import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.exclusionzone.model.PointGeometry
-import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.exclusionzone.model.PolygonGeometry
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.service.CurrentUserService
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.exclusionzone.service.ExclusionZoneService
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.timelineevents.EventType
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.timelineevents.service.TimelineEventsService
+import java.time.Instant
+
+private val log = KotlinLogging.logger {}
 
 @RestController
 @RequestMapping("/people/{personId}/exclusion-zones")
 @Tag(name = "Exclusion Zones", description = "Endpoint to retrieve exclusion zones for a person by personId")
-class ExclusionZoneController {
+class ExclusionZoneController(
+  private val exclusionZoneService: ExclusionZoneService,
+  private val timelineEventsService: TimelineEventsService,
+  private val currentUserService: CurrentUserService,
+  private val devExclusionZoneProvider: ObjectProvider<DevExclusionZoneProvider>,
+  @Value("\${dev.stub.enabled:false}")
+  private val devStubEnabled: Boolean,
+) {
 
-  // TODO - hardcoded exclusion zones for dev person for now. This will get the exclusion zones from the database once we have the derived data in the database
   companion object {
     private const val DEV_PERSON_ID = "777777"
-
-    private val DEV_EXCLUSION_ZONES = listOf(
-      ExclusionZone(
-        name = "St James Park",
-        address = "St. James's Park in London SW1A 2BJ",
-        geometry = PolygonGeometry(
-          crs = CoordinateReferenceSystem(
-            type = "name",
-            properties = CoordinateReferenceSystemProperties(name = "EPSG:4326"),
-          ),
-          coordinates = listOf(
-            listOf(
-              listOf(-0.132646597116215, 51.50525361293847),
-              listOf(-0.129900015084965, 51.50620856945221),
-              listOf(-0.127829349725468, 51.50148033725193),
-              listOf(-0.141090191095097, 51.50014458956852),
-              listOf(-0.140909976247892, 51.50224330385428),
-              listOf(-0.132646597116215, 51.50525361293847),
-            ),
-          ),
-        ),
-      ),
-      ExclusionZone(
-        name = "Rapha London",
-        address = "85 Brewer Street, London W1F 9ZN",
-        geometry = PolygonGeometry(
-          crs = CoordinateReferenceSystem(
-            type = "name",
-            properties = CoordinateReferenceSystemProperties(name = "EPSG:4326"),
-          ),
-          coordinates = listOf(
-            listOf(
-              listOf(-0.136755, 51.510818),
-              listOf(-0.136567, 51.510913),
-              listOf(-0.136337, 51.510509),
-              listOf(-0.136589, 51.510527),
-              listOf(-0.136728, 51.510704),
-              listOf(-0.136691, 51.510651),
-              listOf(-0.136798, 51.510811),
-              listOf(-0.136755, 51.510818),
-            ),
-          ),
-        ),
-      ),
-      ExclusionZone(
-        name = "Borough Market",
-        address = "8 Southwark Street, London, SE1 1TL",
-        geometry = PointGeometry(
-          crs = CoordinateReferenceSystem(
-            type = "name",
-            properties = CoordinateReferenceSystemProperties(name = "EPSG:4326"),
-          ),
-          coordinates = listOf(-0.091249, 51.505444),
-          radiusMetres = 500.0,
-        ),
-      ),
-    )
   }
 
   @Operation(
@@ -88,13 +44,51 @@ class ExclusionZoneController {
   )
   @GetMapping
   @PreAuthorize(HAS_VIEW_ROLE)
-  fun getExclusionZones(@PathVariable personId: String): ResponseEntity<ExclusionZoneResponse> {
-    val exclusionZones = if (personId == DEV_PERSON_ID) {
-      DEV_EXCLUSION_ZONES
-    } else {
-      emptyList()
+  fun getExclusionZonesForPerson(
+    @PathVariable personId: String,
+    @RequestParam @NotNull crn: String,
+    @RequestParam @NotNull from: Instant,
+    @RequestParam @NotNull to: Instant,
+  ): ResponseEntity<ExclusionZoneResponse> {
+    val provider = devExclusionZoneProvider.ifAvailable
+
+    if (
+      devStubEnabled &&
+      personId == DEV_PERSON_ID &&
+      provider != null
+    ) {
+      log.info("Using hardcoded dev exclusion zones")
+
+      val filteredZones = provider.getExclusionZones().exclusionZones.filter { zone ->
+        !zone.activeFrom.isAfter(to) && zone.activeTo?.isBefore(from) != true
+      }
+
+      return ResponseEntity.ok(
+        ExclusionZoneResponse(filteredZones),
+      )
     }
 
-    return ResponseEntity.ok(ExclusionZoneResponse(exclusionZones))
+    log.debug("Getting exclusion zones for personId: {}, crn {}, from{}, to{}", personId, crn, from, to)
+    val startedAt = System.nanoTime()
+
+    val exclusionZonesList = exclusionZoneService.getAllExclusionZonesForPersonByPersonId(personId, from, to)
+
+    timelineEventsService.record(
+      startedAt = startedAt,
+      userName = currentUserService.username(),
+      eventType = EventType.VIEW_EXCLUSION_ZONES,
+      results = exclusionZonesList.size,
+      detail = mapOf(
+        "from" to from.toString(),
+        "to" to to.toString(),
+      ),
+      crn = crn,
+    )
+    log.debug("Found {} locations for personId: {}, crn {}, from{}, to{}", exclusionZonesList.size, personId, crn, from, to)
+    return ResponseEntity.ok(
+      ExclusionZoneResponse(
+        exclusionZones = exclusionZonesList,
+      ),
+    )
   }
 }
