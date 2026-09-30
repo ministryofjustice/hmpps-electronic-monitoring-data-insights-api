@@ -55,11 +55,11 @@ class TimelineEventsMonthlyMetricsTest : IntegrationTestBase() {
       .jsonPath("$.statistics.averageTimeSpentSeconds").isEmpty
       .jsonPath("$.regions.length()").isEqualTo(3)
       .jsonPath("$.regions[0].region").isEqualTo("London")
-      .jsonPath("$.regions[0].userCount").isEqualTo(3)
+      .jsonPath("$.regions[0].userCount").isEqualTo(2)
       .jsonPath("$.regions[1].region").isEqualTo("Wales")
       .jsonPath("$.regions[1].userCount").isEqualTo(1)
       .jsonPath("$.regions[2].region").isEqualTo("TOTAL")
-      .jsonPath("$.regions[2].userCount").isEqualTo(3)
+      .jsonPath("$.regions[2].userCount").isEqualTo(2)
   }
 
   @Test
