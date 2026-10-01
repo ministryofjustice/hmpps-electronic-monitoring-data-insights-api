@@ -136,7 +136,7 @@ person-matching:
 
 person-match-alert:
   enabled: ${PERSON_MATCH_ALERT_ENABLED:false}
-  score-threshold: ${PERSON_MATCH_ALERT_SCORE_THRESHOLD:95}
+  score-threshold: ${PERSON_MATCH_ALERT_SCORE_THRESHOLD:30}
 
 slack:
   webhook-url: ${SLACK_WEBHOOK_URL:}
