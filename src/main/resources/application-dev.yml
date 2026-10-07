@@ -31,4 +31,4 @@ apis:
     url: https://emdi-and-delius-dev.hmpps.service.justice.gov.uk
 
 probation-integration:
-  enabled: ${PROBATION_INTEGRATION_ENABLED:true}
+  enabled: ${PROBATION_INTEGRATION_ENABLED:false}
