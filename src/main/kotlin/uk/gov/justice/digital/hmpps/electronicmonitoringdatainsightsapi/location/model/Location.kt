@@ -18,4 +18,7 @@ constructor(
   val geometry: String? = null,
   val latitude: Double? = null,
   val longitude: Double? = null,
-)
+) {
+  val tagStatus: String?
+    get() = TagStatus.decode(hdop)
+}
