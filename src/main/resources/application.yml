@@ -124,6 +124,9 @@ probation:
   search:
     enabled: ${PROBATION_SEARCH_ENABLED:false}
 
+probation-integration:
+  enabled: ${PROBATION_INTEGRATION_ENABLED:false}
+
 access-control:
   enabled: ${ACCESS_CONTROL_ENABLED:false}
 
@@ -154,3 +157,5 @@ apis:
     url: ${ACCESS_CONTROL_API_URL}
   probation-search-api:
     url: ${PROBATION_SEARCH_API_URL}
+  probation-integration-api:
+    url: ${PROBATION_INTEGRATION_API_URL}

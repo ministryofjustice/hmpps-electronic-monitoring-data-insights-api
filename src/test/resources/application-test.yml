@@ -50,4 +50,3 @@ apis:
     url: http://localhost:8090
   probation-search-api:
     url: http://localhost:8090
-
