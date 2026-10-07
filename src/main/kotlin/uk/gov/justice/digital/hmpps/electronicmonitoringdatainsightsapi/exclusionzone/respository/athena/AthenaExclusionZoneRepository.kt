@@ -1,9 +1,9 @@
 package uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.exclusionzone.respository.athena
 
-import com.fasterxml.jackson.core.JsonProcessingException
 import mu.KotlinLogging
 import org.springframework.stereotype.Repository
 import software.amazon.awssdk.services.athena.model.Datum
+import tools.jackson.core.JacksonException
 import tools.jackson.databind.ObjectMapper
 import tools.jackson.databind.node.ObjectNode
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.athena.AthenaQueryRunner
@@ -18,8 +18,9 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
+import java.time.format.DateTimeFormatterBuilder
 import java.time.format.DateTimeParseException
-
+import java.time.temporal.ChronoField
 private val log = KotlinLogging.logger {}
 
 @Repository
@@ -158,10 +159,9 @@ ORDER BY
   private fun parseGeometry(raw: String?, radius: Double?): Geometry {
     val node = try {
       objectMapper.readTree(raw) as? ObjectNode
-    } catch (error: JsonProcessingException) {
+    } catch (_: JacksonException) {
       null
-    } ?: throw DataIntegrityException("zone_geometry is not a valid GeoJSON object: '$raw'")
-
+    } ?: throw DataIntegrityException("zone_geometry is not a valid GeoJSON object")
     when (val type = node.path("type").asText()) {
       "Point" -> node.put(
         "radiusMetres",
@@ -175,7 +175,7 @@ ORDER BY
 
     return try {
       objectMapper.treeToValue(node, Geometry::class.java)
-    } catch (error: JsonProcessingException) {
+    } catch (error: JacksonException) {
       throw DataIntegrityException("zone_geometry could not be mapped: ${error.originalMessage}")
     }
   }
@@ -200,7 +200,11 @@ ORDER BY
     private const val COL_ACTIVE_START_DATE = 6
     private const val COL_ACTIVE_END_DATE = 7
 
-    private val ATHENA_TIMESTAMP: DateTimeFormatter =
-      DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss[.SSS]")
+    private val ATHENA_TIMESTAMP: DateTimeFormatter = DateTimeFormatterBuilder()
+      .appendPattern("yyyy-MM-dd HH:mm:ss")
+      .optionalStart()
+      .appendFraction(ChronoField.NANO_OF_SECOND, 0, 9, true)
+      .optionalEnd()
+      .toFormatter()
   }
 }

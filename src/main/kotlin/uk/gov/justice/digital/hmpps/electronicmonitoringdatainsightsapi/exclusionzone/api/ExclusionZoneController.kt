@@ -22,6 +22,7 @@ import java.time.Instant
 
 private val log = KotlinLogging.logger {}
 
+// TODO Rename endpoint and associated files to reflect inclusion(restriction) and exclusion capabilities
 @RestController
 @RequestMapping("/people/{personId}/exclusion-zones")
 @Tag(name = "Exclusion Zones", description = "Endpoint to retrieve exclusion zones for a person by personId")
