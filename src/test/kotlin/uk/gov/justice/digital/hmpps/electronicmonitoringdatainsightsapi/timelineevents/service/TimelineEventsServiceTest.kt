@@ -2,10 +2,18 @@ package uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.timelin
 
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.slot
 import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.client.probationintegration.Pdu
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.client.probationintegration.ProbationIntegrationApiClient
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.client.probationintegration.Region
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.client.probationintegration.Team
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.client.probationintegration.TeamsResponse
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.config.ServiceProperties
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.timelineevents.EventType
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.timelineevents.entity.TimelineEventEntity
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.timelineevents.model.RegionalAdoptionResponse
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.timelineevents.repository.RegionalAdoption
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.timelineevents.repository.TimelineEventStatistics
@@ -18,6 +26,50 @@ class TimelineEventsServiceTest {
   private val repository = mockk<TimelineEventsRepository>()
   private val properties = ServiceProperties("https://api.test", "https://ui.test", listOf(" London ", "", "London"))
   private val service = TimelineEventsService(repository, properties)
+
+  @Test
+  fun `records distinct user PDU and region names from all teams`() {
+    val client = mockk<ProbationIntegrationApiClient>()
+    val event = slot<TimelineEventEntity>()
+    every { repository.save(capture(event)) } answers { firstArg() }
+    val team = Team("T1", "Team one", Pdu("P1", "PDU one"), Region("R1", "Region one"))
+    every { client.getUserTeams("USER") } returns TeamsResponse(
+      listOf(team, team.copy(code = "T2"), Team("T3", "Team three", Pdu("P2", "PDU two"), Region("R2", "Region two"))),
+    )
+
+    TimelineEventsService(repository, properties, client).record(System.nanoTime(), "USER", null, EventType.SEARCH_PERSON_BY_ID, 1)
+
+    assertThat(event.captured.userPdus).containsExactly("PDU one", "PDU two")
+    assertThat(event.captured.userRegions).containsExactly("Region one", "Region two")
+  }
+
+  @Test
+  fun `records null user PDU and region lists when integration is disabled or fails`() {
+    val client = mockk<ProbationIntegrationApiClient>()
+    every { client.getUserTeams("USER") } throws IllegalStateException("Unavailable")
+    val event = slot<TimelineEventEntity>()
+    every { repository.save(capture(event)) } answers { firstArg() }
+
+    listOf(service, TimelineEventsService(repository, properties, client)).forEach {
+      it.record(System.nanoTime(), "USER", null, EventType.SEARCH_PERSON_BY_ID, 1)
+
+      assertThat(event.captured.userPdus).isNull()
+      assertThat(event.captured.userRegions).isNull()
+    }
+  }
+
+  @Test
+  fun `records empty user PDU and region lists when user has no teams`() {
+    val client = mockk<ProbationIntegrationApiClient>()
+    every { client.getUserTeams("USER") } returns TeamsResponse(emptyList())
+    val event = slot<TimelineEventEntity>()
+    every { repository.save(capture(event)) } answers { firstArg() }
+
+    TimelineEventsService(repository, properties, client).record(System.nanoTime(), "USER", null, EventType.SEARCH_PERSON_BY_ID, 1)
+
+    assertThat(event.captured.userPdus).isEmpty()
+    assertThat(event.captured.userRegions).isEmpty()
+  }
 
   @Test
   fun `returns zero regional total without querying adoption when no areas are configured`() {
