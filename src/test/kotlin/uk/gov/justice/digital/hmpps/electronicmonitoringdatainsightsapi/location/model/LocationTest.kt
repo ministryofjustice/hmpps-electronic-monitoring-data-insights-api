@@ -44,8 +44,8 @@ class LocationTest {
   @ParameterizedTest
   @NullSource
   @ValueSource(ints = [-1, 6, 256])
-  fun `missing and unlisted statuses are null`(hdop: Int?) {
-    assertThat(Location(positionId = 1, deviceId = 1001, hdop = hdop).tagStatus).isNull()
+  fun `missing and unlisted statuses are blank`(hdop: Int?) {
+    assertThat(Location(positionId = 1, deviceId = 1001, hdop = hdop).tagStatus).isEqualTo("")
   }
 
   @Test
