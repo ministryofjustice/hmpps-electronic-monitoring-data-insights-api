@@ -8,7 +8,10 @@ import org.springframework.test.web.reactive.server.expectBody
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.api.PersonResponse
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.timelineevents.EventType
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.timelineevents.entity.TimelineEventEntity
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.timelineevents.repository.TimelineEventsRepository
+import java.time.Instant
+import java.util.UUID
 
 class PeopleTimelineEventsTest : IntegrationTestBase() {
 
@@ -18,6 +21,29 @@ class PeopleTimelineEventsTest : IntegrationTestBase() {
   @BeforeEach
   fun clearEvents() {
     timelineEventsRepository.deleteAll()
+  }
+
+  @Test
+  fun `user PDU and region lists round trip through the database including null and empty lists`() {
+    listOf<List<String>?>(null, emptyList(), listOf("First, area", "Second area")).forEach { areas ->
+      val event = timelineEventsRepository.saveAndFlush(
+        TimelineEventEntity(
+          id = UUID.randomUUID(),
+          occurredAt = Instant.now(),
+          userName = "AUTH_ADM",
+          crn = "UNKNOWN",
+          eventType = EventType.SEARCH_PERSON_BY_ID,
+          results = 1,
+          durationMs = 0L,
+          userPdus = areas,
+          userRegions = areas,
+        ),
+      )
+
+      val stored = timelineEventsRepository.findById(event.id).orElseThrow()
+      assertThat(stored.userPdus).isEqualTo(areas)
+      assertThat(stored.userRegions).isEqualTo(areas)
+    }
   }
 
   @Test

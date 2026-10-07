@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.timelin
 
 import mu.KotlinLogging
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.client.probationintegration.ProbationIntegrationApiClient
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.config.ServiceProperties
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.timelineevents.EventType
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.timelineevents.entity.TimelineEventEntity
@@ -25,6 +26,7 @@ private val log = KotlinLogging.logger {}
 class TimelineEventsService(
   private val timelineEventsRepository: TimelineEventsRepository,
   private val serviceProperties: ServiceProperties,
+  private val probationIntegrationApiClient: ProbationIntegrationApiClient? = null,
 ) {
 
   fun getMonthlyMetrics(month: YearMonth): TimelineEventsMonthlyMetricsResponse {
@@ -117,6 +119,13 @@ class TimelineEventsService(
       System.nanoTime() - startedAt,
     )
 
+    val teams = try {
+      probationIntegrationApiClient?.getUserTeams(userName)?.teams
+    } catch (exception: Exception) {
+      log.warn(exception) { "Failed to retrieve teams for timeline event userName=$userName" }
+      null
+    }
+
     val event = TimelineEventEntity(
       id = UUID.randomUUID(),
       occurredAt = Instant.now(),
@@ -127,6 +136,8 @@ class TimelineEventsService(
       durationMs = durationMs,
       detail = detail,
       crnProbationAreas = crnProbationAreas,
+      userPdus = teams?.map { it.pdu.description }?.distinct(),
+      userRegions = teams?.map { it.region.description }?.distinct(),
     )
     try {
       timelineEventsRepository.save(event)
