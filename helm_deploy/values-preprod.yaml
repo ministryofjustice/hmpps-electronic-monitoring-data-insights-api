@@ -31,5 +31,10 @@ generic-service:
     TIMELINE_EVENTS_REPORT_ENABLED: "false"
     PERSON_MATCH_ALERT_ENABLED: "false"
 
+  namespace_secrets:
+    hmpps-electronic-monitoring-data-insights-api-client-creds:
+      PROBATION_INT_API_CLIENT_ID: "PROBATION_INT_API_CLIENT_ID"
+      PROBATION_INT_API_CLIENT_SECRET: "PROBATION_INT_API_CLIENT_SECRET"
+
 generic-prometheus-alerts:
   alertSeverity: hmpps-electronic-monitoring-data-insights-preprod
