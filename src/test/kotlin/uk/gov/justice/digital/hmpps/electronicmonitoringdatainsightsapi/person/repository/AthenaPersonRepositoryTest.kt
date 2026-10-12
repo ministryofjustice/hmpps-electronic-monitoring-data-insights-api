@@ -106,7 +106,7 @@ class AthenaPersonRepositoryTest {
       datum("0987654321"), // 6: cepr_id
       datum("X69847"), // 7: prison_id
       datum("2020-01-01"), // 8: dob
-      datum("LON 1243"), // 9: zip
+      datum("LON 1243"), // 9: postcode
       datum("City"), // 10: city
       datum("Street"), // 11: street
       datum("ORDER123"), // 12: order_id

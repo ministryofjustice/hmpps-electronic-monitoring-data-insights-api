@@ -158,7 +158,7 @@ class PersonService(
     val mainAddressIndex = cprPerson.addresses
       .indexOfFirst { it.status?.code.equals("M", ignoreCase = true) }
     val cprPostcode = cprPerson.addresses.getOrNull(mainAddressIndex)?.postcode.normalisePostcode()
-    val emPostcode = emPerson.zip.normalisePostcode()
+    val emPostcode = emPerson.postCode.normalisePostcode()
     val cprDob = cprPerson.dateOfBirth?.let { runCatching { LocalDate.parse(it) }.getOrNull() }
     val emDob = emPerson.dob
 

@@ -60,7 +60,7 @@ class PersonServiceTest {
       personId = "41593",
       personName = "john smith",
       dob = LocalDate.of(1990, 8, 21),
-      zip = "SW1H9AJ",
+      postCode = "SW1H9AJ",
     )
 
     val result = personService.personMatchScore(cprPerson, emPerson)
@@ -147,7 +147,7 @@ class PersonServiceTest {
       personId = "41593",
       personName = "John Smith",
       dob = LocalDate.of(1990, 8, 21),
-      zip = "SW1H 9AJ",
+      postCode = "SW1H 9AJ",
     )
 
     val result = personService.personMatchScore(cprPerson, emPerson)
@@ -178,7 +178,7 @@ class PersonServiceTest {
       personId = "41593",
       personName = "John Smith",
       dob = LocalDate.of(1990, 8, 21),
-      zip = "ls11aa",
+      postCode = "ls11aa",
     )
 
     val result = personService.personMatchScore(cprPerson, emPerson)
@@ -242,7 +242,7 @@ class PersonServiceTest {
     personId = "41593",
     personName = "John Smith",
     dob = LocalDate.of(1990, 8, 21),
-    zip = "SW1H9AJ",
+    postCode = "SW1H9AJ",
   )
 
   private fun previousMatch(overallMatchScore: Double) = PersonMatchScoreEntity(

@@ -25,7 +25,7 @@ constructor(
   val ceprId: String? = null,
   val prisonId: String? = null,
   val dob: LocalDate? = null,
-  val zip: String? = null,
+  val postCode: String? = null,
   val city: String? = null,
   val street: String? = null,
   val orderId: String? = null,

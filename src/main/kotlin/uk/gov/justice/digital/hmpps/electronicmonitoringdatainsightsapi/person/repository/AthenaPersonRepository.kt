@@ -105,7 +105,7 @@ class AthenaPersonRepository(
       CAST(NULL AS VARCHAR) AS cepr,
       CAST(NULL AS VARCHAR) AS u_prison_number,
       c.date_of_birth AS u_dob,
-      c.postcode AS zip,
+      c.postcode AS postcode,
       c.city_or_town AS city,
       c.house_number_and_street_name AS street,
       c.order_id AS order_id
@@ -276,7 +276,7 @@ class AthenaPersonRepository(
       CAST(NULL AS VARCHAR) AS cepr,
       CAST(NULL AS VARCHAR) AS u_prison_number,
       c.date_of_birth AS u_dob,
-      c.postcode AS zip,
+      c.postcode AS postcode,
       c.city_or_town AS city,
       c.house_number_and_street_name AS street,
       c.order_id AS order_id
@@ -380,7 +380,7 @@ class AthenaPersonRepository(
       CAST(NULL AS VARCHAR) AS cepr,
       CAST(NULL AS VARCHAR) AS u_prison_number,
       c.date_of_birth AS u_dob,
-      c.postcode AS zip,
+      c.postcode AS postcode,
       c.city_or_town AS city,
       c.house_number_and_street_name AS street,
       c.order_id AS order_id,
@@ -440,7 +440,7 @@ class AthenaPersonRepository(
       ceprId = v(COL_CEP_ID),
       prisonId = v(COL_PRISON_ID),
       dob = date(COL_DOB),
-      zip = v(COL_ZIP),
+      postCode = v(COL_POSTCODE),
       city = v(COL_CITY),
       street = v(COL_STREET),
       orderId = v(COL_ORDER_ID),
@@ -519,7 +519,7 @@ class AthenaPersonRepository(
     private const val COL_CEP_ID = 7
     private const val COL_PRISON_ID = 8
     private const val COL_DOB = 9
-    private const val COL_ZIP = 10
+    private const val COL_POSTCODE = 10
     private const val COL_CITY = 11
     private const val COL_STREET = 12
     private const val COL_ORDER_ID = 13
