@@ -42,7 +42,7 @@ class PersonSearchTest : IntegrationTestBase() {
     assertThat(person.ceprId).isEqualTo("CEPR001")
     assertThat(person.prisonId).isEqualTo("PRISON123")
     assertThat(person.dob).isEqualTo(LocalDate.parse("1980-01-15"))
-    assertThat(person.zip).isEqualTo("SW1A 1AA")
+    assertThat(person.postCode).isEqualTo("SW1A 1AA")
     assertThat(person.city).isEqualTo("London")
     assertThat(person.street).isEqualTo("1 Test Street")
     assertThat(person.orderId).isEqualTo("ORDER123")
