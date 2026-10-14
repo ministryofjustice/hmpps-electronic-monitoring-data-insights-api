@@ -1,8 +1,8 @@
 {
-  "exclusionZones": [
+  "restrictionZones": [
     {
-      "exclusionZoneId": 1001,
-      "type": "Exclusion",
+      "restrictionZoneId": 1001,
+      "restrictionType": "EXCLUSION",
       "name": "St James Park",
       "address": "St. James's Park in London SW1A 2BJ",
       "geometry": {
@@ -15,39 +15,27 @@
         },
         "coordinates": [
           [
-            [
-              -0.132646597116215,
-              51.50525361293847
-            ],
-            [
-              -0.129900015084965,
-              51.50620856945221
-            ],
-            [
-              -0.127829349725468,
-              51.50148033725193
-            ],
-            [
-              -0.141090191095097,
-              51.50014458956852
-            ],
-            [
-              -0.140909976247892,
-              51.50224330385428
-            ],
-            [
-              -0.132646597116215,
-              51.50525361293847
-            ]
+            [-0.132646597116215, 51.50525361293847],
+            [-0.129900015084965, 51.50620856945221],
+            [-0.127829349725468, 51.50148033725193],
+            [-0.141090191095097, 51.50014458956852],
+            [-0.140909976247892, 51.50224330385428],
+            [-0.132646597116215, 51.50525361293847]
           ]
         ]
       },
-      "activeFrom": "2026-09-01T00:00:00Z",
-      "activeTo": "2026-10-01T00:00:00Z"
+      "schedule": {
+        "activeFrom": "2026-09-01T00:00:00Z",
+        "activeTo": "2026-10-01T00:00:00Z",
+        "applicableFrom": null,
+        "applicableTo": null,
+        "recursionType": null,
+        "recursionPattern": null
+      }
     },
     {
-      "exclusionZoneId": 1002,
-      "type": "Exclusion",
+      "restrictionZoneId": 1002,
+      "restrictionType": "EXCLUSION",
       "name": "Rapha London",
       "address": "85 Brewer Street, London W1F 9ZN",
       "geometry": {
@@ -60,47 +48,29 @@
         },
         "coordinates": [
           [
-            [
-              -0.136755,
-              51.510818
-            ],
-            [
-              -0.136567,
-              51.510913
-            ],
-            [
-              -0.136337,
-              51.510509
-            ],
-            [
-              -0.136589,
-              51.510527
-            ],
-            [
-              -0.136728,
-              51.510704
-            ],
-            [
-              -0.136691,
-              51.510651
-            ],
-            [
-              -0.136798,
-              51.510811
-            ],
-            [
-              -0.136755,
-              51.510818
-            ]
+            [-0.136755, 51.510818],
+            [-0.136567, 51.510913],
+            [-0.136337, 51.510509],
+            [-0.136589, 51.510527],
+            [-0.136728, 51.510704],
+            [-0.136691, 51.510651],
+            [-0.136798, 51.510811],
+            [-0.136755, 51.510818]
           ]
         ]
       },
-      "activeFrom": "2025-09-01T00:00:00Z",
-      "activeTo": "2026-05-01T00:00:00Z"
+      "schedule": {
+        "activeFrom": "2025-09-01T00:00:00Z",
+        "activeTo": "2026-05-01T00:00:00Z",
+        "applicableFrom": null,
+        "applicableTo": null,
+        "recursionType": null,
+        "recursionPattern": null
+      }
     },
     {
-      "exclusionZoneId": 1003,
-      "type": "Exclusion",
+      "restrictionZoneId": 1003,
+      "restrictionType": "EXCLUSION",
       "name": "Borough Market",
       "address": "8 Southwark Street, London, SE1 1TL",
       "geometry": {
@@ -117,8 +87,14 @@
         ],
         "radiusMetres": 500.0
       },
-      "activeFrom": "2026-05-01T00:00:00Z",
-      "activeTo": "2027-05-01T00:00:00Z"
+      "schedule": {
+        "activeFrom": "2026-05-01T00:00:00Z",
+        "activeTo": "2027-05-01T00:00:00Z",
+        "applicableFrom": null,
+        "applicableTo": null,
+        "recursionType": null,
+        "recursionPattern": null
+      }
     }
   ]
 }

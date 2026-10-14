@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.core.io.Resource
 import org.springframework.stereotype.Component
 import tools.jackson.databind.ObjectMapper
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.restrictionzone.api.RestrictionZoneResponse
 
 @Component
 class DevExclusionZoneProvider(
@@ -11,7 +12,7 @@ class DevExclusionZoneProvider(
   @Value("classpath:dev_exclusion_zones.json")
   private val devExclusionZonesFile: Resource,
 ) {
-  fun getExclusionZones(): ExclusionZoneResponse = devExclusionZonesFile.inputStream.use {
-    objectMapper.readValue(it, ExclusionZoneResponse::class.java)
+  fun getExclusionZones(): RestrictionZoneResponse = devExclusionZonesFile.inputStream.use {
+    objectMapper.readValue(it, RestrictionZoneResponse::class.java)
   }
 }

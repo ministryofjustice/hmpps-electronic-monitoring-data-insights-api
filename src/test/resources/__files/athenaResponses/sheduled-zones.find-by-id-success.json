@@ -1,0 +1,59 @@
+{
+  "ResultSet": {
+    "Rows": [
+      {
+        "Data": [
+          { "VarCharValue": "zone_id" },
+          { "VarCharValue": "curfew_rule_name" },
+          { "VarCharValue": "zone_type_name" },
+          { "VarCharValue": "zone_address" },
+          { "VarCharValue": "zone_geometry" },
+          { "VarCharValue": "zone_radius" },
+          { "VarCharValue": "active_from" },
+          { "VarCharValue": "active_to" },
+          { "VarCharValue": "applicable_from" },
+          { "VarCharValue": "applicable_to" },
+          { "VarCharValue": "recursion_type" },
+          { "VarCharValue": "recursion_pattern" }
+        ]
+      },
+      {
+        "Data": [
+          { "VarCharValue": "101" },
+          { "VarCharValue": "Inclusion" },
+          { "VarCharValue": "Some Place" },
+          { "VarCharValue": "1 Example Street, London" },
+          {
+            "VarCharValue": "{\"type\":\"Point\",\"crs\":{\"type\":\"name\",\"properties\":{\"name\":\"EPSG:4326\"}},\"coordinates\":[-0.091249,51.505444]}"
+          },
+          { "VarCharValue": "150.0" },
+          {},
+          {},
+          { "VarCharValue": "2025-11-13 09:00:00.000000" },
+          { "VarCharValue": "2026-01-01 11:15:00.000000" },
+          { "VarCharValue": "week_1___0,1,2,3,4,5,6#" },
+          { "VarCharValue": "week_1___0,1,2,3,4,5,6" }
+        ]
+      },
+      {
+        "Data": [
+          { "VarCharValue": "102" },
+          { "VarCharValue": "Exclusion" },
+          { "VarCharValue": "Office Complex" },
+          { "VarCharValue": "100 Test Road, London" },
+          {
+            "VarCharValue": "{\"type\":\"Polygon\",\"crs\":{\"type\":\"name\",\"properties\":{\"name\":\"EPSG:4326\"}},\"coordinates\":[[[-0.132646597116215,51.50525361293847],[-0.129900015084965,51.50620856945221],[-0.127829349725468,51.50148033725193],[-0.141090191095097,51.50014458956852],[-0.140909976247892,51.50224330385428],[-0.132646597116215,51.50525361293847]]]}"
+          },
+          {},
+          {},
+          {},
+          { "VarCharValue": "2025-11-13 07:00:00.000000" },
+          { "VarCharValue": "2026-01-01 10:26:00.000000" },
+          { "VarCharValue": "week_1___3,4,5#" },
+          { "VarCharValue": "week_1___3,4,5" }
+        ]
+      }
+    ]
+  },
+  "UpdateCount": 0
+}

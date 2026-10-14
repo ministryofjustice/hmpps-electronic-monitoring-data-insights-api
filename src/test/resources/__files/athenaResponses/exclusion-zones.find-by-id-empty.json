@@ -4,7 +4,7 @@
       {
         "Data": [
           {
-            "VarCharValue": "curfew_id"
+            "VarCharValue": "zone_id"
           },
           {
             "VarCharValue": "curfew_rule_name"
@@ -22,10 +22,22 @@
             "VarCharValue": "zone_radius"
           },
           {
-            "VarCharValue": "curfew_rule_active_start_date"
+            "VarCharValue": "active_from"
           },
           {
-            "VarCharValue": "curfew_rule_active_end_date"
+            "VarCharValue": "active_to"
+          },
+          {
+            "VarCharValue": "applicable_from"
+          },
+          {
+            "VarCharValue": "applicable_to"
+          },
+          {
+            "VarCharValue": "recursion_type"
+          },
+          {
+            "VarCharValue": "recursion_pattern"
           }
         ]
       }
@@ -36,8 +48,8 @@
           "CatalogName": "hive",
           "SchemaName": "",
           "TableName": "",
-          "Name": "curfew_id",
-          "Label": "curfew_id",
+          "Name": "zone_id",
+          "Label": "zone_id",
           "Type": "bigint",
           "Precision": 0,
           "Scale": 0,
@@ -48,13 +60,13 @@
           "CatalogName": "hive",
           "SchemaName": "",
           "TableName": "",
-          "Name": "person_id",
-          "Label": "person_id",
-          "Type": "bigint",
+          "Name": "curfew_rule_name",
+          "Label": "curfew_rule_name",
+          "Type": "varchar",
           "Precision": 0,
           "Scale": 0,
           "Nullable": "UNKNOWN",
-          "CaseSensitive": false
+          "CaseSensitive": true
         },
         {
           "CatalogName": "hive",
@@ -108,8 +120,8 @@
           "CatalogName": "hive",
           "SchemaName": "",
           "TableName": "",
-          "Name": "curfew_rule_active_start_date",
-          "Label": "curfew_rule_active_start_date",
+          "Name": "active_from",
+          "Label": "active_from",
           "Type": "timestamp",
           "Precision": 0,
           "Scale": 0,
@@ -120,13 +132,61 @@
           "CatalogName": "hive",
           "SchemaName": "",
           "TableName": "",
-          "Name": "curfew_rule_active_end_date",
-          "Label": "curfew_rule_active_end_date",
+          "Name": "active_to",
+          "Label": "active_to",
           "Type": "timestamp",
           "Precision": 0,
           "Scale": 0,
           "Nullable": "UNKNOWN",
           "CaseSensitive": false
+        },
+        {
+          "CatalogName": "hive",
+          "SchemaName": "",
+          "TableName": "",
+          "Name": "applicable_from",
+          "Label": "applicable_from",
+          "Type": "timestamp",
+          "Precision": 0,
+          "Scale": 0,
+          "Nullable": "UNKNOWN",
+          "CaseSensitive": false
+        },
+        {
+          "CatalogName": "hive",
+          "SchemaName": "",
+          "TableName": "",
+          "Name": "applicable_to",
+          "Label": "applicable_to",
+          "Type": "timestamp",
+          "Precision": 0,
+          "Scale": 0,
+          "Nullable": "UNKNOWN",
+          "CaseSensitive": false
+        },
+        {
+          "CatalogName": "hive",
+          "SchemaName": "",
+          "TableName": "",
+          "Name": "recursion_type",
+          "Label": "recursion_type",
+          "Type": "varchar",
+          "Precision": 0,
+          "Scale": 0,
+          "Nullable": "UNKNOWN",
+          "CaseSensitive": true
+        },
+        {
+          "CatalogName": "hive",
+          "SchemaName": "",
+          "TableName": "",
+          "Name": "recursion_pattern",
+          "Label": "recursion_pattern",
+          "Type": "varchar",
+          "Precision": 0,
+          "Scale": 0,
+          "Nullable": "UNKNOWN",
+          "CaseSensitive": true
         }
       ]
     }
