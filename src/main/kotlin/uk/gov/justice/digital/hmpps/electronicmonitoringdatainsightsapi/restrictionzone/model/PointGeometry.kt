@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.exclusionzone.model
+package uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.restrictionzone.model
 
 data class PointGeometry(
   override val crs: CoordinateReferenceSystem,

@@ -1,0 +1,98 @@
+{
+  "ResultSet": {
+    "Rows": [
+      {
+        "Data": [
+          { "VarCharValue": "zone_id" },
+          { "VarCharValue": "curfew_rule_name" },
+          { "VarCharValue": "zone_name" },
+          { "VarCharValue": "zone_address" },
+          { "VarCharValue": "zone_geometry" },
+          { "VarCharValue": "zone_radius" },
+          { "VarCharValue": "curfew_start_at" },
+          { "VarCharValue": "curfew_end_at" },
+          { "VarCharValue": "applicable_from" },
+          { "VarCharValue": "applicable_to" },
+          { "VarCharValue": "recursion_type" },
+          { "VarCharValue": "recursion_pattern" }
+        ]
+      },
+
+      {
+        "Data": [
+          { "VarCharValue": "1001" },
+          { "VarCharValue": "Exclusion" },
+          { "VarCharValue": "St James Park" },
+          { "VarCharValue": "St. James's Park in London SW1A 2BJ" },
+          {
+            "VarCharValue": "{\"type\":\"Polygon\",\"crs\":{\"type\":\"name\",\"properties\":{\"name\":\"EPSG:4326\"}},\"coordinates\":[[[-0.132646597116215,51.50525361293847],[-0.129900015084965,51.50620856945221],[-0.127829349725468,51.50148033725193],[-0.141090191095097,51.50014458956852],[-0.140909976247892,51.50224330385428],[-0.132646597116215,51.50525361293847]]]}"
+          },
+          {},
+          { "VarCharValue": "2025-01-01 00:00:00" },
+          { "VarCharValue": "2027-01-01 00:00:00" },
+          {},
+          {},
+          {},
+          {}
+        ]
+      },
+
+      {
+        "Data": [
+          { "VarCharValue": "1002" },
+          { "VarCharValue": "Exclusion" },
+          { "VarCharValue": "Borough Market" },
+          { "VarCharValue": "8 Southwark Street, London, SE1 1TL" },
+          {
+            "VarCharValue": "{\"type\":\"Point\",\"crs\":{\"type\":\"name\",\"properties\":{\"name\":\"EPSG:4326\"}},\"coordinates\":[-0.091249,51.505444]}"
+          },
+          { "VarCharValue": "500" },
+          { "VarCharValue": "2025-01-05 09:00:00" },
+          { "VarCharValue": "2025-01-25 17:00:00" },
+          { "VarCharValue": "2025-01-01 00:00:00" },
+          { "VarCharValue": "2025-12-31 23:59:59" },
+          { "VarCharValue": "WEEKLY" },
+          { "VarCharValue": "WEEK_1___5" }
+        ]
+      },
+
+      {
+        "Data": [
+          { "VarCharValue": "2001" },
+          { "VarCharValue": "Inclusion" },
+          { "VarCharValue": "Albert Road Jarrow" },
+          { "VarCharValue": "Albert Road, Jarrow" },
+          {
+            "VarCharValue": "{\"type\":\"Point\",\"crs\":{\"type\":\"name\",\"properties\":{\"name\":\"EPSG:4326\"}},\"coordinates\":[-1.4845,54.9802]}"
+          },
+          { "VarCharValue": "250" },
+          { "VarCharValue": "2025-01-01 00:00:00" },
+          { "VarCharValue": "2027-01-01 00:00:00" },
+          {},
+          {},
+          {},
+          {}
+        ]
+      },
+
+      {
+        "Data": [
+          { "VarCharValue": "2002" },
+          { "VarCharValue": "Inclusion" },
+          { "VarCharValue": "Home Zone" },
+          { "VarCharValue": "2 Inclusion Road" },
+          {
+            "VarCharValue": "{\"type\":\"Polygon\",\"crs\":{\"type\":\"name\",\"properties\":{\"name\":\"EPSG:4326\"}},\"coordinates\":[[[-0.1426,51.5152],[-0.1399,51.5162],[-0.1378,51.5114],[-0.1426,51.5152]]]}"
+          },
+          {},
+          { "VarCharValue": "2025-01-01 00:00:00" },
+          { "VarCharValue": "2025-12-31 23:59:59" },
+          { "VarCharValue": "2025-01-15 00:00:00" },
+          { "VarCharValue": "2025-06-30 23:59:59" },
+          { "VarCharValue": "DAILY" },
+          { "VarCharValue": "DAILY" }
+        ]
+      }
+    ]
+  }
+}
