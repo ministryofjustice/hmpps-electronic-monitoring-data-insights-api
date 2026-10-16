@@ -37,4 +37,4 @@ generic-service:
       PROBATION_INT_API_CLIENT_SECRET: "PROBATION_INT_API_CLIENT_SECRET"
 
 generic-prometheus-alerts:
-  alertSeverity: hmpps-electronic-monitoring-data-insights-preprod
+  alertSeverityOverride: hmpps-electronic-monitoring-data-insights-preprod

@@ -45,4 +45,4 @@ generic-service:
       SLACK_WEBHOOK_URL: "hub_channel_url"
 
 generic-prometheus-alerts:
-  alertSeverity: hmpps-electronic-monitoring-data-insights-dev
+  alertSeverityOverride: hmpps-electronic-monitoring-data-insights-dev
