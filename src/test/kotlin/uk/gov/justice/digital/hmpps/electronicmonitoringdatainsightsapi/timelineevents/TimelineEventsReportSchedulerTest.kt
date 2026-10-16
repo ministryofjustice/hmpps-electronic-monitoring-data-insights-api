@@ -4,6 +4,7 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
+import org.hamcrest.Matchers.containsString
 import org.junit.jupiter.api.Test
 import org.springframework.http.HttpMethod
 import org.springframework.scheduling.annotation.Scheduled
@@ -43,6 +44,7 @@ class TimelineEventsReportSchedulerTest {
     )
     every { timelineEventsService.getStatistics(toDate = yesterday) } returns statistics
     every { timelineEventsService.getStatisticsSummary() } returns summary
+    every { timelineEventsService.getRegionalStatisticsSummaries() } returns emptyMap()
     server.expect(requestTo("https://hooks.slack.test/services/test"))
       .andExpect(method(HttpMethod.POST))
       .andExpect(
@@ -60,6 +62,29 @@ class TimelineEventsReportSchedulerTest {
 
     verify { timelineEventsService.getStatistics(toDate = yesterday) }
     verify { timelineEventsService.getStatisticsSummary() }
+    server.verify()
+  }
+
+  @Test
+  fun `includes each regional table alongside the overall statistics`() {
+    val overall = statistics(10, 20, 5, 1000.0, 1000.0, 1000.0, 2000, 60.0)
+    val regional = statistics(2, 3, 1, 2000.0, 2000.0, 2000.0, 3000, 120.0)
+    every { timelineEventsService.getStatistics(toDate = any()) } returns "Overall statistics"
+    every { timelineEventsService.getStatisticsSummary() } returns TimelineEventsStatisticsResponse(overall, overall, overall, overall)
+    every { timelineEventsService.getRegionalStatisticsSummaries() } returns mapOf(
+      "London" to TimelineEventsStatisticsResponse(regional, regional, regional, regional),
+      "Wales & <test>" to TimelineEventsStatisticsResponse(regional, regional, regional, regional),
+    )
+    server.expect(requestTo("https://hooks.slack.test/services/test"))
+      .andExpect(content().string(containsString("Overall statistics")))
+      .andExpect(content().string(containsString("*PoP probation region: London*")))
+      .andExpect(content().string(containsString("*PoP probation region: Wales &amp; &lt;test&gt;*")))
+      .andExpect(content().string(containsString("| Users                          |         2 |           2 |            2 |        2 |")))
+      .andExpect(content().string(containsString("| Avg time on page               |    120.0s |      120.0s |       120.0s |   120.0s |")))
+      .andRespond(withSuccess())
+
+    scheduler.sendDailyReport()
+
     server.verify()
   }
 

@@ -49,11 +49,12 @@ class TimelineEventsService(
 
   fun getStatisticsSummary(
     today: LocalDate = LocalDate.now(REPORTING_TIME_ZONE),
+    region: String? = null,
   ): TimelineEventsStatisticsResponse {
     val to = today.atStartOfDay(REPORTING_TIME_ZONE).toInstant()
 
     fun statisticsFrom(from: Instant) = timelineEventsRepository
-      .getStatistics(from, to)
+      .getStatistics(from, to, region)
       .toResponse()
 
     fun statisticsFrom(from: LocalDate) = statisticsFrom(
@@ -67,6 +68,12 @@ class TimelineEventsService(
       allTime = statisticsFrom(Instant.EPOCH),
     )
   }
+
+  fun getRegionalStatisticsSummaries(
+    today: LocalDate = LocalDate.now(REPORTING_TIME_ZONE),
+  ): Map<String, TimelineEventsStatisticsResponse> = timelineEventsRepository
+    .getStatisticsRegions(Instant.EPOCH, today.atStartOfDay(REPORTING_TIME_ZONE).toInstant())
+    .associateWith { getStatisticsSummary(today, it) }
 
   fun getStatistics(
     fromDate: LocalDate = DEFAULT_FROM_DATE,

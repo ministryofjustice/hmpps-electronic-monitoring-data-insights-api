@@ -39,10 +39,18 @@ class TimelineEventsReportScheduler(
     val statistics = timelineEventsService.getStatistics(toDate = reportToDate)
     val statisticsSummary = timelineEventsService.getStatisticsSummary()
 
+    val regionalSummaries = timelineEventsService.getRegionalStatisticsSummaries()
+    val regionalTables = regionalSummaries.map { (region, summary) ->
+      val escapedRegion = region.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+      formatSlackMessage("*PoP probation region: $escapedRegion*", summary)
+    }
+    val message = (listOf(formatSlackMessage(statistics, statisticsSummary)) + regionalTables)
+      .joinToString("\n\n")
+
     restClient.post()
       .uri(slackWebhookUrl)
       .contentType(MediaType.APPLICATION_JSON)
-      .body(mapOf("text" to formatSlackMessage(statistics, statisticsSummary)))
+      .body(mapOf("text" to message))
       .retrieve()
       .toBodilessEntity()
   }

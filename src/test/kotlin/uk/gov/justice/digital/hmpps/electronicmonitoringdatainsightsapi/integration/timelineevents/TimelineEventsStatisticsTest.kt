@@ -73,6 +73,64 @@ class TimelineEventsStatisticsTest : IntegrationTestBase() {
     assertThat(statistics.averageTimeSpentSeconds).isEqualTo(534.0)
   }
 
+  @Test
+  fun `regional statistics match complete trimmed areas without duplicating events`() {
+    timelineEventsRepository.saveAll(
+      listOf(
+        event("2026-08-11T10:00:00Z", "USER_1", "X1", 1000, crnProbationAreas = " London, Wales, London "),
+        event("2026-08-11T10:02:00Z", "USER_1", "X2", 3000, EventType.VIEW_PERSON_LOCATIONS, crnProbationAreas = "Wales"),
+        event("2026-08-11T11:00:00Z", "USER_2", "X3", 5000, crnProbationAreas = "London"),
+        event("2026-08-11T12:00:00Z", "USER_3", "X4", 9000, crnProbationAreas = "Greater London"),
+        event("2026-08-11T12:00:00Z", "AUTH_ADM", "X5", 9000, crnProbationAreas = "London"),
+        event("2026-08-11T12:00:00Z", "SYS", "X6", 9000, crnProbationAreas = "London"),
+        event("2026-08-11T12:00:00Z", "USER_4", "X7", 9000),
+        event("2026-08-12T00:00:00Z", "USER_5", "X8", 9000, crnProbationAreas = "London"),
+      ),
+    )
+    val from = Instant.parse("2026-08-11T00:00:00Z")
+    val to = Instant.parse("2026-08-12T00:00:00Z")
+    val london = timelineEventsRepository.getStatistics(from, to, "London")
+    val wales = timelineEventsRepository.getStatistics(from, to, "Wales")
+    val empty = timelineEventsRepository.getStatistics(from, to, "Unknown")
+
+    assertThat(london.users).isEqualTo(2)
+    assertThat(london.searches).isEqualTo(2)
+    assertThat(london.pops).isEqualTo(2)
+    assertThat(london.averageLoadDurationMs).isEqualTo(3000.0)
+    assertThat(london.averagePersonLoadDurationMs).isEqualTo(3000.0)
+    assertThat(london.averageLocationLoadDurationMs).isNull()
+    assertThat(london.maximumDurationMs).isEqualTo(5000)
+    // The next page is in Wales: retain it when calculating dwell time for the London page.
+    assertThat(london.averageTimeSpentSeconds).isEqualTo(120.0)
+    assertThat(wales.users).isEqualTo(1)
+    assertThat(wales.searches).isEqualTo(2)
+    assertThat(wales.averageLocationLoadDurationMs).isEqualTo(3000.0)
+    assertThat(empty.searches).isZero()
+    assertThat(empty.averageLoadDurationMs).isNull()
+    assertThat(timelineEventsRepository.getStatistics(from, to).searches).isEqualTo(5)
+  }
+
+  @Test
+  fun `discovers distinct nonblank regions from qualifying historical events only`() {
+    timelineEventsRepository.saveAll(
+      listOf(
+        event("2026-07-01T10:00:00Z", "USER_1", "X1", 1000, crnProbationAreas = " Wales, London, London, ,"),
+        event("2026-08-11T10:00:00Z", "USER_2", "X2", 1000, EventType.VIEW_PERSON_LOCATIONS, "London"),
+        event("2026-08-11T10:00:00Z", "USER_3", "X3", 1000),
+        event("2026-08-11T10:00:00Z", "USER_4", "X4", 1000, crnProbationAreas = " , "),
+        event("2026-08-11T10:00:00Z", "AUTH_ADM", "X5", 1000, crnProbationAreas = "Admin area"),
+        event("2026-08-11T10:00:00Z", "SYS", "X6", 1000, crnProbationAreas = "System area"),
+        event("2026-08-12T00:00:00Z", "USER_5", "X7", 1000, crnProbationAreas = "Future area"),
+        event("1969-12-31T23:59:59Z", "USER_6", "X8", 1000, crnProbationAreas = "Before epoch"),
+      ),
+    )
+
+    assertThat(timelineEventsRepository.getStatisticsRegions(Instant.EPOCH, Instant.parse("2026-08-12T00:00:00Z")))
+      .containsExactly("London", "Wales")
+    assertThat(timelineEventsRepository.getStatisticsRegions(Instant.EPOCH, Instant.parse("2026-01-01T00:00:00Z")))
+      .isEmpty()
+  }
+
   private fun pageViews(
     userName: String,
     crn: String,
@@ -105,6 +163,7 @@ class TimelineEventsStatisticsTest : IntegrationTestBase() {
     crn: String,
     durationMs: Long,
     eventType: EventType = EventType.SEARCH_PERSON_BY_ID,
+    crnProbationAreas: String? = null,
   ) = TimelineEventEntity(
     id = UUID.randomUUID(),
     occurredAt = Instant.parse(occurredAt),
@@ -112,6 +171,7 @@ class TimelineEventsStatisticsTest : IntegrationTestBase() {
     crn = crn,
     eventType = eventType,
     results = 1,
+    crnProbationAreas = crnProbationAreas,
     durationMs = durationMs,
   )
 

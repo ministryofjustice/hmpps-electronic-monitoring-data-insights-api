@@ -226,6 +226,30 @@ class TimelineEventsServiceTest {
     }
   }
 
+  @Test
+  fun `regional summaries use database regions and London reporting periods`() {
+    every { repository.getStatisticsRegions(Instant.EPOCH, Instant.parse("2026-10-26T00:00:00Z")) } returns listOf("London", "Wales")
+    every { repository.getStatistics(any(), any(), any()) } returns statistics(2, 3, 1)
+
+    val summaries = service.getRegionalStatisticsSummaries(LocalDate.parse("2026-10-26"))
+
+    assertThat(summaries.keys).containsExactly("London", "Wales")
+    summaries.values.forEach { assertThat(it.daily.users).isEqualTo(2) }
+    listOf("London", "Wales").forEach { region ->
+      listOf("2026-10-24T23:00:00Z", "2026-10-18T23:00:00Z", "2026-09-25T23:00:00Z", "1970-01-01T00:00:00Z").forEach { from ->
+        verify(exactly = 1) { repository.getStatistics(Instant.parse(from), Instant.parse("2026-10-26T00:00:00Z"), region) }
+      }
+    }
+  }
+
+  @Test
+  fun `regional summaries are empty when the database has no regions`() {
+    every { repository.getStatisticsRegions(any(), any()) } returns emptyList()
+
+    assertThat(service.getRegionalStatisticsSummaries()).isEmpty()
+    verify(exactly = 0) { repository.getStatistics(any(), any(), any()) }
+  }
+
   private fun statistics(
     users: Long,
     searches: Long,
