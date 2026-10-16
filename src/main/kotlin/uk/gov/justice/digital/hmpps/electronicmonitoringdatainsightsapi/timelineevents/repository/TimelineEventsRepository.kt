@@ -12,6 +12,22 @@ interface TimelineEventsRepository : JpaRepository<TimelineEventEntity, UUID> {
 
   @Query(
     """
+      SELECT DISTINCT TRIM(area.region) AS region
+      FROM timeline_events
+      CROSS JOIN LATERAL unnest(string_to_array(crn_probation_areas, ',')) AS area(region)
+      WHERE occurred_at >= :from
+        AND occurred_at < :to
+        AND user_name NOT IN ('AUTH_ADM', 'SYS')
+        AND event_type IN ('SEARCH_PERSON_BY_ID', 'VIEW_PERSON_LOCATIONS')
+        AND TRIM(area.region) <> ''
+      ORDER BY region
+    """,
+    nativeQuery = true,
+  )
+  fun getStatisticsRegions(from: Instant, to: Instant): List<String>
+
+  @Query(
+    """
       SELECT COALESCE(TRIM(area.region), 'TOTAL') AS region,
              COUNT(DISTINCT user_name) AS adoption
       FROM timeline_events
@@ -37,9 +53,14 @@ interface TimelineEventsRepository : JpaRepository<TimelineEventEntity, UUID> {
           AND occurred_at < :to
           AND user_name NOT IN ('AUTH_ADM', 'SYS')
           AND event_type IN ('SEARCH_PERSON_BY_ID', 'VIEW_PERSON_LOCATIONS')
+          AND (CAST(:region AS text) IS NULL OR EXISTS (
+            SELECT 1 FROM unnest(string_to_array(crn_probation_areas, ',')) AS area(region)
+            WHERE TRIM(area.region) = :region
+          ))
       ),
       page_views AS (
         SELECT occurred_at,
+               crn_probation_areas,
                user_name,
                crn,
                LEAD(occurred_at) OVER (
@@ -56,6 +77,7 @@ interface TimelineEventsRepository : JpaRepository<TimelineEventEntity, UUID> {
       ),
       dwell_times AS (
         SELECT occurred_at,
+               crn_probation_areas,
                user_name,
                crn,
                next_crn,
@@ -82,12 +104,16 @@ interface TimelineEventsRepository : JpaRepository<TimelineEventEntity, UUID> {
                  AND duration_seconds <= 1200
                  AND occurred_at >= :from
                  AND occurred_at < :to
+                 AND (CAST(:region AS text) IS NULL OR EXISTS (
+                   SELECT 1 FROM unnest(string_to_array(crn_probation_areas, ',')) AS area(region)
+                   WHERE TRIM(area.region) = :region
+                 ))
              ) AS "averageTimeSpentSeconds"
       FROM filtered_events
     """,
     nativeQuery = true,
   )
-  fun getStatistics(from: Instant, to: Instant): TimelineEventStatistics
+  fun getStatistics(from: Instant, to: Instant, region: String? = null): TimelineEventStatistics
 }
 
 interface TimelineEventStatistics {
