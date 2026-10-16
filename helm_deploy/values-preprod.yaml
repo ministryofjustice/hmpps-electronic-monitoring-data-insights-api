@@ -35,3 +35,6 @@ generic-service:
     hmpps-electronic-monitoring-data-insights-api-client-creds:
       PROBATION_INT_API_CLIENT_ID: "PROBATION_INT_API_CLIENT_ID"
       PROBATION_INT_API_CLIENT_SECRET: "PROBATION_INT_API_CLIENT_SECRET"
+
+generic-prometheus-alerts:
+  alertSeverityOverride: hmpps-electronic-monitoring-data-insights-preprod

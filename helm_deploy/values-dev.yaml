@@ -43,3 +43,6 @@ generic-service:
       PROBATION_INT_API_CLIENT_SECRET: "PROBATION_INT_API_CLIENT_SECRET"
     slack-webhook:
       SLACK_WEBHOOK_URL: "hub_channel_url"
+
+generic-prometheus-alerts:
+  alertSeverityOverride: hmpps-electronic-monitoring-data-insights-dev
