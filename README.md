@@ -283,6 +283,9 @@ Probation Search failures propagate as errors rather than being treated as no ma
 
 ### Daily Slack statistics by region
 
+The overall table and each regional table are sent as separate Slack messages to keep
+code blocks intact and avoid Slack splitting a table between messages.
+
 The daily Slack report includes the overall statistics followed by a table for each region
 recorded in the database. Regions are discovered dynamically from the PoP probation areas on
 qualifying search and location-view events, from the epoch up to the end of yesterday;

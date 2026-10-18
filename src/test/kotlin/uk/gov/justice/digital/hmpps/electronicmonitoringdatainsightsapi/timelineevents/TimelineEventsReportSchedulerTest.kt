@@ -7,6 +7,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.hamcrest.Matchers.containsString
 import org.junit.jupiter.api.Test
 import org.springframework.http.HttpMethod
+import org.springframework.mock.http.client.MockClientHttpRequest
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.test.web.client.MockRestServiceServer
 import org.springframework.test.web.client.match.MockRestRequestMatchers.content
@@ -66,7 +67,7 @@ class TimelineEventsReportSchedulerTest {
   }
 
   @Test
-  fun `includes each regional table alongside the overall statistics`() {
+  fun `sends each regional table in its own message with complete code fences`() {
     val overall = statistics(10, 20, 5, 1000.0, 1000.0, 1000.0, 2000, 60.0)
     val regional = statistics(2, 3, 1, 2000.0, 2000.0, 2000.0, 3000, 120.0)
     every { timelineEventsService.getStatistics(toDate = any()) } returns "Overall statistics"
@@ -77,11 +78,20 @@ class TimelineEventsReportSchedulerTest {
     )
     server.expect(requestTo("https://hooks.slack.test/services/test"))
       .andExpect(content().string(containsString("Overall statistics")))
-      .andExpect(content().string(containsString("*PoP probation region: London*")))
-      .andExpect(content().string(containsString("*PoP probation region: Wales &amp; &lt;test&gt;*")))
-      .andExpect(content().string(containsString("| Users                          |         2 |           2 |            2 |        2 |")))
-      .andExpect(content().string(containsString("| Avg time on page               |    120.0s |      120.0s |       120.0s |   120.0s |")))
       .andRespond(withSuccess())
+    listOf("London", "Wales &amp; &lt;test&gt;").forEach { region ->
+      server.expect(requestTo("https://hooks.slack.test/services/test"))
+        .andExpect(content().string(containsString("*PoP probation region: $region*")))
+        .andExpect(content().string(containsString("| Users                          |         2 |           2 |            2 |        2 |")))
+        .andExpect(content().string(containsString("| Avg time on page               |    120.0s |      120.0s |       120.0s |   120.0s |")))
+        .andExpect { request ->
+          val body = (request as MockClientHttpRequest).bodyAsString
+          assertThat(body.split("```")).hasSize(3)
+          assertThat(body.split("*PoP probation region:")).hasSize(2)
+          assertThat(body.length).isLessThan(4000)
+        }
+        .andRespond(withSuccess())
+    }
 
     scheduler.sendDailyReport()
 
