@@ -40,24 +40,26 @@ class TimelineEventsReportScheduler(
     val statisticsSummary = timelineEventsService.getStatisticsSummary()
 
     val regionalSummaries = timelineEventsService.getRegionalStatisticsSummaries()
-    val regionalTables = regionalSummaries.map { (region, summary) ->
-      val escapedRegion = region.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
-      formatSlackMessage("*PoP probation region: $escapedRegion*", summary)
-    }
-    val message = (listOf(formatSlackMessage(statistics, statisticsSummary)) + regionalTables)
-      .joinToString("\n\n")
-
+    val table = formatTable(statisticsSummary, regionalSummaries)
+    // Structured preformatted text keeps one continuous table without Markdown code fences.
+    val block = mapOf(
+      "type" to "rich_text",
+      "elements" to listOf(
+        mapOf("type" to "rich_text_section", "elements" to listOf(mapOf("type" to "text", "text" to statistics))),
+        mapOf("type" to "rich_text_preformatted", "elements" to listOf(mapOf("type" to "text", "text" to table))),
+      ),
+    )
     restClient.post()
       .uri(slackWebhookUrl)
       .contentType(MediaType.APPLICATION_JSON)
-      .body(mapOf("text" to message))
+      .body(mapOf("text" to statistics, "blocks" to listOf(block)))
       .retrieve()
       .toBodilessEntity()
   }
 
-  private fun formatSlackMessage(
-    statistics: String,
+  private fun formatTable(
     summary: TimelineEventsStatisticsResponse,
+    regions: Map<String, TimelineEventsStatisticsResponse>,
   ): String {
     fun row(label: String, daily: Any, weekly: Any, monthly: Any, allTime: Any) = String.format(
       Locale.UK,
@@ -82,13 +84,19 @@ class TimelineEventsReportScheduler(
     )
 
     val border = "+--------------------------------+-----------+-------------+--------------+----------+"
-    val table = listOf(
+    fun heading(label: String): List<String> = label.replace(Regex("\\s+"), " ")
+      .chunked(border.length - 4)
+      .map { "| ${it.padEnd(border.length - 4)} |" }
+
+    val rows = mutableListOf(
       border,
       row("Metric", "Yesterday", "Last 7 days", "Last 30 days", "All time"),
       border,
       row("Users", summary.daily.users, summary.weekly.users, summary.monthly.users, summary.allTime.users),
       row("Searches", summary.daily.searches, summary.weekly.searches, summary.monthly.searches, summary.allTime.searches),
       row("PoPs", summary.daily.pops, summary.weekly.pops, summary.monthly.pops, summary.allTime.pops),
+    )
+    rows += listOf(
       row(
         "Average person load duration",
         duration(summary.daily.averagePersonLoadDurationMs),
@@ -124,10 +132,17 @@ class TimelineEventsReportScheduler(
         seconds(summary.monthly.averageTimeSpentSeconds),
         seconds(summary.allTime.averageTimeSpentSeconds),
       ),
-      border,
-    ).joinToString("\n")
-
-    return "$statistics\n```\n$table\n```"
+    )
+    regions.forEach { (region, regional) ->
+      rows += border
+      rows += heading("PoP probation region: $region")
+      rows += border
+      rows += row("Users", regional.daily.users, regional.weekly.users, regional.monthly.users, regional.allTime.users)
+      rows += row("Searches", regional.daily.searches, regional.weekly.searches, regional.monthly.searches, regional.allTime.searches)
+      rows += row("PoPs", regional.daily.pops, regional.weekly.pops, regional.monthly.pops, regional.allTime.pops)
+    }
+    rows += border
+    return rows.joinToString("\n")
   }
 
   private companion object {
