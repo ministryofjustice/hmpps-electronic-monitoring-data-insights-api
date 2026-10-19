@@ -4,17 +4,16 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
-import org.hamcrest.Matchers.containsString
 import org.junit.jupiter.api.Test
 import org.springframework.http.HttpMethod
 import org.springframework.mock.http.client.MockClientHttpRequest
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.test.web.client.MockRestServiceServer
-import org.springframework.test.web.client.match.MockRestRequestMatchers.content
 import org.springframework.test.web.client.match.MockRestRequestMatchers.method
 import org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo
 import org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess
 import org.springframework.web.client.RestClient
+import tools.jackson.module.kotlin.jacksonObjectMapper
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.timelineevents.model.TimelineEventStatisticsResponse
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.timelineevents.model.TimelineEventsStatisticsResponse
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.timelineevents.service.TimelineEventsService
@@ -48,15 +47,30 @@ class TimelineEventsReportSchedulerTest {
     every { timelineEventsService.getRegionalStatisticsSummaries() } returns emptyMap()
     server.expect(requestTo("https://hooks.slack.test/services/test"))
       .andExpect(method(HttpMethod.POST))
-      .andExpect(
-        content().json(
+      .andExpect { request ->
+        val payload = jacksonObjectMapper().readTree((request as MockClientHttpRequest).bodyAsString)
+        assertThat(payload.path("text").asString()).isEqualTo(statistics)
+        assertThat(payload.path("blocks").size()).isEqualTo(1)
+        assertThat(payload.at("/blocks/0/type").asString()).isEqualTo("rich_text")
+        assertThat(payload.at("/blocks/0/elements/0/elements/0/text").asString()).isEqualTo(statistics)
+        assertThat(payload.at("/blocks/0/elements/1/type").asString()).isEqualTo("rich_text_preformatted")
+        assertThat(payload.at("/blocks/0/elements/1/elements/0/text").asString()).isEqualTo(
           """
-          {
-            "text": "$statistics\n```\n+--------------------------------+-----------+-------------+--------------+----------+\n| Metric                         | Yesterday | Last 7 days | Last 30 days | All time |\n+--------------------------------+-----------+-------------+--------------+----------+\n| Users                          |        20 |          80 |          215 |      222 |\n| Searches                       |        63 |         374 |         2643 |     2989 |\n| PoPs                           |        19 |          88 |          263 |      280 |\n| Average person load duration   |      4.0s |        3.6s |         3.2s |     3.3s |\n| Average location load duration |      7.0s |        6.0s |         5.2s |     5.3s |\n| Average load duration          |      5.5s |        4.8s |         4.2s |     4.3s |\n| Max duration                   |     59.1s |       59.1s |        70.2s |    70.2s |\n| Avg time on page               |    245.6s |      230.1s |       220.8s |   225.4s |\n+--------------------------------+-----------+-------------+--------------+----------+\n```"
-          }
+          +--------------------------------+-----------+-------------+--------------+----------+
+          | Metric                         | Yesterday | Last 7 days | Last 30 days | All time |
+          +--------------------------------+-----------+-------------+--------------+----------+
+          | Users                          |        20 |          80 |          215 |      222 |
+          | Searches                       |        63 |         374 |         2643 |     2989 |
+          | PoPs                           |        19 |          88 |          263 |      280 |
+          | Average person load duration   |      4.0s |        3.6s |         3.2s |     3.3s |
+          | Average location load duration |      7.0s |        6.0s |         5.2s |     5.3s |
+          | Average load duration          |      5.5s |        4.8s |         4.2s |     4.3s |
+          | Max duration                   |     59.1s |       59.1s |        70.2s |    70.2s |
+          | Avg time on page               |    245.6s |      230.1s |       220.8s |   225.4s |
+          +--------------------------------+-----------+-------------+--------------+----------+
           """.trimIndent(),
-        ),
-      )
+        )
+      }
       .andRespond(withSuccess())
 
     scheduler.sendDailyReport()
@@ -67,33 +81,39 @@ class TimelineEventsReportSchedulerTest {
   }
 
   @Test
-  fun `sends each regional table in its own message with complete code fences`() {
+  fun `sends one continuous table with full-width region headings in a single message`() {
     val overall = statistics(10, 20, 5, 1000.0, 1000.0, 1000.0, 2000, 60.0)
     val regional = statistics(2, 3, 1, 2000.0, 2000.0, 2000.0, 3000, 120.0)
     every { timelineEventsService.getStatistics(toDate = any()) } returns "Overall statistics"
     every { timelineEventsService.getStatisticsSummary() } returns TimelineEventsStatisticsResponse(overall, overall, overall, overall)
-    every { timelineEventsService.getRegionalStatisticsSummaries() } returns mapOf(
-      "London" to TimelineEventsStatisticsResponse(regional, regional, regional, regional),
-      "Wales & <test>" to TimelineEventsStatisticsResponse(regional, regional, regional, regional),
-    )
-    server.expect(requestTo("https://hooks.slack.test/services/test"))
-      .andExpect(content().string(containsString("Overall statistics")))
-      .andRespond(withSuccess())
-    listOf("London", "Wales &amp; &lt;test&gt;").forEach { region ->
-      server.expect(requestTo("https://hooks.slack.test/services/test"))
-        .andExpect(content().string(containsString("*PoP probation region: $region*")))
-        .andExpect(content().string(containsString("| Users                          |         2 |           2 |            2 |        2 |")))
-        .andExpect(content().string(containsString("| Searches                       |         3 |           3 |            3 |        3 |")))
-        .andExpect(content().string(containsString("| PoPs                           |         1 |           1 |            1 |        1 |")))
-        .andExpect { request ->
-          val body = (request as MockClientHttpRequest).bodyAsString
-          assertThat(body).doesNotContain("duration", "Avg time on page")
-          assertThat(body.split("```")).hasSize(3)
-          assertThat(body.split("*PoP probation region:")).hasSize(2)
-          assertThat(body.length).isLessThan(4000)
-        }
-        .andRespond(withSuccess())
+    val names = listOf("London", "Wales & <test>", "A".repeat(150)) + (1..20).map { "Region $it" }
+    every { timelineEventsService.getRegionalStatisticsSummaries() } returns names.associateWith {
+      TimelineEventsStatisticsResponse(regional, regional, regional, regional)
     }
+    server.expect(requestTo("https://hooks.slack.test/services/test"))
+      .andExpect(method(HttpMethod.POST))
+      .andExpect { request ->
+        val payload = jacksonObjectMapper().readTree((request as MockClientHttpRequest).bodyAsString)
+        assertThat(payload.path("text").asString()).isEqualTo("Overall statistics")
+        assertThat(payload.path("blocks").size()).isEqualTo(1)
+        assertThat(payload.at("/blocks/0/elements").size()).isEqualTo(2)
+        assertThat(payload.at("/blocks/0/elements/1/type").asString()).isEqualTo("rich_text_preformatted")
+        val table = payload.at("/blocks/0/elements/1/elements/0/text").asString()
+        assertThat(table).doesNotContain("```")
+        assertThat(table.length).isGreaterThan(4000)
+        assertThat(table.lines().map(String::length).distinct()).hasSize(1)
+        val width = table.lines().first().length
+        assertThat(table).contains("| ${"PoP probation region: London".padEnd(width - 4)} |")
+        assertThat(table).contains("| ${"PoP probation region: Wales & <test>".padEnd(width - 4)} |")
+        assertThat(table.split("PoP probation region:")).hasSize(names.size + 1)
+        assertThat(table.split("| Metric")).hasSize(2)
+        val regions = table.substringAfter("PoP probation region:")
+        assertThat(regions).doesNotContain("duration", "Avg time on page")
+        assertThat(regions).contains("| Users                          |         2 |           2 |            2 |        2 |")
+        assertThat(regions).contains("| Searches                       |         3 |           3 |            3 |        3 |")
+        assertThat(regions).contains("| PoPs                           |         1 |           1 |            1 |        1 |")
+      }
+      .andRespond(withSuccess())
 
     scheduler.sendDailyReport()
 

@@ -40,25 +40,26 @@ class TimelineEventsReportScheduler(
     val statisticsSummary = timelineEventsService.getStatisticsSummary()
 
     val regionalSummaries = timelineEventsService.getRegionalStatisticsSummaries()
-    val regionalTables = regionalSummaries.map { (region, summary) ->
-      val escapedRegion = region.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
-      formatSlackMessage("*PoP probation region: $escapedRegion*", summary, includeTimings = false)
-    }
-    // Keep each table's code fences together when Slack splits long messages.
-    (listOf(formatSlackMessage(statistics, statisticsSummary)) + regionalTables).forEach { message ->
-      restClient.post()
-        .uri(slackWebhookUrl)
-        .contentType(MediaType.APPLICATION_JSON)
-        .body(mapOf("text" to message))
-        .retrieve()
-        .toBodilessEntity()
-    }
+    val table = formatTable(statisticsSummary, regionalSummaries)
+    // Structured preformatted text keeps one continuous table without Markdown code fences.
+    val block = mapOf(
+      "type" to "rich_text",
+      "elements" to listOf(
+        mapOf("type" to "rich_text_section", "elements" to listOf(mapOf("type" to "text", "text" to statistics))),
+        mapOf("type" to "rich_text_preformatted", "elements" to listOf(mapOf("type" to "text", "text" to table))),
+      ),
+    )
+    restClient.post()
+      .uri(slackWebhookUrl)
+      .contentType(MediaType.APPLICATION_JSON)
+      .body(mapOf("text" to statistics, "blocks" to listOf(block)))
+      .retrieve()
+      .toBodilessEntity()
   }
 
-  private fun formatSlackMessage(
-    statistics: String,
+  private fun formatTable(
     summary: TimelineEventsStatisticsResponse,
-    includeTimings: Boolean = true,
+    regions: Map<String, TimelineEventsStatisticsResponse>,
   ): String {
     fun row(label: String, daily: Any, weekly: Any, monthly: Any, allTime: Any) = String.format(
       Locale.UK,
@@ -83,6 +84,10 @@ class TimelineEventsReportScheduler(
     )
 
     val border = "+--------------------------------+-----------+-------------+--------------+----------+"
+    fun heading(label: String): List<String> = label.replace(Regex("\\s+"), " ")
+      .chunked(border.length - 4)
+      .map { "| ${it.padEnd(border.length - 4)} |" }
+
     val rows = mutableListOf(
       border,
       row("Metric", "Yesterday", "Last 7 days", "Last 30 days", "All time"),
@@ -91,49 +96,53 @@ class TimelineEventsReportScheduler(
       row("Searches", summary.daily.searches, summary.weekly.searches, summary.monthly.searches, summary.allTime.searches),
       row("PoPs", summary.daily.pops, summary.weekly.pops, summary.monthly.pops, summary.allTime.pops),
     )
-    if (includeTimings) {
-      rows += listOf(
-        row(
-          "Average person load duration",
-          duration(summary.daily.averagePersonLoadDurationMs),
-          duration(summary.weekly.averagePersonLoadDurationMs),
-          duration(summary.monthly.averagePersonLoadDurationMs),
-          duration(summary.allTime.averagePersonLoadDurationMs),
-        ),
-        row(
-          "Average location load duration",
-          duration(summary.daily.averageLocationLoadDurationMs),
-          duration(summary.weekly.averageLocationLoadDurationMs),
-          duration(summary.monthly.averageLocationLoadDurationMs),
-          duration(summary.allTime.averageLocationLoadDurationMs),
-        ),
-        row(
-          "Average load duration",
-          duration(summary.daily.averageLoadDurationMs),
-          duration(summary.weekly.averageLoadDurationMs),
-          duration(summary.monthly.averageLoadDurationMs),
-          duration(summary.allTime.averageLoadDurationMs),
-        ),
-        row(
-          "Max duration",
-          duration(summary.daily.maximumDurationMs),
-          duration(summary.weekly.maximumDurationMs),
-          duration(summary.monthly.maximumDurationMs),
-          duration(summary.allTime.maximumDurationMs),
-        ),
-        row(
-          "Avg time on page",
-          seconds(summary.daily.averageTimeSpentSeconds),
-          seconds(summary.weekly.averageTimeSpentSeconds),
-          seconds(summary.monthly.averageTimeSpentSeconds),
-          seconds(summary.allTime.averageTimeSpentSeconds),
-        ),
-      )
+    rows += listOf(
+      row(
+        "Average person load duration",
+        duration(summary.daily.averagePersonLoadDurationMs),
+        duration(summary.weekly.averagePersonLoadDurationMs),
+        duration(summary.monthly.averagePersonLoadDurationMs),
+        duration(summary.allTime.averagePersonLoadDurationMs),
+      ),
+      row(
+        "Average location load duration",
+        duration(summary.daily.averageLocationLoadDurationMs),
+        duration(summary.weekly.averageLocationLoadDurationMs),
+        duration(summary.monthly.averageLocationLoadDurationMs),
+        duration(summary.allTime.averageLocationLoadDurationMs),
+      ),
+      row(
+        "Average load duration",
+        duration(summary.daily.averageLoadDurationMs),
+        duration(summary.weekly.averageLoadDurationMs),
+        duration(summary.monthly.averageLoadDurationMs),
+        duration(summary.allTime.averageLoadDurationMs),
+      ),
+      row(
+        "Max duration",
+        duration(summary.daily.maximumDurationMs),
+        duration(summary.weekly.maximumDurationMs),
+        duration(summary.monthly.maximumDurationMs),
+        duration(summary.allTime.maximumDurationMs),
+      ),
+      row(
+        "Avg time on page",
+        seconds(summary.daily.averageTimeSpentSeconds),
+        seconds(summary.weekly.averageTimeSpentSeconds),
+        seconds(summary.monthly.averageTimeSpentSeconds),
+        seconds(summary.allTime.averageTimeSpentSeconds),
+      ),
+    )
+    regions.forEach { (region, regional) ->
+      rows += border
+      rows += heading("PoP probation region: $region")
+      rows += border
+      rows += row("Users", regional.daily.users, regional.weekly.users, regional.monthly.users, regional.allTime.users)
+      rows += row("Searches", regional.daily.searches, regional.weekly.searches, regional.monthly.searches, regional.allTime.searches)
+      rows += row("PoPs", regional.daily.pops, regional.weekly.pops, regional.monthly.pops, regional.allTime.pops)
     }
     rows += border
-    val table = rows.joinToString("\n")
-
-    return "$statistics\n```\n$table\n```"
+    return rows.joinToString("\n")
   }
 
   private companion object {
