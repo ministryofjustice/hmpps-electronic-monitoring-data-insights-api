@@ -5,9 +5,11 @@ import org.springframework.stereotype.Component
 import software.amazon.awssdk.services.athena.model.Datum
 import tools.jackson.core.JacksonException
 import tools.jackson.databind.ObjectMapper
-import tools.jackson.databind.node.ObjectNode
+import tools.jackson.databind.exc.InvalidTypeIdException
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.exception.DataIntegrityException
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.restrictionzone.model.Geometry
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.restrictionzone.model.PointGeometry
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.restrictionzone.model.PolygonGeometry
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.restrictionzone.model.RestrictionSchedule
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.restrictionzone.model.RestrictionType
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.restrictionzone.model.RestrictionZone
@@ -81,24 +83,29 @@ class RestrictionZoneRowMapper(
   }
 
   private fun parseGeometry(raw: String, radius: Double?): Geometry {
-    val node = try {
-      objectMapper.readTree(raw) as? ObjectNode
+    val source = try {
+      objectMapper.readValue(raw, SourceGeometry::class.java)
+    } catch (e: InvalidTypeIdException) {
+      throw DataIntegrityException("Unsupported zone_geometry type '${e.typeId ?: "missing"}'")
     } catch (_: JacksonException) {
-      null
-    } ?: throw DataIntegrityException("zone_geometry is not a valid GeoJSON object")
-
-    when (val type = node.path("type").asText()) {
-      "Point" -> node.put(
-        "radiusMetres",
-        radius ?: throw DataIntegrityException("The zone radius is required for Point geometry"),
-      )
-      "Polygon" -> if (radius != null) {
-        log.warn("Ignoring zone_radius={} on Polygon geometry", radius)
-      }
-      else -> throw DataIntegrityException("Unsupported zone_geometry type '$type'")
+      throw DataIntegrityException("zone_geometry is not a valid GeoJSON object")
     }
 
-    return objectMapper.treeToValue(node, Geometry::class.java)
+    return when (source) {
+      is SourceGeometry.Point -> PointGeometry(
+        crs = source.crs,
+        coordinates = source.coordinates,
+        radiusMetres = radius
+          ?: throw DataIntegrityException("The zone radius is required for Point geometry"),
+      )
+      is SourceGeometry.Polygon -> {
+        if (radius != null) log.warn("Ignoring zone_radius={} on Polygon geometry", radius)
+        PolygonGeometry(
+          crs = source.crs,
+          coordinates = source.coordinates,
+        )
+      }
+    }
   }
 
   private fun parseAthenaInstant(raw: String, fieldName: String): Instant = try {
