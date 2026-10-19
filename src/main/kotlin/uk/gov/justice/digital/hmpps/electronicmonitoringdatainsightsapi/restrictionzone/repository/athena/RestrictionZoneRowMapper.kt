@@ -83,22 +83,22 @@ class RestrictionZoneRowMapper(
   }
 
   private fun parseGeometry(raw: String, radius: Double?): Geometry {
-    val source = try {
-      objectMapper.readValue(raw, SourceGeometry::class.java)
+    val source: AthenaGeometry = try {
+      objectMapper.readValue(raw, AthenaGeometry::class.java)
     } catch (e: InvalidTypeIdException) {
       throw DataIntegrityException("Unsupported zone_geometry type '${e.typeId ?: "missing"}'")
     } catch (_: JacksonException) {
-      throw DataIntegrityException("zone_geometry is not a valid GeoJSON object")
-    }
+      null
+    } ?: throw DataIntegrityException("zone_geometry is not a valid GeoJSON object")
 
     return when (source) {
-      is SourceGeometry.Point -> PointGeometry(
+      is AthenaGeometry.Point -> PointGeometry(
         crs = source.crs,
         coordinates = source.coordinates,
         radiusMetres = radius
           ?: throw DataIntegrityException("The zone radius is required for Point geometry"),
       )
-      is SourceGeometry.Polygon -> {
+      is AthenaGeometry.Polygon -> {
         if (radius != null) log.warn("Ignoring zone_radius={} on Polygon geometry", radius)
         PolygonGeometry(
           crs = source.crs,

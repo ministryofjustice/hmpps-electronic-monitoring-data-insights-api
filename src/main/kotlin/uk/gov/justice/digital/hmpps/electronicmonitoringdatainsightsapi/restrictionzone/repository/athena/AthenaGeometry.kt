@@ -7,21 +7,21 @@ import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.restrict
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
 @JsonSubTypes(
-  JsonSubTypes.Type(value = SourceGeometry.Point::class, name = "Point"),
-  JsonSubTypes.Type(value = SourceGeometry.Polygon::class, name = "Polygon"),
+  JsonSubTypes.Type(value = AthenaGeometry.Point::class, name = "Point"),
+  JsonSubTypes.Type(value = AthenaGeometry.Polygon::class, name = "Polygon"),
 )
-internal sealed interface SourceGeometry {
+internal sealed interface AthenaGeometry {
   val crs: CoordinateReferenceSystem
 
   @JsonIgnoreProperties(ignoreUnknown = true)
   data class Point(
     override val crs: CoordinateReferenceSystem,
     val coordinates: List<Double>,
-  ) : SourceGeometry
+  ) : AthenaGeometry
 
   @JsonIgnoreProperties(ignoreUnknown = true)
   data class Polygon(
     override val crs: CoordinateReferenceSystem,
     val coordinates: List<List<List<Double>>>,
-  ) : SourceGeometry
+  ) : AthenaGeometry
 }

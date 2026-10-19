@@ -7,7 +7,7 @@ import software.amazon.awssdk.services.athena.model.Datum
 import tools.jackson.module.kotlin.jacksonObjectMapper
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.exception.DataIntegrityException
 
-class RestrictionZoneRowMapperTest {
+class RestrictionZoneMapperTest {
 
   private val mapper = RestrictionZoneRowMapper(jacksonObjectMapper())
 
