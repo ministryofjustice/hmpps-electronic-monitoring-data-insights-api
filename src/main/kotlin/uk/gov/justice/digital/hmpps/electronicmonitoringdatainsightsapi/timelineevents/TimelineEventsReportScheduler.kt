@@ -42,7 +42,7 @@ class TimelineEventsReportScheduler(
     val regionalSummaries = timelineEventsService.getRegionalStatisticsSummaries()
     val regionalTables = regionalSummaries.map { (region, summary) ->
       val escapedRegion = region.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
-      formatSlackMessage("*PoP probation region: $escapedRegion*", summary)
+      formatSlackMessage("*PoP probation region: $escapedRegion*", summary, includeTimings = false)
     }
     // Keep each table's code fences together when Slack splits long messages.
     (listOf(formatSlackMessage(statistics, statisticsSummary)) + regionalTables).forEach { message ->
@@ -58,6 +58,7 @@ class TimelineEventsReportScheduler(
   private fun formatSlackMessage(
     statistics: String,
     summary: TimelineEventsStatisticsResponse,
+    includeTimings: Boolean = true,
   ): String {
     fun row(label: String, daily: Any, weekly: Any, monthly: Any, allTime: Any) = String.format(
       Locale.UK,
@@ -82,50 +83,55 @@ class TimelineEventsReportScheduler(
     )
 
     val border = "+--------------------------------+-----------+-------------+--------------+----------+"
-    val table = listOf(
+    val rows = mutableListOf(
       border,
       row("Metric", "Yesterday", "Last 7 days", "Last 30 days", "All time"),
       border,
       row("Users", summary.daily.users, summary.weekly.users, summary.monthly.users, summary.allTime.users),
       row("Searches", summary.daily.searches, summary.weekly.searches, summary.monthly.searches, summary.allTime.searches),
       row("PoPs", summary.daily.pops, summary.weekly.pops, summary.monthly.pops, summary.allTime.pops),
-      row(
-        "Average person load duration",
-        duration(summary.daily.averagePersonLoadDurationMs),
-        duration(summary.weekly.averagePersonLoadDurationMs),
-        duration(summary.monthly.averagePersonLoadDurationMs),
-        duration(summary.allTime.averagePersonLoadDurationMs),
-      ),
-      row(
-        "Average location load duration",
-        duration(summary.daily.averageLocationLoadDurationMs),
-        duration(summary.weekly.averageLocationLoadDurationMs),
-        duration(summary.monthly.averageLocationLoadDurationMs),
-        duration(summary.allTime.averageLocationLoadDurationMs),
-      ),
-      row(
-        "Average load duration",
-        duration(summary.daily.averageLoadDurationMs),
-        duration(summary.weekly.averageLoadDurationMs),
-        duration(summary.monthly.averageLoadDurationMs),
-        duration(summary.allTime.averageLoadDurationMs),
-      ),
-      row(
-        "Max duration",
-        duration(summary.daily.maximumDurationMs),
-        duration(summary.weekly.maximumDurationMs),
-        duration(summary.monthly.maximumDurationMs),
-        duration(summary.allTime.maximumDurationMs),
-      ),
-      row(
-        "Avg time on page",
-        seconds(summary.daily.averageTimeSpentSeconds),
-        seconds(summary.weekly.averageTimeSpentSeconds),
-        seconds(summary.monthly.averageTimeSpentSeconds),
-        seconds(summary.allTime.averageTimeSpentSeconds),
-      ),
-      border,
-    ).joinToString("\n")
+    )
+    if (includeTimings) {
+      rows += listOf(
+        row(
+          "Average person load duration",
+          duration(summary.daily.averagePersonLoadDurationMs),
+          duration(summary.weekly.averagePersonLoadDurationMs),
+          duration(summary.monthly.averagePersonLoadDurationMs),
+          duration(summary.allTime.averagePersonLoadDurationMs),
+        ),
+        row(
+          "Average location load duration",
+          duration(summary.daily.averageLocationLoadDurationMs),
+          duration(summary.weekly.averageLocationLoadDurationMs),
+          duration(summary.monthly.averageLocationLoadDurationMs),
+          duration(summary.allTime.averageLocationLoadDurationMs),
+        ),
+        row(
+          "Average load duration",
+          duration(summary.daily.averageLoadDurationMs),
+          duration(summary.weekly.averageLoadDurationMs),
+          duration(summary.monthly.averageLoadDurationMs),
+          duration(summary.allTime.averageLoadDurationMs),
+        ),
+        row(
+          "Max duration",
+          duration(summary.daily.maximumDurationMs),
+          duration(summary.weekly.maximumDurationMs),
+          duration(summary.monthly.maximumDurationMs),
+          duration(summary.allTime.maximumDurationMs),
+        ),
+        row(
+          "Avg time on page",
+          seconds(summary.daily.averageTimeSpentSeconds),
+          seconds(summary.weekly.averageTimeSpentSeconds),
+          seconds(summary.monthly.averageTimeSpentSeconds),
+          seconds(summary.allTime.averageTimeSpentSeconds),
+        ),
+      )
+    }
+    rows += border
+    val table = rows.joinToString("\n")
 
     return "$statistics\n```\n$table\n```"
   }

@@ -289,10 +289,11 @@ code blocks intact and avoid Slack splitting a table between messages.
 The daily Slack report includes the overall statistics followed by a table for each region
 recorded in the database. Regions are discovered dynamically from the PoP probation areas on
 qualifying search and location-view events, from the epoch up to the end of yesterday;
-system and admin users are excluded. No region configuration is needed for the daily report. Each table includes all metrics for yesterday,
+system and admin users are excluded. No region configuration is needed for the daily report.
+Regional tables include only Users, Searches and PoPs for yesterday,
 the last 7 days, the last 30 days, and all time, using completed London calendar days.
 Regions are matched against the PoP's comma-separated probation areas, with whitespace trimmed.
 An event covering multiple regions counts once in each matching region, so regional counts
 are not additive. Events without a matching area remain in the overall statistics only.
-Time on page is attributed to the starting event's region and uses the next page view across
-all regions. Regions with historical activity but no recent activity show zero recent counts.
+The overall table retains all timing metrics. Regions with historical activity but no recent
+activity show zero recent counts.

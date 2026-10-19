@@ -83,9 +83,11 @@ class TimelineEventsReportSchedulerTest {
       server.expect(requestTo("https://hooks.slack.test/services/test"))
         .andExpect(content().string(containsString("*PoP probation region: $region*")))
         .andExpect(content().string(containsString("| Users                          |         2 |           2 |            2 |        2 |")))
-        .andExpect(content().string(containsString("| Avg time on page               |    120.0s |      120.0s |       120.0s |   120.0s |")))
+        .andExpect(content().string(containsString("| Searches                       |         3 |           3 |            3 |        3 |")))
+        .andExpect(content().string(containsString("| PoPs                           |         1 |           1 |            1 |        1 |")))
         .andExpect { request ->
           val body = (request as MockClientHttpRequest).bodyAsString
+          assertThat(body).doesNotContain("duration", "Avg time on page")
           assertThat(body.split("```")).hasSize(3)
           assertThat(body.split("*PoP probation region:")).hasSize(2)
           assertThat(body.length).isLessThan(4000)
