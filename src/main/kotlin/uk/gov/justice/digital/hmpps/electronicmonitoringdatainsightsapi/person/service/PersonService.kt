@@ -95,12 +95,10 @@ class PersonService(
 
   fun searchPeopleByPersonalDetails(request: PersonSearchRequest): List<Person> = personRepository.findByPersonalDetails(resolveSearchCriteria(request))
     .updateOutsidePeriodFlag()
-    .sortedByDescending { it.isActiveLocationMonitoringRecord() }
-    .distinctBy(Person::enforceableCondition)
-
-  private fun Person.isActiveLocationMonitoringRecord(): Boolean = !outsideOrderPeriod &&
-    positionData?.hasPositionData == true &&
-    enforceableCondition == "location_monitoring"
+    .sortedWith(
+      compareByDescending<Person> { it.enforceableCondition == "location_monitoring" }
+        .thenByDescending { it.positionData?.latestPositionGpsDate },
+    )
 
   private fun List<Person>.updateOutsidePeriodFlag(): List<Person> {
     val today = LocalDate.now()
