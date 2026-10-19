@@ -84,16 +84,31 @@ class AthenaPersonRepository(
     }
 
     val enhancedSearchCriteria = if (personsQueryCriteria.enhancedPeopleSearch) {
-      "AND EXISTS (" +
-        "      SELECT 1" +
-        "      FROM ${properties.athena.mdssDatabase}.position p" +
-        "      WHERE p.person_id = c.mdss_person_id" +
-        "    )"
+      "WHERE lp.person_id IS NOT NULL"
     } else {
       ""
     }
 
     val sql = """
+    WITH matching_caseload AS (
+      SELECT c.*
+      FROM ${properties.athena.mdssDatabase}.caseload c
+      ${builder.where}
+      AND c.mdss_person_id IS NOT NULL
+      AND current_date BETWEEN c.order_start_date AND c.order_end_date
+    ),
+    matching_people AS (
+      SELECT DISTINCT mdss_person_id
+      FROM matching_caseload
+    ),
+    latest_positions AS (
+      SELECT
+        p.person_id,
+        max(p.position_gps_date) AS latest_position_gps_date
+      FROM ${properties.athena.mdssDatabase}.position p
+      INNER JOIN matching_people m ON p.person_id = m.mdss_person_id
+      GROUP BY p.person_id
+    )
     SELECT
       c.mdss_person_id AS person_id,
       c.unique_device_wearer_id AS consumer_id,
@@ -108,13 +123,13 @@ class AthenaPersonRepository(
       c.postcode AS postcode,
       c.city_or_town AS city,
       c.house_number_and_street_name AS street,
-      c.order_id AS order_id
-    FROM ${properties.athena.mdssDatabase}.caseload c
-    ${builder.where}
-    AND c.mdss_person_id IS NOT NULL
-    AND current_date BETWEEN c.order_start_date AND c.order_end_date
+      c.order_id AS order_id,
+      lp.latest_position_gps_date
+    FROM matching_caseload c
+    LEFT JOIN latest_positions lp ON lp.person_id = c.mdss_person_id
     $enhancedSearchCriteria
     ORDER BY
+      latest_position_gps_date DESC NULLS LAST,
       CASE WHEN c.is_monitored = TRUE THEN 0 ELSE 1 END,
       c.is_monitored DESC NULLS LAST
     LIMIT ${properties.athena.rowLimit}
