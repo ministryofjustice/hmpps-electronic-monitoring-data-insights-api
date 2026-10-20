@@ -13,8 +13,8 @@
           { "VarCharValue": "active_to" },
           { "VarCharValue": "applicable_from" },
           { "VarCharValue": "applicable_to" },
-          { "VarCharValue": "recursion_type" },
-          { "VarCharValue": "recursion_pattern" }
+          { "VarCharValue": "recursion_pattern" },
+          { "VarCharValue": "schedule_type" }
         ]
       },
       {
@@ -31,8 +31,8 @@
           {},
           { "VarCharValue": "2025-11-13 09:00:00.000000" },
           { "VarCharValue": "2026-01-01 11:15:00.000000" },
-          { "VarCharValue": "week_1___0,1,2,3,4,5,6#" },
-          { "VarCharValue": "week_1___0,1,2,3,4,5,6" }
+          { "VarCharValue": "week_1___0,1,2,3,4,5,6" },
+          { "VarCharValue": "Schedule Defined" }
         ]
       },
       {
@@ -49,8 +49,8 @@
           {},
           { "VarCharValue": "2025-11-13 07:00:00.000000" },
           { "VarCharValue": "2026-01-01 10:26:00.000000" },
-          { "VarCharValue": "week_1___3,4,5#" },
-          { "VarCharValue": "week_1___3,4,5" }
+          { "VarCharValue": "week_1___3,4,5" },
+          { "VarCharValue": "Schedule Defined" }
         ]
       }
     ]

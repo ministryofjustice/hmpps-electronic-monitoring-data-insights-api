@@ -18,9 +18,6 @@ fun buildRestrictionSql(filter: RestrictionFilter): String {
         from_iso8601_timestamp(?) AS start_window,
         from_iso8601_timestamp(?) AS end_window
     ),
-    -- Latest enforceable order for the person.
-    -- If the person has no enforceable order, this is empty and the
-    -- CROSS JOIN below returns no restriction zones (intended).
     latest_order AS (
       SELECT
         c.order_start_date,
@@ -34,8 +31,6 @@ fun buildRestrictionSql(filter: RestrictionFilter): String {
         c.order_start_date DESC
       LIMIT 1
     ),
-    -- Latest revision of each zone. Rule-type filtering happens after
-    -- ranking so a filter can never surface a superseded revision.
     latest_revision AS (
       SELECT
         z.zone_id,
@@ -48,8 +43,8 @@ fun buildRestrictionSql(filter: RestrictionFilter): String {
         z.curfew_end_at,
         z.curfew_rule_active_start_date,
         z.curfew_rule_active_end_date,
-        z.curfew_rule_recursion_type,
         z.curfew_rule_recursion_pattern,
+        z.rule_restriction_type_name,
         ROW_NUMBER() OVER (
           PARTITION BY z.zone_id
           ORDER BY z.revision_start_date DESC
@@ -69,26 +64,19 @@ fun buildRestrictionSql(filter: RestrictionFilter): String {
       z.curfew_end_at,
       z.curfew_rule_active_start_date AS applicable_from,
       z.curfew_rule_active_end_date AS applicable_to,
-      z.curfew_rule_recursion_type AS recursion_type,
-      z.curfew_rule_recursion_pattern AS recursion_pattern
+      z.curfew_rule_recursion_pattern AS recursion_pattern,
+      z.rule_restriction_type_name AS schedule_type
     FROM latest_revision z
     CROSS JOIN latest_order lo
     CROSS JOIN params p
     WHERE z.rn = 1
       $curfewRuleTypeFilter
-
-      -- restriction overlaps requested window
       AND z.curfew_start_at <= p.end_window
       AND (z.curfew_end_at IS NULL OR z.curfew_end_at >= p.start_window)
-
-      -- restriction overlaps latest enforceable order
       AND (lo.order_end_date IS NULL OR z.curfew_start_at <= lo.order_end_date)
       AND (z.curfew_end_at IS NULL OR z.curfew_end_at >= lo.order_start_date)
-
-      -- schedule active period overlaps requested window
       AND (z.curfew_rule_active_start_date IS NULL OR z.curfew_rule_active_start_date <= p.end_window)
       AND (z.curfew_rule_active_end_date IS NULL OR z.curfew_rule_active_end_date >= p.start_window)
-
     ORDER BY
       z.curfew_start_at,
       z.zone_id

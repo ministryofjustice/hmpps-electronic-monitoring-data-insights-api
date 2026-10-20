@@ -1,11 +1,11 @@
-package uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.restrictionzone.repository.athena
+package uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.restrictionzone.repository
 
-import org.assertj.core.api.Assertions.assertThat
-import org.assertj.core.api.Assertions.assertThatThrownBy
+import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.Test
 import software.amazon.awssdk.services.athena.model.Datum
 import tools.jackson.module.kotlin.jacksonObjectMapper
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.exception.DataIntegrityException
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.restrictionzone.repository.athena.RestrictionZoneRowMapper
 
 class RestrictionZoneMapperTest {
 
@@ -23,7 +23,7 @@ class RestrictionZoneMapperTest {
 
   @Test
   fun `Given a point geometry, when there is no radis, then the row is rejected`() {
-    assertThatThrownBy { mapper.map(row(point)) }
+    Assertions.assertThatThrownBy { mapper.map(row(point)) }
       .isInstanceOf(DataIntegrityException::class.java)
       .hasMessageContaining("radius is required")
   }
@@ -32,32 +32,32 @@ class RestrictionZoneMapperTest {
   fun `Given an unsupported geometry type then the row is rejected`() {
     val multiPolygon = """{"type":"Universal",$crs,"coordinates":[]}"""
 
-    assertThatThrownBy { mapper.map(row(multiPolygon)) }
+    Assertions.assertThatThrownBy { mapper.map(row(multiPolygon)) }
       .isInstanceOf(DataIntegrityException::class.java)
       .hasMessageContaining("'Universal'")
   }
 
   @Test
   fun `Given a geometry without a type then the row is rejected`() {
-    assertThatThrownBy { mapper.map(row("""{$crs,"coordinates":[-0.09,51.5]}""")) }
+    Assertions.assertThatThrownBy { mapper.map(row("""{$crs,"coordinates":[-0.09,51.5]}""")) }
       .isInstanceOf(DataIntegrityException::class.java)
   }
 
   @Test
   fun `invalid JSON is rejected`() {
-    assertThatThrownBy { mapper.map(row("not json")) }
+    Assertions.assertThatThrownBy { mapper.map(row("not json")) }
       .isInstanceOf(DataIntegrityException::class.java)
       .hasMessage("zone_geometry is not a valid GeoJSON object")
   }
 
   @Test
   fun `malformed coordinates are rejected rather than failing the request`() {
-    assertThatThrownBy { mapper.map(row("""{"type":"Polygon",$crs,"coordinates":"oops"}""")) }
+    Assertions.assertThatThrownBy { mapper.map(row("""{"type":"Polygon",$crs,"coordinates":"oops"}""")) }
       .isInstanceOf(DataIntegrityException::class.java)
   }
 
   @Test
   fun `Given a bad row, the row is skipped and the request continues`() {
-    assertThat(mapper.mapOrNull(row(point))).isNull()
+    Assertions.assertThat(mapper.mapOrNull(row(point))).isNull()
   }
 }
