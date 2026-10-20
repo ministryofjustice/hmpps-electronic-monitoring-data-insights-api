@@ -13,8 +13,8 @@
           { "VarCharValue": "curfew_end_at" },
           { "VarCharValue": "applicable_from" },
           { "VarCharValue": "applicable_to" },
-          { "VarCharValue": "recursion_type" },
-          { "VarCharValue": "recursion_pattern" }
+          { "VarCharValue": "recursion_pattern" },
+          { "VarCharValue": "schedule_type" }
         ]
       },
 
@@ -33,7 +33,7 @@
           {},
           {},
           {},
-          {}
+          {"VarCharValue": "Exclusion - 24/7"}
         ]
       },
 
@@ -51,8 +51,8 @@
           { "VarCharValue": "2025-01-25 17:00:00" },
           { "VarCharValue": "2025-01-01 00:00:00" },
           { "VarCharValue": "2025-12-31 23:59:59" },
-          { "VarCharValue": "WEEKLY" },
-          { "VarCharValue": "WEEK_1___5" }
+          { "VarCharValue": "week_1___5" },
+          {"VarCharValue": "Schedule Defined"}
         ]
       },
 
@@ -68,10 +68,10 @@
           { "VarCharValue": "250" },
           { "VarCharValue": "2025-01-01 00:00:00" },
           { "VarCharValue": "2027-01-01 00:00:00" },
-          {},
-          {},
-          {},
-          {}
+          { "VarCharValue": "2025-01-15 00:00:00" },
+          { "VarCharValue": "2025-06-30 23:59:59" },
+          { "VarCharValue": "week_1___0,5,6" },
+          {"VarCharValue": "Schedule Defined"}
         ]
       },
 
@@ -79,8 +79,8 @@
         "Data": [
           { "VarCharValue": "2002" },
           { "VarCharValue": "Inclusion" },
-          { "VarCharValue": "Home Zone" },
-          { "VarCharValue": "2 Inclusion Road" },
+          { "VarCharValue": "Bond Street Area" },
+          { "VarCharValue": "New Bond Street, London, W1S" },
           {
             "VarCharValue": "{\"type\":\"Polygon\",\"crs\":{\"type\":\"name\",\"properties\":{\"name\":\"EPSG:4326\"}},\"coordinates\":[[[-0.1426,51.5152],[-0.1399,51.5162],[-0.1378,51.5114],[-0.1426,51.5152]]]}"
           },
@@ -89,8 +89,8 @@
           { "VarCharValue": "2025-12-31 23:59:59" },
           { "VarCharValue": "2025-01-15 00:00:00" },
           { "VarCharValue": "2025-06-30 23:59:59" },
-          { "VarCharValue": "DAILY" },
-          { "VarCharValue": "DAILY" }
+          { "VarCharValue": "week_2___0,2,4" },
+          {"VarCharValue": "Schedule Defined"}
         ]
       }
     ]

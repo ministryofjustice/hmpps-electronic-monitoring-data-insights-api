@@ -48,8 +48,8 @@ fun buildRestrictionSql(filter: RestrictionFilter): String {
         z.curfew_end_at,
         z.curfew_rule_active_start_date,
         z.curfew_rule_active_end_date,
-        z.curfew_rule_recursion_type,
         z.curfew_rule_recursion_pattern,
+        z.rule_restriction_type_name AS schedule_type,
         ROW_NUMBER() OVER (
           PARTITION BY z.zone_id
           ORDER BY z.revision_start_date DESC
@@ -71,6 +71,7 @@ fun buildRestrictionSql(filter: RestrictionFilter): String {
       z.curfew_rule_active_end_date AS applicable_to,
       z.curfew_rule_recursion_type AS recursion_type,
       z.curfew_rule_recursion_pattern AS recursion_pattern
+      z.rule_restriction_type_name AS schedule_type,
     FROM latest_revision z
     CROSS JOIN latest_order lo
     CROSS JOIN params p

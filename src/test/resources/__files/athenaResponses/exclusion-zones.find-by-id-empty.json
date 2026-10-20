@@ -34,10 +34,10 @@
             "VarCharValue": "applicable_to"
           },
           {
-            "VarCharValue": "recursion_type"
+            "VarCharValue": "recursion_pattern"
           },
           {
-            "VarCharValue": "recursion_pattern"
+            "VarCharValue": "schedule_type"
           }
         ]
       }
@@ -168,8 +168,8 @@
           "CatalogName": "hive",
           "SchemaName": "",
           "TableName": "",
-          "Name": "recursion_type",
-          "Label": "recursion_type",
+          "Name": "recursion_pattern",
+          "Label": "recursion_pattern",
           "Type": "varchar",
           "Precision": 0,
           "Scale": 0,
@@ -180,8 +180,8 @@
           "CatalogName": "hive",
           "SchemaName": "",
           "TableName": "",
-          "Name": "recursion_pattern",
-          "Label": "recursion_pattern",
+          "Name": "schedule_type",
+          "Label": "schedule_type",
           "Type": "varchar",
           "Precision": 0,
           "Scale": 0,
