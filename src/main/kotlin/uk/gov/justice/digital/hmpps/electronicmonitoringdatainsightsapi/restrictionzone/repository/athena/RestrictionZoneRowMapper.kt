@@ -10,8 +10,8 @@ import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.e
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.restrictionzone.model.Geometry
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.restrictionzone.model.PointGeometry
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.restrictionzone.model.PolygonGeometry
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.restrictionzone.model.Recurrence
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.restrictionzone.model.RestrictionSchedule
-import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.restrictionzone.model.RestrictionType
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.restrictionzone.model.RestrictionZone
 import java.time.Instant
 import java.time.LocalDate
@@ -27,6 +27,7 @@ private val log = KotlinLogging.logger {}
 @Component
 class RestrictionZoneRowMapper(
   private val objectMapper: ObjectMapper,
+  private val parsers: RestrictionZoneParsers = RestrictionZoneParsers(),
 ) {
 
   fun mapOrNull(cols: List<Datum>): RestrictionZone? = try {
@@ -57,7 +58,7 @@ class RestrictionZoneRowMapper(
 
     return RestrictionZone(
       restrictionZoneId = requiredLong(COL_ZONE_ID, "zone_id"),
-      restrictionType = parseRestrictionType(v(COL_CURFEW_RULE_NAME)),
+      restrictionType = parsers.parseRestrictionType(v(COL_CURFEW_RULE_NAME)),
       name = v(COL_ZONE_NAME),
       address = v(COL_ZONE_ADDRESS),
       geometry = parseGeometry(
@@ -66,20 +67,14 @@ class RestrictionZoneRowMapper(
         optionalDouble(COL_ZONE_RADIUS, "zone_radius"),
       ),
       schedule = RestrictionSchedule(
+        scheduleType = parsers.parseScheduleType(v(COL_SCHEDULE_TYPE)),
         activeFrom = optionalInstant(COL_ACTIVE_FROM, "active_from"),
         activeTo = optionalInstant(COL_ACTIVE_TO, "active_to"),
         applicableFrom = optionalInstant(COL_APPLICABLE_FROM, "applicable_from"),
         applicableTo = optionalInstant(COL_APPLICABLE_TO, "applicable_to"),
-        recursionType = v(COL_RECURSION_TYPE),
-        recursionPattern = v(COL_RECURSION_PATTERN),
+        recurrence = parsers.parseRecurrence(v(COL_RECURSION_PATTERN)) as Recurrence?,
       ),
     )
-  }
-
-  private fun parseRestrictionType(value: String?): RestrictionType = when (value?.trim()?.uppercase()) {
-    "EXCLUSION" -> RestrictionType.EXCLUSION
-    "INCLUSION" -> RestrictionType.INCLUSION
-    else -> throw DataIntegrityException("Unsupported restriction type '$value'")
   }
 
   private fun parseGeometry(raw: String, radius: Double?): Geometry {
@@ -129,8 +124,8 @@ class RestrictionZoneRowMapper(
     private const val COL_ACTIVE_TO = 7
     private const val COL_APPLICABLE_FROM = 8
     private const val COL_APPLICABLE_TO = 9
-    private const val COL_RECURSION_TYPE = 10
-    private const val COL_RECURSION_PATTERN = 11
+    private const val COL_RECURSION_PATTERN = 10
+    private const val COL_SCHEDULE_TYPE = 11
 
     private val ATHENA_TIMESTAMP: DateTimeFormatter =
       DateTimeFormatterBuilder()

@@ -18,6 +18,7 @@ import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.restrict
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.restrictionzone.model.RestrictionSchedule
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.restrictionzone.model.RestrictionType
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.restrictionzone.model.RestrictionZone
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.restrictionzone.model.ScheduleType
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.restrictionzone.service.RestrictionZoneService
 import java.time.Instant
 
@@ -69,12 +70,12 @@ class RestrictionZoneControllerTest {
         ),
       ),
       schedule = RestrictionSchedule(
+        scheduleType = ScheduleType.CONTINUOUS,
         activeFrom = Instant.parse("2025-01-01T00:00:00Z"),
         activeTo = Instant.parse("2025-01-20T00:00:00Z"),
         applicableFrom = null,
         applicableTo = null,
-        recursionType = null,
-        recursionPattern = null,
+        recurrence = null,
       ),
     )
 
@@ -89,12 +90,12 @@ class RestrictionZoneControllerTest {
         radiusMetres = 500.0,
       ),
       schedule = RestrictionSchedule(
+        scheduleType = ScheduleType.CONTINUOUS,
         activeFrom = Instant.parse("2025-01-10T00:00:00Z"),
         activeTo = Instant.parse("2025-01-20T00:00:00Z"),
         applicableFrom = null,
         applicableTo = null,
-        recursionType = null,
-        recursionPattern = null,
+        recurrence = null,
       ),
     )
 
