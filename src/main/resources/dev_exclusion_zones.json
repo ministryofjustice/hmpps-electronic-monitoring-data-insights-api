@@ -25,11 +25,11 @@
         ]
       },
       "schedule": {
+        "scheduleType": "CONTINUOUS",
         "activeFrom": "2026-09-01T00:00:00Z",
         "activeTo": "2026-10-01T00:00:00Z",
         "applicableFrom": null,
         "applicableTo": null,
-        "recursionType": null,
         "recursionPattern": null
       }
     },
@@ -60,11 +60,11 @@
         ]
       },
       "schedule": {
+        "scheduleType": "CONTINUOUS",
         "activeFrom": "2025-09-01T00:00:00Z",
         "activeTo": "2026-05-01T00:00:00Z",
         "applicableFrom": null,
         "applicableTo": null,
-        "recursionType": null,
         "recursionPattern": null
       }
     },
@@ -88,11 +88,11 @@
         "radiusMetres": 500.0
       },
       "schedule": {
+        "scheduleType": "CONTINUOUS",
         "activeFrom": "2026-05-01T00:00:00Z",
         "activeTo": "2027-05-01T00:00:00Z",
         "applicableFrom": null,
         "applicableTo": null,
-        "recursionType": null,
         "recursionPattern": null
       }
     }

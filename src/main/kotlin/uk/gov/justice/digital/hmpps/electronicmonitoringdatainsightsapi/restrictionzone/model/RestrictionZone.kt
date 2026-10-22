@@ -14,14 +14,15 @@ data class RestrictionZone(
 )
 
 data class RestrictionSchedule(
+  val scheduleType: ScheduleType,
+
   val activeFrom: Instant?,
   val activeTo: Instant?,
 
   val applicableFrom: Instant?,
   val applicableTo: Instant?,
 
-  val recursionType: String?,
-  val recursionPattern: String?,
+  val recurrence: Recurrence?,
 )
 
 data class CoordinateReferenceSystem(
