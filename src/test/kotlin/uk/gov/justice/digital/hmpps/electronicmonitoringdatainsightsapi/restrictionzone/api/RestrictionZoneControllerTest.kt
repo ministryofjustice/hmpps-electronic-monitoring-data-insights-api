@@ -5,9 +5,12 @@ import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.CsvSource
 import org.mockito.Mock
 import org.mockito.junit.jupiter.MockitoExtension
 import org.mockito.kotlin.eq
+import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import org.springframework.beans.factory.ObjectProvider
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.exclusionzone.api.DevExclusionZoneProvider
@@ -29,31 +32,29 @@ class RestrictionZoneControllerTest {
   private lateinit var restrictionZoneService: RestrictionZoneService
 
   @Mock
-  private lateinit var devRestrictionZoneProvider: ObjectProvider<DevExclusionZoneProvider>
+  private lateinit var devExclusionZoneProvider: ObjectProvider<DevExclusionZoneProvider>
 
   private lateinit var restrictionZoneController: RestrictionZoneController
 
   private val personId = "88888"
-  private val from = Instant.parse("2025-01-01T00:00:00Z")
-  private val to = Instant.parse("2025-01-31T23:59:59Z")
+
+  private val crs = CoordinateReferenceSystem(
+    type = "name",
+    properties = CoordinateReferenceSystemProperties(name = "EPSG:4326"),
+  )
 
   @BeforeEach
   fun setup() {
     restrictionZoneController = RestrictionZoneController(
       restrictionZoneService = restrictionZoneService,
-      devRestrictionZoneProvider = devRestrictionZoneProvider,
+      devRestrictionZoneProvider = devExclusionZoneProvider,
       devStubEnabled = false,
     )
   }
 
   @Test
-  fun `getExclusionZones should return exclusion zones from the service for that person ID`() {
-    val crs = CoordinateReferenceSystem(
-      type = "name",
-      properties = CoordinateReferenceSystemProperties(name = "EPSG:4326"),
-    )
-
-    val restrictionZoneA = RestrictionZone(
+  fun `getAllRestrictionForPerson returns exclusion and inclusion zones from the service`() {
+    val exclusionPolygon = RestrictionZone(
       restrictionZoneId = 1,
       restrictionType = RestrictionType.EXCLUSION,
       name = "Zone A",
@@ -69,17 +70,10 @@ class RestrictionZoneControllerTest {
           ),
         ),
       ),
-      schedule = RestrictionSchedule(
-        scheduleType = ScheduleType.CONTINUOUS,
-        activeFrom = Instant.parse("2025-01-01T00:00:00Z"),
-        activeTo = Instant.parse("2025-01-20T00:00:00Z"),
-        applicableFrom = null,
-        applicableTo = null,
-        recurrence = null,
-      ),
+      schedule = continuousSchedule("2025-01-01T00:00:00Z", "2025-01-20T00:00:00Z"),
     )
 
-    val restrictionZoneB = RestrictionZone(
+    val exclusionCircle = RestrictionZone(
       restrictionZoneId = 2,
       restrictionType = RestrictionType.EXCLUSION,
       name = "Zone B",
@@ -89,32 +83,28 @@ class RestrictionZoneControllerTest {
         coordinates = listOf(-0.091249, 51.505444),
         radiusMetres = 500.0,
       ),
-      schedule = RestrictionSchedule(
-        scheduleType = ScheduleType.CONTINUOUS,
-        activeFrom = Instant.parse("2025-01-10T00:00:00Z"),
-        activeTo = Instant.parse("2025-01-20T00:00:00Z"),
-        applicableFrom = null,
-        applicableTo = null,
-        recurrence = null,
-      ),
+      schedule = continuousSchedule("2025-01-10T00:00:00Z", "2025-01-20T00:00:00Z"),
     )
 
-    val zones = listOf(restrictionZoneA, restrictionZoneB)
-    whenever(
-      restrictionZoneService.getRestrictions(
-        eq(personId),
-        eq(from),
-        eq(to),
-        eq(true),
-        eq(true),
+    val inclusionCircle = RestrictionZone(
+      restrictionZoneId = 3,
+      restrictionType = RestrictionType.INCLUSION,
+      name = "Zone C",
+      address = "3 Test Street, London, E1 6AN",
+      geometry = PointGeometry(
+        crs = crs,
+        coordinates = listOf(-0.0712, 51.5155),
+        radiusMetres = 250.0,
       ),
+      schedule = continuousSchedule("2025-01-05T00:00:00Z", "2025-01-25T00:00:00Z"),
     )
+
+    val zones = listOf(exclusionPolygon, exclusionCircle, inclusionCircle)
+    whenever(restrictionZoneService.getRestrictions(eq(personId), eq(true), eq(true)))
       .thenReturn(zones)
 
     val result = restrictionZoneController.getAllRestrictionForPerson(
       personId,
-      from = from,
-      to = to,
       inclusions = null,
       exclusions = null,
     )
@@ -123,23 +113,37 @@ class RestrictionZoneControllerTest {
     assertThat(requireNotNull(result.body).restrictionZones).containsExactlyElementsOf(zones)
   }
 
+  @ParameterizedTest(name = "inclusions={0}, exclusions={1} -> service({2}, {3})")
+  @CsvSource(
+    nullValues = ["null"],
+    value = [
+      "null,  null,  true,  true",
+      "true,  null,  true,  false",
+      "null,  true,  false, true",
+      "true,  true,  true,  true",
+      "true,  false, true,  false",
+      "false, true,  false, true",
+    ],
+  )
+  fun `getAllRestrictionForPerson passes inclusion and exclusion flags through to the service`(
+    inclusions: Boolean?,
+    exclusions: Boolean?,
+    expectedInclusions: Boolean,
+    expectedExclusions: Boolean,
+  ) {
+    val result = restrictionZoneController.getAllRestrictionForPerson(personId, inclusions, exclusions)
+
+    assertThat(result.statusCode.value()).isEqualTo(200)
+    verify(restrictionZoneService).getRestrictions(personId, expectedInclusions, expectedExclusions)
+  }
+
   @Test
-  fun `getExclusionZones should return empty list for other people`() {
-    whenever(
-      restrictionZoneService.getRestrictions(
-        eq(personId),
-        eq(from),
-        eq(to),
-        eq(true),
-        eq(true),
-      ),
-    )
+  fun `getAllRestrictionForPerson returns empty list when the person has no restrictions`() {
+    whenever(restrictionZoneService.getRestrictions(eq(personId), eq(true), eq(true)))
       .thenReturn(emptyList())
 
     val result = restrictionZoneController.getAllRestrictionForPerson(
       personId,
-      from = from,
-      to = to,
       inclusions = null,
       exclusions = null,
     )
@@ -149,23 +153,13 @@ class RestrictionZoneControllerTest {
   }
 
   @Test
-  fun `getExclusionZones should propagate exception when the service fails`() {
-    whenever(
-      restrictionZoneService.getRestrictions(
-        eq(personId),
-        eq(from),
-        eq(to),
-        eq(true),
-        eq(true),
-      ),
-    )
+  fun `getAllRestrictionForPerson propagates exception when the service fails`() {
+    whenever(restrictionZoneService.getRestrictions(eq(personId), eq(true), eq(true)))
       .thenThrow(RuntimeException("Athena query failed"))
 
     assertThatThrownBy {
       restrictionZoneController.getAllRestrictionForPerson(
         personId,
-        from = from,
-        to = to,
         inclusions = null,
         exclusions = null,
       )
@@ -174,32 +168,12 @@ class RestrictionZoneControllerTest {
       .hasMessage("Athena query failed")
   }
 
-  @Test
-  fun `getExclusionZones should propagate exception when from is after to`() {
-    val from = Instant.parse("2025-02-01T00:00:00Z")
-    val to = Instant.parse("2025-01-01T00:00:00Z")
-
-    whenever(
-      restrictionZoneService.getRestrictions(
-        eq(personId),
-        eq(from),
-        eq(to),
-        eq(true),
-        eq(true),
-      ),
-    )
-      .thenThrow(IllegalArgumentException("'from' ($from) must not be after 'to' ($to)"))
-
-    assertThatThrownBy {
-      restrictionZoneController.getAllRestrictionForPerson(
-        personId,
-        from = from,
-        to = to,
-        inclusions = null,
-        exclusions = null,
-      )
-    }
-      .isInstanceOf(IllegalArgumentException::class.java)
-      .hasMessageContaining("must not be after")
-  }
+  private fun continuousSchedule(activeFrom: String, activeTo: String) = RestrictionSchedule(
+    scheduleType = ScheduleType.CONTINUOUS,
+    activeFrom = Instant.parse(activeFrom),
+    activeTo = Instant.parse(activeTo),
+    applicableFrom = null,
+    applicableTo = null,
+    recurrence = null,
+  )
 }
