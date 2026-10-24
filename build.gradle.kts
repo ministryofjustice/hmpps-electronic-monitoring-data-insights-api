@@ -1,6 +1,6 @@
 plugins {
   val kotlinVersion = "2.4.21"
-  id("uk.gov.justice.hmpps.gradle-spring-boot") version "11.0.12"
+  id("uk.gov.justice.hmpps.gradle-spring-boot") version "11.0.13"
   id("io.gatling.gradle") version "3.16.0"
   kotlin("plugin.spring") version kotlinVersion
   kotlin("plugin.serialization") version kotlinVersion
@@ -11,7 +11,7 @@ configurations {
   testImplementation { exclude(group = "org.junit.vintage") }
 }
 
-val springdocOpenapiVersion = "3.1.1"
+val springdocOpenapiVersion = "3.2.0"
 val hmppsKotlinSpringBootStarterVersion = "3.0.3"
 val kotlinLoggingVersion = "3.0.5"
 val commonsTextVersion = "1.15.0"
