@@ -3,7 +3,6 @@ package uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.restric
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.restrictionzone.model.RestrictionZone
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.restrictionzone.repository.athena.RestrictionZoneRepository
-import java.time.Instant
 
 @Service
 class RestrictionZoneService(
@@ -11,8 +10,6 @@ class RestrictionZoneService(
 ) {
   fun getRestrictions(
     personId: String,
-    from: Instant,
-    to: Instant,
     includeInclusions: Boolean?,
     includeExclusions: Boolean?,
   ): List<RestrictionZone> {
@@ -35,8 +32,6 @@ class RestrictionZoneService(
 
     return restrictionZoneRepository.getRestrictions(
       personId = personId,
-      from = from,
-      to = to,
       filter = filter,
     )
   }

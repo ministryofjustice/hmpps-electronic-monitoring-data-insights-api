@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.restrictionzone.repository.athena
 
-import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.jpa.Constants
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.restrictionzone.service.RestrictionFilter
 
 fun buildRestrictionSql(filter: RestrictionFilter): String {
@@ -14,22 +13,7 @@ fun buildRestrictionSql(filter: RestrictionFilter): String {
   return """
     WITH params AS (
       SELECT
-        CAST(? AS BIGINT) AS person_id,
-        from_iso8601_timestamp(?) AS start_window,
-        from_iso8601_timestamp(?) AS end_window
-    ),
-    latest_order AS (
-      SELECT
-        c.order_start_date,
-        c.order_end_date
-      FROM caseload c
-      JOIN params p
-        ON c.mdss_person_id = p.person_id
-      WHERE c.enforceable_condition IN (${Constants.ENFORCEABLE_CONDITIONS_SQL})
-      ORDER BY
-        c.grouped_date DESC,
-        c.order_start_date DESC
-      LIMIT 1
+        CAST(? AS BIGINT) AS person_id
     ),
     latest_revision AS (
       SELECT
@@ -67,16 +51,8 @@ fun buildRestrictionSql(filter: RestrictionFilter): String {
       z.curfew_rule_recursion_pattern AS recursion_pattern,
       z.rule_restriction_type_name AS schedule_type
     FROM latest_revision z
-    CROSS JOIN latest_order lo
-    CROSS JOIN params p
     WHERE z.rn = 1
       $curfewRuleTypeFilter
-      AND z.curfew_start_at <= p.end_window
-      AND (z.curfew_end_at IS NULL OR z.curfew_end_at >= p.start_window)
-      AND (lo.order_end_date IS NULL OR z.curfew_start_at <= lo.order_end_date)
-      AND (z.curfew_end_at IS NULL OR z.curfew_end_at >= lo.order_start_date)
-      AND (z.curfew_rule_active_start_date IS NULL OR z.curfew_rule_active_start_date <= p.end_window)
-      AND (z.curfew_rule_active_end_date IS NULL OR z.curfew_rule_active_end_date >= p.start_window)
     ORDER BY
       z.curfew_start_at,
       z.zone_id
