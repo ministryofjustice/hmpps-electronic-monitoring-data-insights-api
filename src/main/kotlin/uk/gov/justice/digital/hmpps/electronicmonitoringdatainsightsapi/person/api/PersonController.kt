@@ -117,9 +117,8 @@ class PersonController(
       eventType = EventType.SEARCH_PERSON_BY_ID,
       pagedPeople.persons.distinctBy(Person::personId).size,
       detail = buildMap {
-        peopleQueryCriteria.orderIds
-          .takeIf { it.isNotEmpty() }
-          ?.let { put("orderIds", it) }
+        pagedPeople.persons.distinctBy(Person::personId).takeUnless { it.isEmpty() }
+          ?.let { people -> put("personIds", people.map(Person::personId)) }
       },
       crnProbationAreas = probationAreas.joinToString(", "),
     )

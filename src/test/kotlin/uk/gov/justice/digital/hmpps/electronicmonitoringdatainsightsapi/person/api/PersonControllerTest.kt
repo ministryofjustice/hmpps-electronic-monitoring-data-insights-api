@@ -233,7 +233,7 @@ class PersonControllerTest {
       eventType = eq(EventType.SEARCH_PERSON_BY_ID),
       results = eq(1),
       detail = eq(
-        emptyMap(),
+        mapOf("personIds" to listOf("123456")),
       ),
       crnProbationAreas = anyOrNull(),
     )
