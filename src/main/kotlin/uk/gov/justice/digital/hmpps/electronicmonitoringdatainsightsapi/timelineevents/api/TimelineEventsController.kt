@@ -4,10 +4,12 @@ import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
 import org.springframework.format.annotation.DateTimeFormat
 import org.springframework.http.MediaType
+import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.HAS_VIEW_ROLE
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.timelineevents.model.TimelineEventsMonthlyMetricsResponse
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.timelineevents.model.TimelineEventsStatisticsResponse
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.timelineevents.service.TimelineEventsService
@@ -25,6 +27,7 @@ class TimelineEventsController(
 
   @GetMapping(produces = [MediaType.TEXT_PLAIN_VALUE])
   @Operation(summary = "Get timeline event statistics for a date range")
+  @PreAuthorize(HAS_VIEW_ROLE)
   fun getStatistics(
     @RequestParam(required = false)
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
@@ -39,9 +42,11 @@ class TimelineEventsController(
 
   @GetMapping("/statistics", produces = [MediaType.APPLICATION_JSON_VALUE])
   @Operation(summary = "Get daily, weekly, monthly and all-time timeline event statistics")
+  @PreAuthorize(HAS_VIEW_ROLE)
   fun getStatisticsSummary(): TimelineEventsStatisticsResponse = timelineEventsService.getStatisticsSummary()
 
   @GetMapping("/monthly-metrics", produces = [MediaType.APPLICATION_JSON_VALUE])
+  @PreAuthorize(HAS_VIEW_ROLE)
   @Operation(
     summary = "Get timeline event metrics for a calendar month",
     description = "Uses Europe/London month boundaries. Excludes null and blank probation areas. " +

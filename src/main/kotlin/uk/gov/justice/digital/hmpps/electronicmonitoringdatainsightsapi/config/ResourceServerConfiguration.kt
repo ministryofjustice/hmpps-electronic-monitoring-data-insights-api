@@ -35,7 +35,6 @@ class ResourceServerConfiguration {
           "/openapi/**",
           "/queue-admin/retry-all-dlqs",
           "/status",
-          "/timeline-events/**",
         ).forEach { authorize(it, permitAll) }
         authorize(anyRequest, authenticated)
       }
