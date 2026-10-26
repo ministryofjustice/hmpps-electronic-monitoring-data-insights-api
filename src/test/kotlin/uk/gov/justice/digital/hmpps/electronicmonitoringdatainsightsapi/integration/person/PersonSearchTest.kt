@@ -37,7 +37,7 @@ class PersonSearchTest : IntegrationTestBase() {
     assertThat(person.personName).isEqualTo("John Smith")
     assertThat(person.nomisId).isEqualTo("A1234BC")
     assertThat(person.pncId).isEqualTo("2000/123456A")
-    assertThat(person.deliusId).isEqualTo("DEL12345")
+    assertThat(person.deliusId).isEqualTo("DEL12346")
     assertThat(person.horId).isEqualTo("HOR123")
     assertThat(person.ceprId).isEqualTo("CEPR001")
     assertThat(person.prisonId).isEqualTo("PRISON123")
