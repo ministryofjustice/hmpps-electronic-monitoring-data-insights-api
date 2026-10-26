@@ -14,10 +14,7 @@ class AthenaRestrictionZoneRepository(
   private val rowMapper: RestrictionZoneRowMapper,
 ) : RestrictionZoneRepository {
 
-  override fun getRestrictions(
-    personId: String,
-    filter: RestrictionFilter,
-  ): List<RestrictionZone> = getRestrictionZones(
+  override fun getRestrictions(personId: String, filter: RestrictionFilter): List<RestrictionZone> = getRestrictionZones(
     personId = personId,
     sql = buildRestrictionSql(filter),
   )

@@ -1,7 +1,6 @@
 package uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.restrictionzone.api
 
 import org.assertj.core.api.Assertions.assertThat
-import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
@@ -9,11 +8,13 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
 import org.mockito.Mock
 import org.mockito.junit.jupiter.MockitoExtension
+import org.mockito.kotlin.any
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import org.springframework.beans.factory.ObjectProvider
-import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.exclusionzone.api.DevExclusionZoneProvider
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.client.probationsearch.ProbationSearchApiClient
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.service.CurrentUserService
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.restrictionzone.model.CoordinateReferenceSystem
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.restrictionzone.model.CoordinateReferenceSystemProperties
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.restrictionzone.model.PointGeometry
@@ -22,7 +23,10 @@ import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.restrict
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.restrictionzone.model.RestrictionType
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.restrictionzone.model.RestrictionZone
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.restrictionzone.model.ScheduleType
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.restrictionzone.service.RestrictionFilter
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.restrictionzone.service.RestrictionZoneService
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.timelineevents.EventType
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.timelineevents.service.TimelineEventsService
 import java.time.Instant
 
 @ExtendWith(MockitoExtension::class)
@@ -32,11 +36,21 @@ class RestrictionZoneControllerTest {
   private lateinit var restrictionZoneService: RestrictionZoneService
 
   @Mock
-  private lateinit var devExclusionZoneProvider: ObjectProvider<DevExclusionZoneProvider>
+  private lateinit var devExclusionZoneProvider: ObjectProvider<DevRestrictionZoneProvider>
+
+  @Mock
+  private lateinit var timelineEventsService: TimelineEventsService
+
+  @Mock
+  private lateinit var currentUserService: CurrentUserService
+
+  @Mock
+  private lateinit var probationSearchApiClient: ProbationSearchApiClient
 
   private lateinit var restrictionZoneController: RestrictionZoneController
 
   private val personId = "88888"
+  private val crn = "X123456"
 
   private val crs = CoordinateReferenceSystem(
     type = "name",
@@ -48,8 +62,17 @@ class RestrictionZoneControllerTest {
     restrictionZoneController = RestrictionZoneController(
       restrictionZoneService = restrictionZoneService,
       devRestrictionZoneProvider = devExclusionZoneProvider,
+      timelineEventsService = timelineEventsService,
+      currentUserService = currentUserService,
+      probationSearchApiClient = probationSearchApiClient,
       devStubEnabled = false,
     )
+
+    whenever(currentUserService.username())
+      .thenReturn("TEST_USER")
+
+    whenever(probationSearchApiClient.getProbationAreas(crn))
+      .thenReturn(listOf("London"))
   }
 
   @Test
@@ -73,24 +96,11 @@ class RestrictionZoneControllerTest {
       schedule = continuousSchedule("2025-01-01T00:00:00Z", "2025-01-20T00:00:00Z"),
     )
 
-    val exclusionCircle = RestrictionZone(
-      restrictionZoneId = 2,
-      restrictionType = RestrictionType.EXCLUSION,
-      name = "Zone B",
-      address = "2 Test Street, London, SE1 1TL",
-      geometry = PointGeometry(
-        crs = crs,
-        coordinates = listOf(-0.091249, 51.505444),
-        radiusMetres = 500.0,
-      ),
-      schedule = continuousSchedule("2025-01-10T00:00:00Z", "2025-01-20T00:00:00Z"),
-    )
-
     val inclusionCircle = RestrictionZone(
-      restrictionZoneId = 3,
+      restrictionZoneId = 2,
       restrictionType = RestrictionType.INCLUSION,
-      name = "Zone C",
-      address = "3 Test Street, London, E1 6AN",
+      name = "Zone B",
+      address = "2 Test Street, London, E1 6AN",
       geometry = PointGeometry(
         crs = crs,
         coordinates = listOf(-0.0712, 51.5155),
@@ -99,18 +109,26 @@ class RestrictionZoneControllerTest {
       schedule = continuousSchedule("2025-01-05T00:00:00Z", "2025-01-25T00:00:00Z"),
     )
 
-    val zones = listOf(exclusionPolygon, exclusionCircle, inclusionCircle)
-    whenever(restrictionZoneService.getRestrictions(eq(personId), eq(true), eq(true)))
-      .thenReturn(zones)
+    val zones = listOf(exclusionPolygon, inclusionCircle)
 
-    val result = restrictionZoneController.getAllRestrictionForPerson(
-      personId,
+    whenever(
+      restrictionZoneService.getRestrictions(
+        personId,
+        true,
+        true,
+      ),
+    ).thenReturn(zones)
+
+    val result = restrictionZoneController.getRestrictionsForPerson(
+      personId = personId,
       inclusions = null,
       exclusions = null,
+      crn = crn,
     )
 
     assertThat(result.statusCode.value()).isEqualTo(200)
-    assertThat(requireNotNull(result.body).restrictionZones).containsExactlyElementsOf(zones)
+    assertThat(requireNotNull(result.body).restrictionZones)
+      .containsExactlyElementsOf(zones)
   }
 
   @ParameterizedTest(name = "inclusions={0}, exclusions={1} -> service({2}, {3})")
@@ -131,21 +149,34 @@ class RestrictionZoneControllerTest {
     expectedInclusions: Boolean,
     expectedExclusions: Boolean,
   ) {
-    val result = restrictionZoneController.getAllRestrictionForPerson(personId, inclusions, exclusions)
+    val result = restrictionZoneController.getRestrictionsForPerson(
+      personId = personId,
+      inclusions = inclusions,
+      exclusions = exclusions,
+      crn = crn,
+    )
 
     assertThat(result.statusCode.value()).isEqualTo(200)
-    verify(restrictionZoneService).getRestrictions(personId, expectedInclusions, expectedExclusions)
+
+    verify(restrictionZoneService)
+      .getRestrictions(personId, expectedInclusions, expectedExclusions)
   }
 
   @Test
   fun `getAllRestrictionForPerson returns empty list when the person has no restrictions`() {
-    whenever(restrictionZoneService.getRestrictions(eq(personId), eq(true), eq(true)))
-      .thenReturn(emptyList())
+    whenever(
+      restrictionZoneService.getRestrictions(
+        personId,
+        true,
+        true,
+      ),
+    ).thenReturn(emptyList())
 
-    val result = restrictionZoneController.getAllRestrictionForPerson(
-      personId,
+    val result = restrictionZoneController.getRestrictionsForPerson(
+      personId = personId,
       inclusions = null,
       exclusions = null,
+      crn = crn,
     )
 
     assertThat(result.statusCode.value()).isEqualTo(200)
@@ -153,22 +184,80 @@ class RestrictionZoneControllerTest {
   }
 
   @Test
-  fun `getAllRestrictionForPerson propagates exception when the service fails`() {
-    whenever(restrictionZoneService.getRestrictions(eq(personId), eq(true), eq(true)))
-      .thenThrow(RuntimeException("Athena query failed"))
+  fun `should record restriction zone timeline event`() {
+    val zones = listOf(
+      RestrictionZone(
+        restrictionZoneId = 1,
+        restrictionType = RestrictionType.EXCLUSION,
+        name = "Zone A",
+        address = "Address",
+        geometry = PointGeometry(
+          crs = crs,
+          coordinates = listOf(0.0, 0.0),
+          radiusMetres = 100.0,
+        ),
+        schedule = continuousSchedule(
+          "2025-01-01T00:00:00Z",
+          "2025-01-20T00:00:00Z",
+        ),
+      ),
+      RestrictionZone(
+        restrictionZoneId = 2,
+        restrictionType = RestrictionType.INCLUSION,
+        name = "Zone B",
+        address = "Address",
+        geometry = PointGeometry(
+          crs = crs,
+          coordinates = listOf(0.0, 0.0),
+          radiusMetres = 100.0,
+        ),
+        schedule = continuousSchedule(
+          "2025-01-01T00:00:00Z",
+          "2025-01-20T00:00:00Z",
+        ),
+      ),
+    )
 
-    assertThatThrownBy {
-      restrictionZoneController.getAllRestrictionForPerson(
+    whenever(
+      restrictionZoneService.getRestrictions(
         personId,
-        inclusions = null,
-        exclusions = null,
-      )
-    }
-      .isInstanceOf(RuntimeException::class.java)
-      .hasMessage("Athena query failed")
+        true,
+        true,
+      ),
+    ).thenReturn(zones)
+
+    whenever(currentUserService.username())
+      .thenReturn("TEST_USER")
+
+    whenever(probationSearchApiClient.getProbationAreas(crn))
+      .thenReturn(listOf("London"))
+
+    restrictionZoneController.getRestrictionsForPerson(
+      personId = personId,
+      inclusions = null,
+      exclusions = null,
+      crn = crn,
+    )
+
+    verify(timelineEventsService).record(
+      startedAt = any(),
+      userName = eq("TEST_USER"),
+      crn = eq(crn),
+      eventType = eq(EventType.VIEW_PERSON_RESTRICTION_ZONES),
+      results = eq(2),
+      detail = eq(
+        mapOf(
+          "restrictionFilter" to RestrictionFilter.ALL.name,
+        ),
+      ),
+      crnProbationAreas = eq("London"),
+    )
   }
 
-  private fun continuousSchedule(activeFrom: String, activeTo: String) = RestrictionSchedule(
+  private fun continuousSchedule(
+    activeFrom: String,
+    activeTo: String,
+  ) = RestrictionSchedule(
     scheduleType = ScheduleType.CONTINUOUS,
     activeFrom = Instant.parse(activeFrom),
     activeTo = Instant.parse(activeTo),

@@ -1,8 +1,12 @@
 package uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.integration.restrictionzone
 
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.CsvSource
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.system.OutputCaptureExtension
 import org.springframework.test.web.reactive.server.expectBody
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.integration.IntegrationTestBase
@@ -11,11 +15,21 @@ import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.restrict
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.restrictionzone.model.PolygonGeometry
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.restrictionzone.model.RestrictionType
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.restrictionzone.model.ScheduleType
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.timelineevents.EventType
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.timelineevents.repository.TimelineEventsRepository
 import java.time.DayOfWeek
 import java.time.Instant
 
 @ExtendWith(OutputCaptureExtension::class)
 class RestrictionZoneTest : IntegrationTestBase() {
+
+  @Autowired
+  lateinit var timelineEventsRepository: TimelineEventsRepository
+
+  @BeforeEach
+  fun clearTimelineEvents() {
+    timelineEventsRepository.deleteAll()
+  }
 
   @Test
   fun `should return all restrictions when no filters are supplied`() {
@@ -137,6 +151,15 @@ class RestrictionZoneTest : IntegrationTestBase() {
       )
 
     verifyAthenaStartQueryExecutionCount(1)
+
+    val event = timelineEventsRepository.findAll().single()
+
+    assertThat(event.eventType)
+      .isEqualTo(EventType.VIEW_PERSON_RESTRICTION_ZONES)
+    assertThat(event.crn)
+      .isEqualTo(CRN)
+    assertThat(event.results)
+      .isEqualTo(4)
   }
 
   @Test
@@ -309,15 +332,67 @@ class RestrictionZoneTest : IntegrationTestBase() {
     verifyAthenaStartQueryExecutionCount(0)
   }
 
+  @ParameterizedTest
+  @CsvSource(
+    value = [
+      "true,  null,  INCLUSIONS",
+      "null,  true,  EXCLUSIONS",
+      "null,  null,  ALL",
+    ],
+    nullValues = ["null"],
+  )
+  fun `should persist selected restriction filter in timeline event`(
+    inclusions: Boolean?,
+    exclusions: Boolean?,
+    expectedFilter: String,
+  ) {
+    stubQueryExecution(
+      "123",
+      1,
+      "SUCCEEDED",
+      ALL_RESTRICTIONS_SUCCESS_RESPONSE,
+    )
+
+    val uri = buildString {
+      append("/people/$PERSON_ID/restrictions?crn=$CRN")
+
+      inclusions?.let {
+        append("&inclusions=$it")
+      }
+
+      exclusions?.let {
+        append("&exclusions=$it")
+      }
+    }
+
+    webTestClient.get()
+      .uri(uri)
+      .headers(setAuthorisation())
+      .exchange()
+      .expectStatus().isOk()
+
+    val event = timelineEventsRepository.findAll().single()
+
+    assertThat(event.eventType)
+      .isEqualTo(EventType.VIEW_PERSON_RESTRICTION_ZONES)
+
+    assertThat(event.detail)
+      .containsEntry(
+        "restrictionFilter",
+        expectedFilter,
+      )
+  }
+
   companion object {
     private const val PERSON_ID = "123456"
+    private const val CRN = "X123456"
     private const val INCLUDE_EXCLUSION_ZONES = true
 
     private const val EXCLUSION_ZONES_URI =
-      "/people/$PERSON_ID/restrictions?crn=X123456&exclusions=$INCLUDE_EXCLUSION_ZONES"
+      "/people/$PERSON_ID/restrictions?crn=$CRN&exclusions=$INCLUDE_EXCLUSION_ZONES"
 
     private const val ALL_ZONES_URI =
-      "/people/$PERSON_ID/restrictions?crn=X123456"
+      "/people/$PERSON_ID/restrictions?crn=$CRN"
 
     private const val SUCCESS_RESPONSE =
       "athenaResponses/exclusion-zones.find-by-id-success.json"
