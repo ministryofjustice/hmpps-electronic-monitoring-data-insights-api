@@ -73,6 +73,6 @@ class PeopleTimelineEventsTest : IntegrationTestBase() {
     assertThat(event.eventType).isEqualTo(EventType.SEARCH_PERSON_BY_ID)
     assertThat(event.results).isEqualTo(1)
     assertThat(event.occurredAt).isNotNull()
-    assertThat(event.detail).isEmpty()
+    assertThat(event.detail).isEqualTo(mapOf("personIds" to listOf("123456")))
   }
 }
