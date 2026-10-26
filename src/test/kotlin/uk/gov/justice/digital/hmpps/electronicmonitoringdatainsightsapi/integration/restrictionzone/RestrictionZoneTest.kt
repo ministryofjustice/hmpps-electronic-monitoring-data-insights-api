@@ -311,15 +311,13 @@ class RestrictionZoneTest : IntegrationTestBase() {
 
   companion object {
     private const val PERSON_ID = "123456"
-    private const val FROM = "2025-01-01T00:00:00Z"
-    private const val TO = "2025-01-31T23:59:59Z"
     private const val INCLUDE_EXCLUSION_ZONES = true
 
     private const val EXCLUSION_ZONES_URI =
-      "/people/$PERSON_ID/restrictions?crn=X123456&from=$FROM&to=$TO&exclusions=$INCLUDE_EXCLUSION_ZONES"
+      "/people/$PERSON_ID/restrictions?crn=X123456&exclusions=$INCLUDE_EXCLUSION_ZONES"
 
     private const val ALL_ZONES_URI =
-      "/people/$PERSON_ID/restrictions?crn=X123456&from=$FROM&to=$TO"
+      "/people/$PERSON_ID/restrictions?crn=X123456"
 
     private const val SUCCESS_RESPONSE =
       "athenaResponses/exclusion-zones.find-by-id-success.json"
