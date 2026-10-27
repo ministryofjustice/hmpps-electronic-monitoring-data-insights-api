@@ -153,7 +153,7 @@ class AthenaPersonRepositoryTest {
   }
 
   @Test
-  fun `search should add responsible organisation filter when configured`() {
+  fun `search should select responsible organisation without filtering SQL when configured`() {
     val sqlSlot = slot<String>()
     val paramsSlot = slot<List<String>>()
 
@@ -191,14 +191,12 @@ class AthenaPersonRepositoryTest {
     )
 
     assertThat(sqlSlot.captured)
-      .contains("AND c.responsible_organisation IN (CAST(? AS VARCHAR), CAST(? AS VARCHAR))")
+      .doesNotContain("AND c.responsible_organisation IN")
+      .contains("c.responsible_organisation AS responsible_organisation")
       .contains("AND c.mdss_person_id IS NOT NULL")
 
-    assertThat(paramsSlot.captured).contains(
-      nomisId,
-      "Probation London Community/Suspended Sentence",
-      "Probation London Licences",
-    )
+    assertThat(paramsSlot.captured).contains(nomisId)
+    assertThat(paramsSlot.captured).doesNotContain("Probation London Licences")
   }
 
   @Test

@@ -5,8 +5,13 @@ import org.springframework.http.HttpStatus.NOT_FOUND
 import org.springframework.stereotype.Service
 import org.springframework.web.server.ResponseStatusException
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.alert.PersonMatchAlertService
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.athena.AwsProperties
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.client.cpr.CprApiClient
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.client.cpr.CprPerson
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.exception.PersonNotFoundException
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.exception.PersonWrongEnforceableConditionException
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.exception.PersonWrongRegionException
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.jpa.Constants
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.api.ComparedValue
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.api.EmCompareResponse
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.api.PersonSearchRequest
@@ -34,9 +39,60 @@ class PersonService(
   private val personMatchScoreRepository: PersonMatchScoreRepository,
   private val personMatchingProperties: PersonMatchingProperties,
   private val personMatchAlertService: PersonMatchAlertService,
+  awsProperties: AwsProperties,
 ) {
 
-  fun searchPeople(personsQueryCriteria: PeopleQueryCriteria, nextToken: String? = null): PagedPeople = this.personRepository.searchPeople(personsQueryCriteria, nextToken)
+  private val responsibleOrganisations = awsProperties.athena.responsibleOrganisations
+    .map(String::trim)
+    .filter(String::isNotEmpty)
+    .toSet()
+
+  fun searchPeople(personsQueryCriteria: PeopleQueryCriteria, nextToken: String? = null): PagedPeople {
+    val latestPeople = latestRecords(fetchAllPeople(personsQueryCriteria, nextToken))
+    // if no person found at all -> return.
+    if (latestPeople.isEmpty()) throw PersonNotFoundException()
+    // filter on enforceable condition
+    // filter the list on enforceable condition = location_monitoring if none are found then return 404 with message.
+    val locationMonitoringPeople = filterByEnforceableCondition(latestPeople)
+    if (locationMonitoringPeople.isEmpty()) {
+      val enforceableConditions = latestPeople.map { it.enforceableCondition?.takeIf(String::isNotBlank) ?: "Unknown" }.distinct()
+      throw PersonWrongEnforceableConditionException(enforceableConditions.joinToString(", "))
+    }
+
+    // filter on responsible organisation
+    val people = filterByResponsibleOrganisation(locationMonitoringPeople)
+    if (people.isEmpty()) {
+      val regionsFound = locationMonitoringPeople.map { it.responsibleOrganisation?.takeIf(String::isNotBlank) ?: "Unknown" }.distinct()
+      throw PersonWrongRegionException(regionsFound.joinToString(", "))
+    }
+    return PagedPeople(persons = people, nextToken = null)
+  }
+
+  private fun fetchAllPeople(criteria: PeopleQueryCriteria, nextToken: String?): List<Person> {
+    val people = mutableListOf<Person>()
+    var cursor = nextToken
+    do {
+      val page = personRepository.searchPeople(criteria, cursor)
+      people.addAll(page.persons)
+      cursor = page.nextToken
+    } while (cursor != null)
+    return people
+  }
+
+  // return the latest person records by grouped date
+  private fun latestRecords(records: List<Person>): List<Person> {
+    val latestDate = records.mapNotNull { it.groupedDate }.maxOrNull()
+
+    return records.filter { it.groupedDate == latestDate }
+  }
+
+  private fun filterByResponsibleOrganisation(people: List<Person>): List<Person> = if (responsibleOrganisations.isEmpty()) {
+    people
+  } else {
+    people.filter { it.responsibleOrganisation in responsibleOrganisations }
+  }
+
+  private fun filterByEnforceableCondition(people: List<Person>): List<Person> = people.filter { it.enforceableCondition in Constants.ENFORCEABLE_CONDITIONS }
 
   fun getPersonById(personId: String): Person? = personRepository.findByPersonById(personId)
 
