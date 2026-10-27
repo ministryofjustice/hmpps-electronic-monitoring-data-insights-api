@@ -104,7 +104,7 @@ class PersonController(
 
     val startedAt = System.nanoTime()
     val enrichedPeopleQueryCriteria = enrichPeopleQueryCriteria(peopleQueryCriteria)
-    val pagedPeople = personService.searchPeople(enrichedPeopleQueryCriteria, nextToken)
+    val pagedPeople = personService.searchPeople(enrichedPeopleQueryCriteria)
     if (pagedPeople.persons.isNotEmpty() && enrichedPeopleQueryCriteria.person != null) {
       personService.personMatchScore(enrichedPeopleQueryCriteria.person, pagedPeople.persons.first())
     }
