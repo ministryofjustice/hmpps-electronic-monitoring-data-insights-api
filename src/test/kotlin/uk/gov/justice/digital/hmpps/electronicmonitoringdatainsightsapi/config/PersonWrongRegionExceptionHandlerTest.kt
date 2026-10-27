@@ -11,7 +11,7 @@ class PersonWrongRegionExceptionHandlerTest {
       .handlePersonWrongRegionException(PersonWrongRegionException("Probation North West"))
 
     assertThat(response.statusCode.value()).isEqualTo(404)
-    assertThat(response.body?.code).isEqualTo("PERSON_WRONG_REGION")
+    assertThat(response.body?.code).isEqualTo("PERSON_NOT_TRIAL_REGION")
     assertThat(response.body?.description).isEqualTo(
       "Person exists in EMDI but is associated with region Probation North West which is not trial region.",
     )

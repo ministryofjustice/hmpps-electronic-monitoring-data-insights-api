@@ -40,7 +40,7 @@ class ElectronicMonitoringDataInsightsApiExceptionHandler {
   @ExceptionHandler(PersonWrongRegionException::class)
   fun handlePersonWrongRegionException(e: PersonWrongRegionException): ResponseEntity<PersonSearchErrorResponse> = ResponseEntity
     .status(NOT_FOUND)
-    .body(PersonSearchErrorResponse(NOT_FOUND.value(), "PERSON_WRONG_REGION", e.message, e.message))
+    .body(PersonSearchErrorResponse(NOT_FOUND.value(), "PERSON_NOT_TRIAL_REGION", e.message, e.message))
 
   @ExceptionHandler(PersonWrongEnforceableConditionException::class)
   fun handlePersonWrongEnforceableConditionException(e: PersonWrongEnforceableConditionException): ResponseEntity<PersonSearchErrorResponse> = ResponseEntity
