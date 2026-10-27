@@ -28,6 +28,8 @@ generic-service:
     FMS_DB: "serco_fms_curated_dev_dbt"
     ATHENA_OUTPUT_BUCKET: "s3://emds-preprod-athena-query-results-20241105110923178000000003/output"
     WORKGROUP: "443370694497-default"
+    RESPONSIBLE_ORGANISATIONS: "Probation London Community/Suspended Sentence,Probation London Licences,Probation West Midlands,Probation East of England"
+    DELIUS_RESPONSIBLE_ORGANISATIONS: "West Midlands Region,London,East of England"
     TIMELINE_EVENTS_REPORT_ENABLED: "false"
     PERSON_MATCH_ALERT_ENABLED: "false"
 
