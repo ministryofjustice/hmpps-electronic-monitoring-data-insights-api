@@ -81,8 +81,7 @@ class PersonService(
 
   // return the latest person records by grouped date
   private fun latestRecords(records: List<Person>): List<Person> {
-    val latestDate = records.maxByOrNull { it.groupedDate ?: return emptyList() }
-      ?.groupedDate
+    val latestDate = records.mapNotNull { it.groupedDate }.maxOrNull()
 
     return records.filter { it.groupedDate == latestDate }
   }
