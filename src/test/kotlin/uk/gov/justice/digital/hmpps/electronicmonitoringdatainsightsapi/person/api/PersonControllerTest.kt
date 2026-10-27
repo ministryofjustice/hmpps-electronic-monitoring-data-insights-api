@@ -218,7 +218,7 @@ class PersonControllerTest {
         pncId = "EXISTING-PNC",
         enrichIds = true,
       ),
-      nextToken = "next-token",
+      nextToken = null,
     )
 
     assertThat(result.statusCode).isEqualTo(HttpStatus.OK)

@@ -49,7 +49,7 @@ class PersonSearchTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Search people returns empty array when no people found`() {
+  fun `Search people returns 404 when no people found`() {
     stubQueryExecution(
       "123",
       1,
@@ -61,11 +61,10 @@ class PersonSearchTest : IntegrationTestBase() {
       .uri("/people?nomisId=A1234BC")
       .headers(setAuthorisation())
       .exchange()
-      .expectStatus().isOk
+      .expectStatus().isNotFound
       .expectBody()
-      .jsonPath("$.persons").isArray
-      .jsonPath("$.persons.length()").isEqualTo(0)
-      .jsonPath("$.nextToken").doesNotExist()
+      .jsonPath("$.code").isEqualTo("PERSON_NOT_FOUND")
+      .jsonPath("$.description").isEqualTo("This person could not be found in EMDI using any of the delius Ids")
   }
 
   @Test

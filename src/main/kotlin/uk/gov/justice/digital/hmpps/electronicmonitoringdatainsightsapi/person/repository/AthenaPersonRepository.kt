@@ -6,7 +6,6 @@ import software.amazon.awssdk.services.athena.model.Datum
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.athena.AthenaQueryRunner
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.athena.AwsProperties
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.exception.DataIntegrityException
-import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.jpa.Constants
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.util.DateTimeConstants
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.model.EmPersonDetails
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.model.PagedPeople
@@ -50,16 +49,8 @@ class AthenaPersonRepository(
       params = built.params,
     )
 
-    log.info(
-      "Athena person search returned {} people with {} distinct orderIds",
-      result.items.size,
-      distinctOrderIds.size,
-    )
-
-    return PagedPeople(
-      persons = result.items,
-      nextToken = result.nextToken,
-    )
+    log.info("Athena person search returned {} people with {} distinct orderIds", result.items.size, distinctOrderIds.size)
+    return PagedPeople(persons = result.items, nextToken = result.nextToken)
   }
 
   data class SqlAndParams(val sql: String, val params: List<String>)
@@ -72,16 +63,6 @@ class AthenaPersonRepository(
       inColumn = "c.order_id",
       inValues = personsQueryCriteria.orderIds,
     )
-    builder.addIn(
-      "c.enforceable_condition",
-      Constants.ENFORCEABLE_CONDITIONS,
-    )
-    if (properties.athena.responsibleOrganisations.isNotEmpty()) {
-      builder.addIn(
-        "c.responsible_organisation",
-        properties.athena.responsibleOrganisations,
-      )
-    }
 
     val enhancedSearchCriteria = if (personsQueryCriteria.enhancedPeopleSearch) {
       "WHERE lp.person_id IS NOT NULL"
@@ -124,7 +105,12 @@ class AthenaPersonRepository(
       c.city_or_town AS city,
       c.house_number_and_street_name AS street,
       c.order_id AS order_id,
-      lp.latest_position_gps_date
+      lp.latest_position_gps_date,
+      c.responsible_organisation AS responsible_organisation,
+      c.enforceable_condition AS enforceable_condition,
+      CAST(NULL AS VARCHAR) AS order_start_date,
+      CAST(NULL AS VARCHAR) AS order_end_date,
+      c.grouped_date AS grouped_date
     FROM matching_caseload c
     LEFT JOIN latest_positions lp ON lp.person_id = c.mdss_person_id
     $enhancedSearchCriteria
@@ -132,7 +118,6 @@ class AthenaPersonRepository(
       latest_position_gps_date DESC NULLS LAST,
       CASE WHEN c.is_monitored = TRUE THEN 0 ELSE 1 END,
       c.is_monitored DESC NULLS LAST
-    LIMIT ${properties.athena.rowLimit}
     """.trimIndent()
 
     return SqlAndParams(sql, builder.params)
@@ -472,6 +457,7 @@ class AthenaPersonRepository(
       enforceableCondition = v(COL_ENFORCEABLE_CONDITION),
       orderStartDate = timestamp(COL_ORDER_START_DATE),
       orderEndDate = timestamp(COL_ORDER_END_DATE),
+      groupedDate = timestamp(COL_GROUPED_DATE),
     )
   }
 
@@ -543,6 +529,7 @@ class AthenaPersonRepository(
     private const val COL_ENFORCEABLE_CONDITION = 16
     private const val COL_ORDER_START_DATE = 17
     private const val COL_ORDER_END_DATE = 18
+    private const val COL_GROUPED_DATE = 19
     private const val COL_RAW_GROUPED_DATE = 0
     private const val COL_RAW_UNIQUE_DEVICE_WEARER_ID = 1
     private const val COL_RAW_FIRST_NAME = 2

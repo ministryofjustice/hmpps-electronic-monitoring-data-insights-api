@@ -157,6 +157,90 @@
           "SchemaName": "",
           "TableName": "",
           "Type": "varchar"
+        },
+        {
+          "CaseSensitive": false,
+          "CatalogName": "hive",
+          "Label": "order_id",
+          "Name": "order_id",
+          "Nullable": "UNKNOWN",
+          "Precision": 2147483647,
+          "Scale": 0,
+          "SchemaName": "",
+          "TableName": "",
+          "Type": "varchar"
+        },
+        {
+          "CaseSensitive": false,
+          "CatalogName": "hive",
+          "Label": "latest_position_gps_date",
+          "Name": "latest_position_gps_date",
+          "Nullable": "UNKNOWN",
+          "Precision": 0,
+          "Scale": 6,
+          "SchemaName": "",
+          "TableName": "",
+          "Type": "timestamp"
+        },
+        {
+          "CaseSensitive": false,
+          "CatalogName": "hive",
+          "Label": "responsible_organisation",
+          "Name": "responsible_organisation",
+          "Nullable": "UNKNOWN",
+          "Precision": 2147483647,
+          "Scale": 0,
+          "SchemaName": "",
+          "TableName": "",
+          "Type": "varchar"
+        },
+        {
+          "CaseSensitive": false,
+          "CatalogName": "hive",
+          "Label": "enforceable_condition",
+          "Name": "enforceable_condition",
+          "Nullable": "UNKNOWN",
+          "Precision": 2147483647,
+          "Scale": 0,
+          "SchemaName": "",
+          "TableName": "",
+          "Type": "varchar"
+        },
+        {
+          "CaseSensitive": false,
+          "CatalogName": "hive",
+          "Label": "order_start_date",
+          "Name": "order_start_date",
+          "Nullable": "UNKNOWN",
+          "Precision": 2147483647,
+          "Scale": 0,
+          "SchemaName": "",
+          "TableName": "",
+          "Type": "varchar"
+        },
+        {
+          "CaseSensitive": false,
+          "CatalogName": "hive",
+          "Label": "order_end_date",
+          "Name": "order_end_date",
+          "Nullable": "UNKNOWN",
+          "Precision": 2147483647,
+          "Scale": 0,
+          "SchemaName": "",
+          "TableName": "",
+          "Type": "varchar"
+        },
+        {
+          "CaseSensitive": false,
+          "CatalogName": "hive",
+          "Label": "grouped_date",
+          "Name": "grouped_date",
+          "Nullable": "UNKNOWN",
+          "Precision": 0,
+          "Scale": 6,
+          "SchemaName": "",
+          "TableName": "",
+          "Type": "timestamp"
         }
       ]
     },
@@ -176,7 +260,13 @@
           { "VarCharValue": "zip" },
           { "VarCharValue": "city" },
           { "VarCharValue": "street" },
-          { "VarCharValue": "order_id" }
+          { "VarCharValue": "order_id" },
+          { "VarCharValue": "latest_position_gps_date" },
+          { "VarCharValue": "responsible_organisation" },
+          { "VarCharValue": "enforceable_condition" },
+          { "VarCharValue": "order_start_date" },
+          { "VarCharValue": "order_end_date" },
+          { "VarCharValue": "grouped_date" }
         ]
       },
       {
@@ -194,7 +284,13 @@
           { "VarCharValue": "SW1A 1AA" },
           { "VarCharValue": "London" },
           { "VarCharValue": "1 Test Street" },
-          {"VarCharValue": "ORDER123"}
+          { "VarCharValue": "ORDER123" },
+          {},
+          { "VarCharValue": "London" },
+          { "VarCharValue": "location_monitoring" },
+          {},
+          {},
+          { "VarCharValue": "2026-10-27 00:00:00.000000" }
         ]
       }
     ]

@@ -6,7 +6,9 @@ import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import software.amazon.awssdk.regions.Region
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.alert.PersonMatchAlertService
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.athena.AwsProperties
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.client.cpr.CprAddress
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.client.cpr.CprAddressStatus
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.client.cpr.CprApiClient
@@ -34,6 +36,7 @@ class PersonServiceTest {
     personMatchScoreRepository,
     PersonMatchingProperties(),
     personMatchAlertService,
+    AwsProperties(region = Region.EU_WEST_2),
   )
 
   @BeforeEach
