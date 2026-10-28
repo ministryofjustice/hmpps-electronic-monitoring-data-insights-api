@@ -64,7 +64,7 @@ class PersonSearchTest : IntegrationTestBase() {
       .expectStatus().isNotFound
       .expectBody()
       .jsonPath("$.code").isEqualTo("PERSON_NOT_FOUND")
-      .jsonPath("$.description").isEqualTo("This person could not be found in EMDI using any of the delius Ids")
+      .jsonPath("$.description").isEqualTo("This person could not be found in EMDI using any of the Delius identifiers. Please contact EMDI support for more information.")
   }
 
   @Test

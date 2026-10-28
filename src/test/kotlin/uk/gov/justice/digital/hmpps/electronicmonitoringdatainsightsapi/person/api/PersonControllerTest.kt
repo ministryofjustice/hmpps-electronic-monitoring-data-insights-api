@@ -29,6 +29,9 @@ import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.client.p
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.client.probationsearch.ProbationSearchApiClient
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.client.probationsearch.ProbationSearchApiException
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.client.probationsearch.ProbationSearchOffender
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.exception.PersonNotFoundException
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.exception.PersonWrongEnforceableConditionException
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.exception.PersonWrongRegionException
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.service.CurrentUserService
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.config.ServiceProperties
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.model.PagedPeople
@@ -83,6 +86,72 @@ class PersonControllerTest {
       cprEnabled = false,
       timelineEventsService = timelineEventsService,
     )
+  }
+
+  @Test
+  fun `searchPeople records zero results when person is not found`() {
+    val criteria = PeopleQueryCriteria(deliusId = "X123456", enrichIds = false)
+    val exception = PersonNotFoundException()
+    whenever(currentUserService.username()).thenReturn("test-user")
+    whenever(personService.searchPeople(criteria)).thenThrow(exception)
+    whenever(probationSearchApiClient.getProbationAreas("X123456")).thenReturn(listOf("London"))
+
+    assertThatThrownBy { controller.searchPeople(criteria, null) }.isSameAs(exception)
+
+    verify(timelineEventsService).record(
+      startedAt = any(),
+      userName = eq("test-user"),
+      crn = eq("X123456"),
+      eventType = eq(EventType.SEARCH_PERSON_BY_ID),
+      results = eq(0),
+      detail = eq(emptyMap()),
+      crnProbationAreas = eq("London"),
+    )
+    verify(personService, times(0)).personMatchScore(any(), any())
+  }
+
+  @Test
+  fun `searchPeople records zero results when person has no location monitoring condition`() {
+    val criteria = PeopleQueryCriteria(deliusId = "X123456", enrichIds = false)
+    val exception = PersonWrongEnforceableConditionException("curfew")
+    whenever(currentUserService.username()).thenReturn("test-user")
+    whenever(personService.searchPeople(criteria)).thenThrow(exception)
+    whenever(probationSearchApiClient.getProbationAreas("X123456")).thenReturn(listOf("London"))
+
+    assertThatThrownBy { controller.searchPeople(criteria, null) }.isSameAs(exception)
+
+    verify(timelineEventsService).record(
+      startedAt = any(),
+      userName = eq("test-user"),
+      crn = eq("X123456"),
+      eventType = eq(EventType.SEARCH_PERSON_BY_ID),
+      results = eq(0),
+      detail = eq(emptyMap()),
+      crnProbationAreas = eq("London"),
+    )
+    verify(personService, times(0)).personMatchScore(any(), any())
+  }
+
+  @Test
+  fun `searchPeople records zero results when person is outside the trial region`() {
+    val criteria = PeopleQueryCriteria(deliusId = "X123456", enrichIds = false)
+    val exception = PersonWrongRegionException("Other region")
+    whenever(currentUserService.username()).thenReturn("test-user")
+    whenever(personService.searchPeople(criteria)).thenThrow(exception)
+    whenever(probationSearchApiClient.getProbationAreas("X123456")).thenReturn(listOf("London"))
+
+    assertThatThrownBy { controller.searchPeople(criteria, null) }.isSameAs(exception)
+
+    verify(timelineEventsService).record(
+      startedAt = any(),
+      userName = eq("test-user"),
+      crn = eq("X123456"),
+      eventType = eq(EventType.SEARCH_PERSON_BY_ID),
+      results = eq(0),
+      detail = eq(emptyMap()),
+      crnProbationAreas = eq("London"),
+    )
+    verify(personService, times(0)).personMatchScore(any(), any())
   }
 
   @Test

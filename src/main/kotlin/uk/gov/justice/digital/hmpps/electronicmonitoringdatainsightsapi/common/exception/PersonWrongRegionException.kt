@@ -2,5 +2,5 @@ package uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.
 
 class PersonWrongRegionException(region: String) :
   RuntimeException(
-    "Person exists in EMDI but is associated with region $region which is not trial region.",
+    "Person exists in EMDI but is associated with region $region which is not a trial region. Please contact your regional EM team for more information.",
   )

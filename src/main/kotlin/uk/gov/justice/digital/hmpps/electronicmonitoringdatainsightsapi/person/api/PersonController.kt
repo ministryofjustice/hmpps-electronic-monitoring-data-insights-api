@@ -22,6 +22,9 @@ import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.client.a
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.client.cpr.CprApiClient
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.client.probationsearch.ProbationSearchApiClient
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.HAS_VIEW_ROLE
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.exception.PersonNotFoundException
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.exception.PersonWrongEnforceableConditionException
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.exception.PersonWrongRegionException
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.service.CurrentUserService
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.config.ServiceProperties
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.model.PeopleQueryCriteria
@@ -104,29 +107,44 @@ class PersonController(
 
     val startedAt = System.nanoTime()
     val enrichedPeopleQueryCriteria = enrichPeopleQueryCriteria(peopleQueryCriteria)
-    val pagedPeople = personService.searchPeople(enrichedPeopleQueryCriteria)
+    val pagedPeople = try {
+      personService.searchPeople(enrichedPeopleQueryCriteria)
+    } catch (exception: RuntimeException) {
+      when (exception) {
+        is PersonNotFoundException,
+        is PersonWrongEnforceableConditionException,
+        is PersonWrongRegionException,
+        -> recordPersonSearch(startedAt, username, crn, emptyList())
+        else -> throw exception
+      }
+      throw exception
+    }
     if (pagedPeople.persons.isNotEmpty() && enrichedPeopleQueryCriteria.person != null) {
       personService.personMatchScore(enrichedPeopleQueryCriteria.person, pagedPeople.persons.first())
     }
 
+    recordPersonSearch(startedAt, username, crn, pagedPeople.persons.distinctBy(Person::personId))
+    return ResponseEntity.ok(
+      PersonResponse(
+        persons = pagedPeople.persons.distinctBy(Person::personId),
+        nextToken = pagedPeople.nextToken,
+      ),
+    )
+  }
+
+  private fun recordPersonSearch(startedAt: Long, username: String, crn: String?, people: List<Person>) {
     val probationAreas = probationSearchApiClient.getProbationAreas(crn)
     timelineEventsService.record(
       startedAt = startedAt,
       userName = username,
       crn = crn,
       eventType = EventType.SEARCH_PERSON_BY_ID,
-      pagedPeople.persons.distinctBy(Person::personId).size,
+      results = people.size,
       detail = buildMap {
-        pagedPeople.persons.distinctBy(Person::personId).takeUnless { it.isEmpty() }
+        people.takeUnless { it.isEmpty() }
           ?.let { people -> put("personIds", people.map(Person::personId)) }
       },
       crnProbationAreas = probationAreas.joinToString(", "),
-    )
-    return ResponseEntity.ok(
-      PersonResponse(
-        persons = pagedPeople.persons.distinctBy(Person::personId),
-        nextToken = pagedPeople.nextToken,
-      ),
     )
   }
 

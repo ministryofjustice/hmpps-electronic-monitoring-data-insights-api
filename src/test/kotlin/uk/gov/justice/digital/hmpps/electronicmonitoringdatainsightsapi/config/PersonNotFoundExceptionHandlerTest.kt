@@ -12,7 +12,7 @@ class PersonNotFoundExceptionHandlerTest {
 
     assertThat(response.statusCode.value()).isEqualTo(404)
     assertThat(response.body?.code).isEqualTo("PERSON_NOT_FOUND")
-    assertThat(response.body?.description).isEqualTo("This person could not be found in EMDI using any of the delius Ids")
+    assertThat(response.body?.description).isEqualTo("This person could not be found in EMDI using any of the Delius identifiers. Please contact EMDI support for more information.")
     assertThat(response.body?.userMessage).isEqualTo(response.body?.description)
   }
 }
