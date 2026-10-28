@@ -8,6 +8,7 @@ import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.alert.Pe
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.athena.AwsProperties
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.client.cpr.CprApiClient
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.client.cpr.CprPerson
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.exception.PersonNoPositionsException
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.exception.PersonNotFoundException
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.exception.PersonWrongEnforceableConditionException
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.exception.PersonWrongRegionException
@@ -60,12 +61,19 @@ class PersonService(
     }
 
     // filter on responsible organisation
-    val people = filterByResponsibleOrganisation(locationMonitoringPeople)
-    if (people.isEmpty()) {
+    val responsibleOrgPeople = filterByResponsibleOrganisation(locationMonitoringPeople)
+    if (responsibleOrgPeople.isEmpty()) {
       val regionsFound = locationMonitoringPeople.map { it.responsibleOrganisation?.takeIf(String::isNotBlank) ?: "Unknown" }.distinct()
       throw PersonWrongRegionException(regionsFound.joinToString(", "))
     }
-    return PagedPeople(persons = people, nextToken = null)
+
+    // filter on no position data
+    val positionPeople = filterByHavingPositionData(responsibleOrgPeople)
+    if (positionPeople.isEmpty()) {
+      throw PersonNoPositionsException()
+    }
+
+    return PagedPeople(persons = positionPeople, nextToken = null)
   }
 
   private fun fetchAllPeople(criteria: PeopleQueryCriteria, nextToken: String?): List<Person> {
@@ -93,6 +101,8 @@ class PersonService(
   }
 
   private fun filterByEnforceableCondition(people: List<Person>): List<Person> = people.filter { it.enforceableCondition in Constants.ENFORCEABLE_CONDITIONS }
+
+  private fun filterByHavingPositionData(people: List<Person>): List<Person> = people.filter { it.positionData?.hasPositionData ?: false }
 
   fun getPersonById(personId: String): Person? = personRepository.findByPersonById(personId)
 

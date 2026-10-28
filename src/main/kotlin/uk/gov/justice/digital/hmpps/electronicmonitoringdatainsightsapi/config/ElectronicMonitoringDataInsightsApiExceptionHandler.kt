@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException
 import org.springframework.web.server.ResponseStatusException
 import org.springframework.web.servlet.resource.NoResourceFoundException
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.exception.PersonNoPositionsException
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.exception.PersonNotFoundException
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.exception.PersonWrongEnforceableConditionException
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.exception.PersonWrongRegionException
@@ -36,6 +37,10 @@ class ElectronicMonitoringDataInsightsApiExceptionHandler {
   fun handlePersonNotFoundException(e: PersonNotFoundException): ResponseEntity<PersonSearchErrorResponse> = ResponseEntity
     .status(NOT_FOUND)
     .body(PersonSearchErrorResponse(NOT_FOUND.value(), "PERSON_NOT_FOUND", e.message, e.message))
+
+  fun handlePersonNoPositionsException(e: PersonNoPositionsException): ResponseEntity<PersonSearchErrorResponse> = ResponseEntity
+    .status(NOT_FOUND)
+    .body(PersonSearchErrorResponse(NOT_FOUND.value(), "PERSON_NO_POSITION_DATA", e.message, e.message))
 
   @ExceptionHandler(PersonWrongRegionException::class)
   fun handlePersonWrongRegionException(e: PersonWrongRegionException): ResponseEntity<PersonSearchErrorResponse> = ResponseEntity

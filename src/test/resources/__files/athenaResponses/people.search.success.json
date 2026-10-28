@@ -285,7 +285,7 @@
           { "VarCharValue": "London" },
           { "VarCharValue": "1 Test Street" },
           { "VarCharValue": "ORDER123" },
-          {},
+          { "VarCharValue": "2026-10-27 12:00:00.000000" },
           { "VarCharValue": "London" },
           { "VarCharValue": "location_monitoring" },
           {},

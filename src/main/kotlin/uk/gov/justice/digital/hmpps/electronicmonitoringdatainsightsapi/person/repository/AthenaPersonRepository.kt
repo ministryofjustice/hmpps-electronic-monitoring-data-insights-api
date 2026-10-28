@@ -64,12 +64,6 @@ class AthenaPersonRepository(
       inValues = personsQueryCriteria.orderIds,
     )
 
-    val enhancedSearchCriteria = if (personsQueryCriteria.enhancedPeopleSearch) {
-      "WHERE lp.person_id IS NOT NULL"
-    } else {
-      ""
-    }
-
     val sql = """
     WITH matching_caseload AS (
       SELECT c.*
@@ -113,7 +107,6 @@ class AthenaPersonRepository(
       c.grouped_date AS grouped_date
     FROM matching_caseload c
     LEFT JOIN latest_positions lp ON lp.person_id = c.mdss_person_id
-    $enhancedSearchCriteria
     ORDER BY
       latest_position_gps_date DESC NULLS LAST,
       CASE WHEN c.is_monitored = TRUE THEN 0 ELSE 1 END,
