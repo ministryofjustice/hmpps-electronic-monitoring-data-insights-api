@@ -2,5 +2,5 @@ package uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.
 
 class PersonWrongEnforceableConditionException(enforceableConditions: String) :
   RuntimeException(
-    "Person exists in EMDI but does not have an active location_monitoring enforceable condition. Conditions found: $enforceableConditions",
+    "Person exists in EMDI but does not have an active location monitoring enforceable condition. Conditions found: $enforceableConditions",
   )

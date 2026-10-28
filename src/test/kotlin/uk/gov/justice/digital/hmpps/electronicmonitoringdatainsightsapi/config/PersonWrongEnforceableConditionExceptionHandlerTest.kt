@@ -13,7 +13,7 @@ class PersonWrongEnforceableConditionExceptionHandlerTest {
     assertThat(response.statusCode.value()).isEqualTo(404)
     assertThat(response.body?.code).isEqualTo("PERSON_NO_LOCATION_MONITORING")
     assertThat(response.body?.description).isEqualTo(
-      "Person exists in EMDI but does not have an active location_monitoring enforceable condition. Conditions found: aml",
+      "Person exists in EMDI but does not have an active location monitoring enforceable condition. Conditions found: aml",
     )
     assertThat(response.body?.userMessage).isEqualTo(response.body?.description)
   }
