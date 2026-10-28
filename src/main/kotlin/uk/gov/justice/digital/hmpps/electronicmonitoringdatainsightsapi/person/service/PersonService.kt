@@ -10,6 +10,7 @@ import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.client.c
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.client.cpr.CprPerson
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.exception.PersonNoPositionsException
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.exception.PersonNotFoundException
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.exception.PersonOutsideOrderPeriodException
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.exception.PersonWrongEnforceableConditionException
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.exception.PersonWrongRegionException
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.jpa.Constants
@@ -73,7 +74,13 @@ class PersonService(
       throw PersonNoPositionsException()
     }
 
-    return PagedPeople(persons = positionPeople, nextToken = null)
+    // filter on current order period
+    val currentOrderPeople = filterByCurrentOrderPeriod(positionPeople)
+    if (currentOrderPeople.isEmpty()) {
+      throw PersonOutsideOrderPeriodException()
+    }
+
+    return PagedPeople(persons = currentOrderPeople, nextToken = null)
   }
 
   private fun fetchAllPeople(criteria: PeopleQueryCriteria, nextToken: String?): List<Person> {
@@ -103,6 +110,15 @@ class PersonService(
   private fun filterByEnforceableCondition(people: List<Person>): List<Person> = people.filter { it.enforceableCondition in Constants.ENFORCEABLE_CONDITIONS }
 
   private fun filterByHavingPositionData(people: List<Person>): List<Person> = people.filter { it.positionData?.hasPositionData ?: false }
+
+  private fun filterByCurrentOrderPeriod(people: List<Person>): List<Person> {
+    val today = LocalDate.now(ZoneOffset.UTC)
+    return people.filter { person ->
+      val startDate = person.orderStartDate?.atZone(ZoneOffset.UTC)?.toLocalDate()
+      val endDate = person.orderEndDate?.atZone(ZoneOffset.UTC)?.toLocalDate()
+      startDate != null && endDate != null && !today.isBefore(startDate) && !today.isAfter(endDate)
+    }
+  }
 
   fun getPersonById(personId: String): Person? = personRepository.findByPersonById(personId)
 

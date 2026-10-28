@@ -19,6 +19,7 @@ import org.springframework.web.server.ResponseStatusException
 import org.springframework.web.servlet.resource.NoResourceFoundException
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.exception.PersonNoPositionsException
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.exception.PersonNotFoundException
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.exception.PersonOutsideOrderPeriodException
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.exception.PersonWrongEnforceableConditionException
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.exception.PersonWrongRegionException
 import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
@@ -41,6 +42,11 @@ class ElectronicMonitoringDataInsightsApiExceptionHandler {
   fun handlePersonNoPositionsException(e: PersonNoPositionsException): ResponseEntity<PersonSearchErrorResponse> = ResponseEntity
     .status(NOT_FOUND)
     .body(PersonSearchErrorResponse(NOT_FOUND.value(), "PERSON_NO_POSITION_DATA", e.message, e.message))
+
+  @ExceptionHandler(PersonOutsideOrderPeriodException::class)
+  fun handlePersonOutsideOrderPeriodException(e: PersonOutsideOrderPeriodException): ResponseEntity<PersonSearchErrorResponse> = ResponseEntity
+    .status(NOT_FOUND)
+    .body(PersonSearchErrorResponse(NOT_FOUND.value(), "PERSON_OUTSIDE_ORDER_PERIOD", e.message, e.message))
 
   @ExceptionHandler(PersonWrongRegionException::class)
   fun handlePersonWrongRegionException(e: PersonWrongRegionException): ResponseEntity<PersonSearchErrorResponse> = ResponseEntity
