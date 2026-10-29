@@ -36,6 +36,7 @@ constructor(
   val orderEndDate: Instant? = null,
   var outsideOrderPeriod: Boolean = false,
   val groupedDate: Instant? = null,
+  val isMonitored: Boolean = false,
 ) {
   val missingDeliusIdsInEM: Boolean
     get() = nomisId == null && pncId == null && deliusId == null

@@ -103,7 +103,8 @@ class AthenaPersonRepository(
       c.enforceable_condition AS enforceable_condition,
       c.order_start_date AS order_start_date,
       c.order_end_date AS order_end_date,
-      c.grouped_date AS grouped_date
+      c.grouped_date AS grouped_date,
+      c.is_monitored AS is_monitored,
     FROM matching_caseload c
     LEFT JOIN latest_positions lp ON lp.person_id = c.mdss_person_id
     ORDER BY
@@ -450,6 +451,7 @@ class AthenaPersonRepository(
       orderStartDate = timestamp(COL_ORDER_START_DATE),
       orderEndDate = timestamp(COL_ORDER_END_DATE),
       groupedDate = timestamp(COL_GROUPED_DATE),
+      isMonitored = v(COL_IS_MONITORED).toBoolean(),
     )
   }
 
@@ -522,6 +524,7 @@ class AthenaPersonRepository(
     private const val COL_ORDER_START_DATE = 17
     private const val COL_ORDER_END_DATE = 18
     private const val COL_GROUPED_DATE = 19
+    private const val COL_IS_MONITORED = 20
     private const val COL_RAW_GROUPED_DATE = 0
     private const val COL_RAW_UNIQUE_DEVICE_WEARER_ID = 1
     private const val COL_RAW_FIRST_NAME = 2

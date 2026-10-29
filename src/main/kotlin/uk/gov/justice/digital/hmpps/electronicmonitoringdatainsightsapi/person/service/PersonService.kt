@@ -71,7 +71,8 @@ class PersonService(
     // filter on no position data
     val positionPeople = filterByHavingPositionData(responsibleOrgPeople)
     if (positionPeople.isEmpty()) {
-      throw PersonNoPositionsException()
+      val isMonitored = responsibleOrgPeople.any { it.isMonitored }
+      throw PersonNoPositionsException(isMonitored)
     }
 
     // filter on current order period
