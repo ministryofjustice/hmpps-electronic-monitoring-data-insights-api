@@ -316,7 +316,6 @@ class PersonController(
       nomisId = peopleQueryCriteria.nomisId ?: enrichedPeopleQueryCriteria.nomisId,
       pncId = peopleQueryCriteria.pncId ?: enrichedPeopleQueryCriteria.pncId,
       orderIds = peopleQueryCriteria.orderIds.ifEmpty { enrichedPeopleQueryCriteria.orderIds },
-      enhancedPeopleSearch = true,
       person = enrichedPeopleQueryCriteria.person,
     )
   }
