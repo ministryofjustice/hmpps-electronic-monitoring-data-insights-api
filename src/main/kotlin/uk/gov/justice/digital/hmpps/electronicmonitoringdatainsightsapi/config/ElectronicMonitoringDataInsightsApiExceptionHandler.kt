@@ -39,6 +39,7 @@ class ElectronicMonitoringDataInsightsApiExceptionHandler {
     .status(NOT_FOUND)
     .body(PersonSearchErrorResponse(NOT_FOUND.value(), "PERSON_NOT_FOUND", e.message, e.message))
 
+  @ExceptionHandler(PersonNoPositionsException::class)
   fun handlePersonNoPositionsException(e: PersonNoPositionsException): ResponseEntity<PersonSearchErrorResponse> = ResponseEntity
     .status(NOT_FOUND)
     .body(PersonSearchErrorResponse(NOT_FOUND.value(), "PERSON_NO_POSITION_DATA", e.message, e.message))
