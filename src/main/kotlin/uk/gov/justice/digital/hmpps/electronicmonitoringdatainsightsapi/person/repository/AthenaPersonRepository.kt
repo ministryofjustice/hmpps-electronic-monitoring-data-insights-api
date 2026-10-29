@@ -104,7 +104,7 @@ class AthenaPersonRepository(
       c.order_start_date AS order_start_date,
       c.order_end_date AS order_end_date,
       c.grouped_date AS grouped_date,
-      c.is_monitored AS is_monitored,
+      c.is_monitored AS is_monitored
     FROM matching_caseload c
     LEFT JOIN latest_positions lp ON lp.person_id = c.mdss_person_id
     ORDER BY
