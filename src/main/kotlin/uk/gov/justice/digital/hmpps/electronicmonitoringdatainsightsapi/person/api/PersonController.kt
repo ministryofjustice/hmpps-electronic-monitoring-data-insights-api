@@ -22,7 +22,9 @@ import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.client.a
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.client.cpr.CprApiClient
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.client.probationsearch.ProbationSearchApiClient
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.HAS_VIEW_ROLE
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.exception.PersonNoPositionsException
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.exception.PersonNotFoundException
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.exception.PersonOutsideOrderPeriodException
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.exception.PersonWrongEnforceableConditionException
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.exception.PersonWrongRegionException
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.service.CurrentUserService
@@ -114,6 +116,8 @@ class PersonController(
         is PersonNotFoundException,
         is PersonWrongEnforceableConditionException,
         is PersonWrongRegionException,
+        is PersonNoPositionsException,
+        is PersonOutsideOrderPeriodException,
         -> recordPersonSearch(startedAt, username, crn, emptyList())
         else -> throw exception
       }
