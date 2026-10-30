@@ -1,6 +1,6 @@
 package uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.exception
 
-class PersonNoPositionsException(isMonitored: Boolean) :
+class PersonNoPositionsException(val isMonitored: Boolean) :
   RuntimeException(
     "This case is available to view but no location data is currently available to display in the tool. ${
       if (isMonitored) {

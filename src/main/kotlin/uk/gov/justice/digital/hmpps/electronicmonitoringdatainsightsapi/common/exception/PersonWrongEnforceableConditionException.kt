@@ -1,6 +1,6 @@
 package uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.exception
 
-class PersonWrongEnforceableConditionException(enforceableConditions: String) :
+class PersonWrongEnforceableConditionException(val enforceableConditions: String) :
   RuntimeException(
     "This case is available to view however EMS does not have a location monitoring condition recorded as part of their GPS tag requirement. " +
       "" +

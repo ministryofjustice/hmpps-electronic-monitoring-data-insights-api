@@ -32,6 +32,7 @@ class ElectronicMonitoringDataInsightsApiExceptionHandler {
     val code: String,
     val description: String?,
     val userMessage: String?,
+    val metadata: Map<String, Any> = emptyMap(),
   )
 
   @ExceptionHandler(PersonNotFoundException::class)
@@ -42,7 +43,15 @@ class ElectronicMonitoringDataInsightsApiExceptionHandler {
   @ExceptionHandler(PersonNoPositionsException::class)
   fun handlePersonNoPositionsException(e: PersonNoPositionsException): ResponseEntity<PersonSearchErrorResponse> = ResponseEntity
     .status(NOT_FOUND)
-    .body(PersonSearchErrorResponse(NOT_FOUND.value(), "PERSON_NO_POSITION_DATA", e.message, e.message))
+    .body(
+      PersonSearchErrorResponse(
+        NOT_FOUND.value(),
+        "PERSON_NO_POSITION_DATA",
+        e.message,
+        e.message,
+        metadata = mapOf("isMonitored" to e.isMonitored),
+      ),
+    )
 
   @ExceptionHandler(PersonOutsideOrderPeriodException::class)
   fun handlePersonOutsideOrderPeriodException(e: PersonOutsideOrderPeriodException): ResponseEntity<PersonSearchErrorResponse> = ResponseEntity
@@ -52,12 +61,28 @@ class ElectronicMonitoringDataInsightsApiExceptionHandler {
   @ExceptionHandler(PersonWrongRegionException::class)
   fun handlePersonWrongRegionException(e: PersonWrongRegionException): ResponseEntity<PersonSearchErrorResponse> = ResponseEntity
     .status(NOT_FOUND)
-    .body(PersonSearchErrorResponse(NOT_FOUND.value(), "PERSON_NOT_TRIAL_REGION", e.message, e.message))
+    .body(
+      PersonSearchErrorResponse(
+        NOT_FOUND.value(),
+        "PERSON_NOT_TRIAL_REGION",
+        e.message,
+        e.message,
+        metadata = mapOf("region" to e.region),
+      ),
+    )
 
   @ExceptionHandler(PersonWrongEnforceableConditionException::class)
   fun handlePersonWrongEnforceableConditionException(e: PersonWrongEnforceableConditionException): ResponseEntity<PersonSearchErrorResponse> = ResponseEntity
     .status(NOT_FOUND)
-    .body(PersonSearchErrorResponse(NOT_FOUND.value(), "PERSON_NO_LOCATION_MONITORING", e.message, e.message))
+    .body(
+      PersonSearchErrorResponse(
+        NOT_FOUND.value(),
+        "PERSON_NO_LOCATION_MONITORING",
+        e.message,
+        e.message,
+        metadata = mapOf("enforceableConditions" to e.enforceableConditions),
+      ),
+    )
 
   @ExceptionHandler(MissingServletRequestParameterException::class, MethodArgumentTypeMismatchException::class)
   fun handleRequestParameterException(e: Exception): ResponseEntity<ErrorResponse> = ResponseEntity

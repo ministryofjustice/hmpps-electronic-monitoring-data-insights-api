@@ -1,6 +1,6 @@
 package uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.exception
 
-class PersonWrongRegionException(region: String) :
+class PersonWrongRegionException(val region: String) :
   RuntimeException(
     "This case is available to view however EMS have recorded this person as being in $region which is not currently part of the EMDI pilot.  " +
       "" +
