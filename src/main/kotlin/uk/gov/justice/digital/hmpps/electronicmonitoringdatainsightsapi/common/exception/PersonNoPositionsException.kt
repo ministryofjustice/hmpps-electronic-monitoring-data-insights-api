@@ -2,5 +2,12 @@ package uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.
 
 class PersonNoPositionsException(isMonitored: Boolean) :
   RuntimeException(
-    "Person exists in EMDI but has no position data. The person is showing as ${if (isMonitored) "monitored in EM." else "not monitored in EM."} Please contact EMDI team for more information.",
+    "This case is available to view but no location data is currently available to display in the tool. \n${
+      if (isMonitored) {
+        "If the tag has fitted within the last 48 hours, the tag may not be providing data yet, please check again the next day.  \n " +
+          "Otherwise, contact EMDI support and provide the CRN of the case you are trying to view and the code NO_POSITION_DATA_ERROR and they can investigate this for you.  \n"
+      } else {
+        "Please contact EMDI support and provide the CRN of the case you are trying to view and the code NO_POSITION_DATA_ERROR and they can investigate this for you.  "
+      }
+    } If you require this information urgently, please escalate your request through EMS.",
   )

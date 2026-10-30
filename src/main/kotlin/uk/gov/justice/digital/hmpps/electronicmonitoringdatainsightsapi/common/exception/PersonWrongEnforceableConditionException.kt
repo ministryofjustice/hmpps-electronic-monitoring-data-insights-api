@@ -2,5 +2,9 @@ package uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.
 
 class PersonWrongEnforceableConditionException(enforceableConditions: String) :
   RuntimeException(
-    "Person exists in EMDI but does not have an active location monitoring enforceable condition. Conditions found: $enforceableConditions Please contact your regional EM team for more information.",
+    "This case is available to view however EMS does not have a location monitoring condition recorded as part of their GPS tag requirement. \n" +
+      "\n" +
+      "The following conditions are recorded on this case: $enforceableConditions \n" +
+      "\n" +
+      "If you think this is incorrect, please contact your regional EM team and ask them to add location monitoring as an enforceable condition to the record.",
   )
