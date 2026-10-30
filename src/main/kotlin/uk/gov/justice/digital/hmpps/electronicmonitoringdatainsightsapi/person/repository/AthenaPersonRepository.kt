@@ -65,11 +65,16 @@ class AthenaPersonRepository(
     )
 
     val sql = """
-    WITH matching_caseload AS (
+    WITH matching_records AS (
       SELECT c.*
       FROM ${properties.athena.mdssDatabase}.caseload c
       ${builder.where}
       AND c.mdss_person_id IS NOT NULL
+    ),
+    matching_caseload AS (
+      SELECT c.*
+      FROM matching_records c
+      WHERE c.grouped_date = (SELECT max(grouped_date) FROM matching_records)
     ),
     matching_people AS (
       SELECT DISTINCT mdss_person_id
