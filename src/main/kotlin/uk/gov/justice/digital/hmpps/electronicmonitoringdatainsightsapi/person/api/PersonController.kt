@@ -13,6 +13,7 @@ import org.springframework.security.access.AccessDeniedException
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RequestBody
+import org.springframework.web.bind.annotation.RequestHeader
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestMethod
 import org.springframework.web.bind.annotation.RequestParam
@@ -233,19 +234,35 @@ class PersonController(
     summary = "Search for people by personal details - ** Dev use only **",
     description = "Searches caseload by partial forename and surname, date of birth, and postcode. This is for Dev use only **" +
       "Use CRN or person name/dob to return results from EM. The CRN option gets the person name and dob from CPR and then they " +
-      "are used to search against EM data. Partial names will also match. Postcode is optional.",
+      "are used to search against EM data. Partial names will also match. Postcode is optional. " +
+      "Use Accept: text/html for a formatted report, or application/json (the default) for JSON.",
   )
   @RequestMapping(
     method = [RequestMethod.POST],
     path = ["/search"],
     consumes = [MediaType.APPLICATION_JSON_VALUE],
-    produces = [MediaType.APPLICATION_JSON_VALUE],
+    produces = [MediaType.APPLICATION_JSON_VALUE, MediaType.TEXT_HTML_VALUE],
   )
   fun searchPeopleByPersonalDetails(
     @Valid @RequestBody request: PersonSearchRequest,
-  ): ResponseEntity<PersonSearchResponse> = ResponseEntity.ok(
-    personService.searchPeopleByPersonalDetails(request),
-  )
+    @RequestHeader(value = "Accept", required = false) accept: String? = null,
+  ): ResponseEntity<*> {
+    val response = personService.searchPeopleByPersonalDetails(request)
+    val accepted = MediaType.parseMediaTypes(accept ?: MediaType.ALL_VALUE)
+    fun quality(type: MediaType): Double = accepted
+      .filter { it.includes(type) }
+      .sortedWith(compareBy<MediaType> { it.isWildcardType }.thenBy { it.isWildcardSubtype })
+      .firstOrNull()?.qualityValue ?: 0.0
+
+    return if (quality(MediaType.TEXT_HTML) > quality(MediaType.APPLICATION_JSON)) {
+      ResponseEntity.ok()
+        .contentType(MediaType("text", "html", Charsets.UTF_8))
+        .varyBy("Accept")
+        .body(PersonSearchHtml.render(response))
+    } else {
+      ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).varyBy("Accept").body(response)
+    }
+  }
 
   @PreAuthorize(HAS_VIEW_ROLE)
   @Operation(tags = ["People"], summary = "Endpoint to establish whether a person exists in EMDI")
