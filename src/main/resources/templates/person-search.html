@@ -18,7 +18,7 @@
     dt { font-weight: bold; }
     .table-scroll { overflow-x: auto; }
     table { width: 100%; min-width: 1150px; border-collapse: collapse; text-align: left; }
-    th, td { padding: 12px; border-bottom: 1px solid #cdd3d8; vertical-align: top; overflow-wrap: anywhere; }
+    th, td { padding: 12px; border-bottom: 1px solid #cdd3d8; vertical-align: top; overflow-wrap: normal; word-break: normal; white-space: nowrap; }
     th { background: #f2f5f7; }
     .identifier { min-width: 180px; }
     .identifier span { display: inline-block; min-width: 70px; color: #505b65; }
@@ -28,7 +28,7 @@
       main { padding: 0; max-width: none; }
       .table-scroll { overflow: visible; }
       table { min-width: 0; font-size: 10px; table-layout: fixed; }
-      th, td { padding: 5px; }
+      th, td { padding: 5px; white-space: normal; overflow-wrap: anywhere; }
       .identifier { min-width: 0; }
       .identifier span { min-width: 0; display: block; }
       tr { break-inside: avoid; }
