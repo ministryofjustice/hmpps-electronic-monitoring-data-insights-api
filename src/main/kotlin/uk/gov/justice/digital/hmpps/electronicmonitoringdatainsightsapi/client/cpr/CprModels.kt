@@ -1,5 +1,7 @@
 package uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.client.cpr
 
+import com.fasterxml.jackson.annotation.JsonAnyGetter
+import com.fasterxml.jackson.annotation.JsonAnySetter
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -15,7 +17,16 @@ data class CprPerson(
 data class CprAddress(
   val postcode: String? = null,
   val status: CprAddressStatus? = null,
-)
+) {
+  // Preserve the full address returned by CPR, including fields not used for matching.
+  @get:JsonAnyGetter
+  val details: MutableMap<String, Any?> = linkedMapOf()
+
+  @JsonAnySetter
+  fun addDetail(name: String, value: Any?) {
+    details[name] = value
+  }
+}
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class CprAddressStatus(

@@ -243,7 +243,7 @@ class PersonController(
   )
   fun searchPeopleByPersonalDetails(
     @Valid @RequestBody request: PersonSearchRequest,
-  ): ResponseEntity<List<Person>> = ResponseEntity.ok(
+  ): ResponseEntity<PersonSearchResponse> = ResponseEntity.ok(
     personService.searchPeopleByPersonalDetails(request),
   )
 
