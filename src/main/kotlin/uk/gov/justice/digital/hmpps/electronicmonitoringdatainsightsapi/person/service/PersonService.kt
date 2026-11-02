@@ -15,6 +15,7 @@ import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.e
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.exception.PersonWrongRegionException
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.jpa.Constants
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.api.ComparedValue
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.api.DeliusAddress
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.api.DeliusPersonDetails
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.api.EmCompareResponse
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.api.PersonSearchRequest
@@ -193,7 +194,18 @@ class PersonService(
           forename = it.firstName,
           surname = it.lastName,
           dateOfBirth = it.dateOfBirth,
-          address = it.addresses.firstOrNull { address -> address.status?.code.equals("M", ignoreCase = true) },
+          address = it.addresses.firstOrNull { address -> address.status?.code.equals("M", ignoreCase = true) }?.let { address ->
+            DeliusAddress(
+              buildingNumber = address.details["buildingNumber"] as? String,
+              buildingName = address.details["buildingName"] as? String,
+              county = address.details["county"] as? String,
+              postTown = address.details["postTown"] as? String,
+              dependentLocality = address.details["dependentLocality"] as? String,
+              thoroughfareName = address.details["thoroughfareName"] as? String,
+              postcode = address.postcode,
+              noFixedAbode = address.details["noFixedAbode"] as? Boolean,
+            )
+          },
         )
       },
       athenaPeople = people,
