@@ -15,8 +15,10 @@ import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.e
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.exception.PersonWrongRegionException
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.jpa.Constants
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.api.ComparedValue
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.api.DeliusPersonDetails
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.api.EmCompareResponse
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.api.PersonSearchRequest
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.api.PersonSearchResponse
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.api.PostcodeComparedValue
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.entity.PersonMatchScoreEntity
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.model.PagedPeople
@@ -176,12 +178,27 @@ class PersonService(
     ?.let { if (removeSpaces) it.replace(" ", "") else it.replace(Regex("\\s+"), " ") }
     ?.takeIf(String::isNotEmpty)
 
-  fun searchPeopleByPersonalDetails(request: PersonSearchRequest): List<Person> = personRepository.findByPersonalDetails(resolveSearchCriteria(request))
-    .updateOutsidePeriodFlag()
-    .sortedWith(
-      compareByDescending<Person> { it.enforceableCondition == "location_monitoring" }
-        .thenByDescending { it.positionData?.latestPositionGpsDate },
+  fun searchPeopleByPersonalDetails(request: PersonSearchRequest): PersonSearchResponse {
+    val cprPerson = request.crn?.trim()?.takeIf(String::isNotEmpty)?.let(cprApiClient::getPersonByCrn)
+    val people = personRepository.findByPersonalDetails(resolveSearchCriteria(request, cprPerson))
+      .updateOutsidePeriodFlag()
+      .sortedWith(
+        compareByDescending<Person> { it.enforceableCondition == "location_monitoring" }
+          .thenByDescending { it.positionData?.latestPositionGpsDate },
+      )
+
+    return PersonSearchResponse(
+      deliusPerson = cprPerson?.let {
+        DeliusPersonDetails(
+          forename = it.firstName,
+          surname = it.lastName,
+          dateOfBirth = it.dateOfBirth,
+          address = it.addresses.firstOrNull { address -> address.status?.code.equals("M", ignoreCase = true) },
+        )
+      },
+      athenaPeople = people,
     )
+  }
 
   private fun List<Person>.updateOutsidePeriodFlag(): List<Person> {
     val today = LocalDate.now()
@@ -195,10 +212,9 @@ class PersonService(
     return this
   }
 
-  private fun resolveSearchCriteria(request: PersonSearchRequest): PersonalDetailsSearchCriteria {
-    val crn = request.crn?.trim()?.takeIf(String::isNotEmpty)
-    if (crn != null) {
-      val cprPerson = cprApiClient.getPersonByCrn(crn)
+  private fun resolveSearchCriteria(request: PersonSearchRequest, cprPerson: CprPerson?): PersonalDetailsSearchCriteria {
+    val crn = request.crn?.trim()
+    if (cprPerson != null) {
       return PersonalDetailsSearchCriteria(
         forename = requireNotNull(cprPerson.firstName?.takeIf(String::isNotBlank)) {
           "CPR person $crn does not have a forename"
@@ -206,12 +222,12 @@ class PersonService(
         surname = requireNotNull(cprPerson.lastName?.takeIf(String::isNotBlank)) {
           "CPR person $crn does not have a surname"
         },
-        dateOfBirth = if (request.searchByNameOnly) {
+        dateOfBirth = if (request.searchByNameOnly && !request.searchByNameAndDOBOnly) {
           null
         } else {
           cprPerson.dateOfBirth?.let { runCatching { LocalDate.parse(it) }.getOrNull() }
         },
-        postcode = if (request.searchByNameOnly) {
+        postcode = if (request.searchByNameOnly || request.searchByNameAndDOBOnly) {
           null
         } else {
           cprPerson.addresses

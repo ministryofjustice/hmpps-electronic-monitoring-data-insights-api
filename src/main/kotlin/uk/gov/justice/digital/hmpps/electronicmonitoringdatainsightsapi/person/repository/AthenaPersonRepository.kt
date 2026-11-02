@@ -387,7 +387,11 @@ class AthenaPersonRepository(
       c.order_start_date AS order_start_date,
       c.order_end_date AS order_end_date
     FROM ${properties.athena.mdssDatabase}.caseload c
-    WHERE LOWER(c.first_name) LIKE LOWER(CAST(? AS VARCHAR))
+    WHERE c.grouped_date = (
+      SELECT MAX(grouped_date)
+      FROM ${properties.athena.mdssDatabase}.caseload
+    )
+      AND LOWER(c.first_name) LIKE LOWER(CAST(? AS VARCHAR))
       AND LOWER(c.last_name) LIKE LOWER(CAST(? AS VARCHAR))
       $dateOfBirthCondition
       $postcodeCondition
