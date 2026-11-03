@@ -12,6 +12,7 @@ data class DeliusPersonDetails(
   val surname: String?,
   val dateOfBirth: String?,
   val address: DeliusAddress?,
+  val identifiers: DeliusIdentifiers = DeliusIdentifiers(),
 )
 
 data class DeliusAddress(
@@ -23,4 +24,11 @@ data class DeliusAddress(
   val thoroughfareName: String?,
   val postcode: String?,
   val noFixedAbode: Boolean?,
+)
+
+data class DeliusIdentifiers(
+  val crns: List<String> = emptyList(),
+  val prisonNumbers: List<String> = emptyList(),
+  val pncs: List<String> = emptyList(),
+  val otherIdentifiers: List<String> = emptyList(),
 )

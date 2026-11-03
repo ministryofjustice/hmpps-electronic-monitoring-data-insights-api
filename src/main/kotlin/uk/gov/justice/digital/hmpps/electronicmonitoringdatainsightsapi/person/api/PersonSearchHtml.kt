@@ -33,6 +33,10 @@ object PersonSearchHtml {
         <dt>Forename</dt><dd>${value(delius.forename)}</dd>
         <dt>Surname</dt><dd>${value(delius.surname)}</dd>
         <dt>Date of birth</dt><dd>${value(delius.dateOfBirth)}</dd>
+        <dt>CRN</dt><dd>${delius.identifiers.crns.takeIf { it.isNotEmpty() }?.joinToString("<br>") { value(it) } ?: "—"}</dd>
+        <dt>Prison number</dt><dd>${delius.identifiers.prisonNumbers.takeIf { it.isNotEmpty() }?.joinToString("<br>") { value(it) } ?: "—"}</dd>
+        <dt>PNC</dt><dd>${delius.identifiers.pncs.takeIf { it.isNotEmpty() }?.joinToString("<br>") { value(it) } ?: "—"}</dd>
+        <dt>MON identifiers</dt><dd>${delius.identifiers.otherIdentifiers.takeIf { it.isNotEmpty() }?.joinToString("<br>") { value(it) } ?: "—"}</dd>
         <dt>Main address</dt><dd>${addressLines.takeIf { it.isNotEmpty() }?.joinToString("<br>") { value(it) } ?: "—"}</dd>
         <dt>No fixed abode</dt><dd>${value(address?.noFixedAbode?.let { if (it) "Yes" else "No" })}</dd>
       </dl>
@@ -50,6 +54,7 @@ object PersonSearchHtml {
       <tr>
         <td>${value(person.personId)}</td>
         <td>${value(person.personName)}</td>
+        <td>${value(person.dob)}</td>
         <td>$athenaAddress</td>
         <td>${value(person.enforceableCondition)}</td>
         <td>${timestamp(person.orderStartDate)}<br>to ${timestamp(person.orderEndDate)}</td>
@@ -66,9 +71,17 @@ object PersonSearchHtml {
       """
       <div class="table-scroll" role="region" aria-label="Athena results" tabindex="0">
       <table>
-        <thead><tr><th scope="col">Person ID</th><th scope="col">Name</th><th scope="col">Address</th>
-        <th scope="col">Enforceable condition</th><th scope="col">Order period</th><th scope="col">Latest GPS ping</th>
-        <th scope="col">Identifiers</th><th scope="col">Order ID</th><th scope="col">Monitored</th></tr></thead>
+        <thead><tr>
+        <th scope="col">Person ID</th>
+        <th scope="col">Name</th><th scope="col">DOB</th>
+        <th scope="col">Address</th>
+        <th scope="col">Enforceable condition</th>
+        <th scope="col">Order period</th>
+        <th scope="col">Latest GPS ping</th>
+        <th scope="col">Identifiers</th>
+        <th scope="col">Order ID</th>
+        <th scope="col">Monitored</th>
+        </tr></thead>
         <tbody>$rows</tbody>
       </table>
       </div>

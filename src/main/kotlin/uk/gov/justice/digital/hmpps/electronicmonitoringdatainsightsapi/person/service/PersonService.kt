@@ -16,6 +16,7 @@ import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.e
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.jpa.Constants
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.api.ComparedValue
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.api.DeliusAddress
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.api.DeliusIdentifiers
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.api.DeliusPersonDetails
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.api.EmCompareResponse
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.api.PersonSearchRequest
@@ -194,6 +195,12 @@ class PersonService(
           forename = it.firstName,
           surname = it.lastName,
           dateOfBirth = it.dateOfBirth,
+          identifiers = DeliusIdentifiers(
+            crns = it.identifiers.crns,
+            prisonNumbers = it.identifiers.prisonNumbers,
+            pncs = it.identifiers.pncs,
+            otherIdentifiers = it.identifiers.otherIdentifiers.filter { identifier -> identifier.startsWith("MON") },
+          ),
           address = it.addresses.firstOrNull { address -> address.status?.code.equals("M", ignoreCase = true) }?.let { address ->
             DeliusAddress(
               buildingNumber = address.details["buildingNumber"] as? String,
