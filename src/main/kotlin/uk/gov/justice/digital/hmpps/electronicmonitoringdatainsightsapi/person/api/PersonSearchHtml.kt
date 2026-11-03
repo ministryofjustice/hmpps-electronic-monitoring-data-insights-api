@@ -29,17 +29,23 @@ object PersonSearchHtml {
       "<p>No Delius details available. Supply a CRN to retrieve them.</p>"
     } else {
       """
+      <div class="delius-columns">
       <dl>
         <dt>Forename</dt><dd>${value(delius.forename)}</dd>
         <dt>Surname</dt><dd>${value(delius.surname)}</dd>
         <dt>Date of birth</dt><dd>${value(delius.dateOfBirth)}</dd>
+      </dl>
+      <dl>
         <dt>CRN</dt><dd>${delius.identifiers.crns.takeIf { it.isNotEmpty() }?.joinToString("<br>") { value(it) } ?: "—"}</dd>
         <dt>Prison number</dt><dd>${delius.identifiers.prisonNumbers.takeIf { it.isNotEmpty() }?.joinToString("<br>") { value(it) } ?: "—"}</dd>
         <dt>PNC</dt><dd>${delius.identifiers.pncs.takeIf { it.isNotEmpty() }?.joinToString("<br>") { value(it) } ?: "—"}</dd>
         <dt>MON identifiers</dt><dd>${delius.identifiers.otherIdentifiers.takeIf { it.isNotEmpty() }?.joinToString("<br>") { value(it) } ?: "—"}</dd>
+      </dl>
+      <dl>
         <dt>Main address</dt><dd>${addressLines.takeIf { it.isNotEmpty() }?.joinToString("<br>") { value(it) } ?: "—"}</dd>
         <dt>No fixed abode</dt><dd>${value(address?.noFixedAbode?.let { if (it) "Yes" else "No" })}</dd>
       </dl>
+      </div>
       """.trimIndent()
     }
     val rows = response.athenaPeople.joinToString("\n") { person ->
@@ -57,6 +63,7 @@ object PersonSearchHtml {
         <td>${value(person.dob)}</td>
         <td>$athenaAddress</td>
         <td>${value(person.enforceableCondition)}</td>
+        <td>${value(person.responsibleOrganisation)}</td>
         <td>${timestamp(person.orderStartDate)}<br>to ${timestamp(person.orderEndDate)}</td>
         <td>${person.positionData?.latestPositionGpsDate?.let(::timestamp) ?: "No GPS data"}</td>
         <td>$identifiers</td>
@@ -76,6 +83,7 @@ object PersonSearchHtml {
         <th scope="col">Name</th><th scope="col">DOB</th>
         <th scope="col">Address</th>
         <th scope="col">Enforceable condition</th>
+        <th scope="col">Responsible organisation</th>
         <th scope="col">Order period</th>
         <th scope="col">Latest GPS ping</th>
         <th scope="col">Identifiers</th>
