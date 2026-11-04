@@ -182,7 +182,25 @@ class PersonService(
 
   fun searchPeopleByPersonalDetails(request: PersonSearchRequest): PersonSearchResponse {
     val cprPerson = request.crn?.trim()?.takeIf(String::isNotEmpty)?.let(cprApiClient::getPersonByCrn)
-    val people = personRepository.findByPersonalDetails(resolveSearchCriteria(request, cprPerson))
+    val identifierMatches = if (cprPerson != null) {
+      latestRecords(
+        fetchAllPeople(
+          PeopleQueryCriteria(
+            deliusId = request.crn?.trim(),
+            pncId = cprPerson.identifiers.pncs.firstOrNull(),
+            nomisId = cprPerson.identifiers.prisonNumbers.firstOrNull(),
+            orderIds = cprPerson.identifiers.otherIdentifiers.filter { it.startsWith("MON") },
+            person = cprPerson,
+          ),
+          nextToken = null,
+        ),
+      )
+    } else {
+      emptyList()
+    }
+    val people = identifierMatches.ifEmpty {
+      personRepository.findByPersonalDetails(resolveSearchCriteria(request, cprPerson))
+    }
       .updateOutsidePeriodFlag()
       .sortedWith(
         compareByDescending<Person> { it.enforceableCondition == "location_monitoring" }
