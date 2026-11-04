@@ -200,7 +200,7 @@ class AthenaPersonRepositoryTest {
   }
 
   @Test
-  fun `search should OR populated person identifiers`() {
+  fun `search should OR populated person identifiers ignoring case`() {
     val sqlSlot = slot<String>()
     val paramsSlot = slot<List<String>>()
 
@@ -217,32 +217,32 @@ class AthenaPersonRepositoryTest {
 
     repository.searchPeople(
       PeopleQueryCriteria(
-        nomisId = "A1234BC",
-        pncId = "2016/0305863C",
-        deliusId = "X123456",
+        nomisId = "a1234Bc",
+        pncId = "2016/0305863c",
+        deliusId = "x123456",
       ),
       nextToken = null,
     )
 
     assertThat(sqlSlot.captured)
       .contains(
-        "AND (c.nomis_id = CAST(? AS VARCHAR) OR c.pnc_id = CAST(? AS VARCHAR) OR c.pnc_id = CAST(? AS VARCHAR) OR c.pnc_id = CAST(? AS VARCHAR) OR c.pnc_id = CAST(? AS VARCHAR) OR c.pnc_id = CAST(? AS VARCHAR) OR c.pnc_id = CAST(? AS VARCHAR) OR c.delius_id = CAST(? AS VARCHAR))",
+        "AND (UPPER(c.nomis_id) = UPPER(CAST(? AS VARCHAR)) OR UPPER(c.pnc_id) = UPPER(CAST(? AS VARCHAR)) OR UPPER(c.pnc_id) = UPPER(CAST(? AS VARCHAR)) OR UPPER(c.pnc_id) = UPPER(CAST(? AS VARCHAR)) OR UPPER(c.pnc_id) = UPPER(CAST(? AS VARCHAR)) OR UPPER(c.pnc_id) = UPPER(CAST(? AS VARCHAR)) OR UPPER(c.pnc_id) = UPPER(CAST(? AS VARCHAR)) OR UPPER(c.delius_id) = UPPER(CAST(? AS VARCHAR)))",
       )
 
     assertThat(paramsSlot.captured).startsWith(
-      "A1234BC",
-      "2016/0305863C",
-      "20160305863C",
-      "16/0305863C",
-      "160305863C",
-      "2016/305863C",
-      "16/305863C",
-      "X123456",
+      "a1234Bc",
+      "2016/0305863c",
+      "20160305863c",
+      "16/0305863c",
+      "160305863c",
+      "2016/305863c",
+      "16/305863c",
+      "x123456",
     )
   }
 
   @Test
-  fun `search should filter by order IDs using an IN query`() {
+  fun `search should filter by order IDs ignoring case using an IN query`() {
     val sqlSlot = slot<String>()
     val paramsSlot = slot<List<String>>()
 
@@ -260,20 +260,20 @@ class AthenaPersonRepositoryTest {
     repository.searchPeople(
       PeopleQueryCriteria(
         deliusId = "X123456",
-        orderIds = listOf("MON12345", " MON67890 ", ""),
+        orderIds = listOf("mon12345", " Mon67890 ", ""),
       ),
       nextToken = null,
     )
 
     assertThat(sqlSlot.captured)
       .contains(
-        "AND (c.delius_id = CAST(? AS VARCHAR) OR c.order_id IN (CAST(? AS VARCHAR), CAST(? AS VARCHAR)))",
+        "AND (UPPER(c.delius_id) = UPPER(CAST(? AS VARCHAR)) OR UPPER(c.order_id) IN (UPPER(CAST(? AS VARCHAR)), UPPER(CAST(? AS VARCHAR))))",
       )
 
     assertThat(paramsSlot.captured).startsWith(
       "X123456",
-      "MON12345",
-      "MON67890",
+      "mon12345",
+      "Mon67890",
     )
   }
 
@@ -302,7 +302,7 @@ class AthenaPersonRepositoryTest {
 
     assertThat(sqlSlot.captured)
       .contains(
-        "AND (c.pnc_id = CAST(? AS VARCHAR) OR c.pnc_id = CAST(? AS VARCHAR) OR c.pnc_id = CAST(? AS VARCHAR) OR c.pnc_id = CAST(? AS VARCHAR) OR c.pnc_id = CAST(? AS VARCHAR) OR c.pnc_id = CAST(? AS VARCHAR))",
+        "AND (UPPER(c.pnc_id) = UPPER(CAST(? AS VARCHAR)) OR UPPER(c.pnc_id) = UPPER(CAST(? AS VARCHAR)) OR UPPER(c.pnc_id) = UPPER(CAST(? AS VARCHAR)) OR UPPER(c.pnc_id) = UPPER(CAST(? AS VARCHAR)) OR UPPER(c.pnc_id) = UPPER(CAST(? AS VARCHAR)) OR UPPER(c.pnc_id) = UPPER(CAST(? AS VARCHAR)))",
       )
 
     assertThat(paramsSlot.captured).startsWith(

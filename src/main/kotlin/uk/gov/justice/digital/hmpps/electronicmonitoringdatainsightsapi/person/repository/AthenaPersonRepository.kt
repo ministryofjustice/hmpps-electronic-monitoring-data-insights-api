@@ -195,12 +195,12 @@ class AthenaPersonRepository(
       if (cleanedCriteria.isEmpty() && cleanedInValues.isEmpty()) return
 
       val conditions = cleanedCriteria
-        .map { (column) -> "$column = CAST(? AS VARCHAR)" }
+        .map { (column) -> "UPPER($column) = UPPER(CAST(? AS VARCHAR))" }
         .toMutableList()
 
       if (cleanedInValues.isNotEmpty()) {
-        val placeholders = cleanedInValues.joinToString(", ") { "CAST(? AS VARCHAR)" }
-        conditions += "$inColumn IN ($placeholders)"
+        val placeholders = cleanedInValues.joinToString(", ") { "UPPER(CAST(? AS VARCHAR))" }
+        conditions += "UPPER($inColumn) IN ($placeholders)"
       }
 
       where.append("  AND (${conditions.joinToString(" OR ")})\n")
