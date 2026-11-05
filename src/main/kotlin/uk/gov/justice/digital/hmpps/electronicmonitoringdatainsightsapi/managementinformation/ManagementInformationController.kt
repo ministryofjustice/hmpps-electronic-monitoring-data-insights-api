@@ -13,7 +13,7 @@ import java.time.Instant
 @RestController
 @RequestMapping("/management-information")
 @Tag(name = "Management Information", description = "Management information reporting")
-class ManagementInformationController(private val repository: PersonOnProbationReportRepository) {
+class ManagementInformationController(private val service: ManagementInformationService) {
 
   @GetMapping("/people-on-probation", produces = [MediaType.APPLICATION_JSON_VALUE])
   @PreAuthorize(HAS_VIEW_MI_DATA)
@@ -24,11 +24,7 @@ class ManagementInformationController(private val repository: PersonOnProbationR
       "Users counts distinct usernames across those events. Last viewed is their latest timestamp. " +
       "Region is the latest non-blank CRN probation areas value; it may contain multiple areas. ",
   )
-  fun getPeopleOnProbation(): PersonOnProbationReportResponse = PersonOnProbationReportResponse(
-    results = repository.getPeopleOnProbation().map {
-      PersonOnProbationReportRow(it.crn, it.region, it.searches, it.users, it.lastViewed)
-    },
-  )
+  fun getPeopleOnProbation(): PersonOnProbationReportResponse = service.getPeopleOnProbation()
 }
 
 data class PersonOnProbationReportResponse(
