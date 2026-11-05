@@ -20,7 +20,7 @@ class ManagementInformationController(private val service: ManagementInformation
   @PreAuthorize(HAS_VIEW_MI_DATA)
   @Operation(
     summary = "Retrieve a list of people on probation and the number of searches against them.",
-    description = "One row per recorded CRN, ordered by last viewed descending then CRN. " +
+    description = "One row per recorded CRN, ordered by last viewed descending then CRN." +
       "Searches counts SEARCH_PERSON_BY_ID and VIEW_PERSON_LOCATIONS, matching existing statistics. " +
       "Users counts distinct usernames across those events. Last viewed is their latest timestamp. " +
       "Region is the latest non-blank CRN probation areas value; it may contain multiple areas. ",
