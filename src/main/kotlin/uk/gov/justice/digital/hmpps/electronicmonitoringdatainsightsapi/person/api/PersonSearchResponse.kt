@@ -14,7 +14,6 @@ data class PersonSearchResponse(
     }
 }
 
-
 data class DeliusPersonDetails(
   val forename: String?,
   val surname: String?,
