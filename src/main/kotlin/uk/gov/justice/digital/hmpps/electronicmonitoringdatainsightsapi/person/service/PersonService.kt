@@ -21,6 +21,7 @@ import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.a
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.api.EmCompareResponse
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.api.PersonSearchRequest
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.api.PersonSearchResponse
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.api.PersonSearchType
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.api.PostcodeComparedValue
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.entity.PersonMatchScoreEntity
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.model.PagedPeople
@@ -234,6 +235,7 @@ class PersonService(
         )
       },
       athenaPeople = people,
+      searchType = if (identifierMatches.isNotEmpty()) PersonSearchType.IDENTIFIER else PersonSearchType.FUZZY_NAME_SEARCH_REQUIRES_CPR_VERIFICATION,
     )
   }
 
