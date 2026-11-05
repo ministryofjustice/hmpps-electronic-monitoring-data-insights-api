@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.managementinformation
+package uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.managementinformation.repository
 
 import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.Repository

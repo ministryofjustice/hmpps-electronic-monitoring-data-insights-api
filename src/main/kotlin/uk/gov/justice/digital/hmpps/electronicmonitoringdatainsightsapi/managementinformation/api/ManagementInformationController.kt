@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.managementinformation
+package uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.managementinformation.api
 
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -8,7 +8,8 @@ import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.HAS_VIEW_MI_DATA
-import java.time.Instant
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.managementinformation.model.PersonOnProbationReportResponse
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.managementinformation.service.ManagementInformationService
 
 @RestController
 @RequestMapping("/management-information")
@@ -26,15 +27,3 @@ class ManagementInformationController(private val service: ManagementInformation
   )
   fun getPeopleOnProbation(): PersonOnProbationReportResponse = service.getPeopleOnProbation()
 }
-
-data class PersonOnProbationReportResponse(
-  val results: List<PersonOnProbationReportRow>,
-)
-
-data class PersonOnProbationReportRow(
-  val crn: String,
-  val region: String?,
-  val searches: Long,
-  val users: Long,
-  val lastViewed: Instant,
-)
