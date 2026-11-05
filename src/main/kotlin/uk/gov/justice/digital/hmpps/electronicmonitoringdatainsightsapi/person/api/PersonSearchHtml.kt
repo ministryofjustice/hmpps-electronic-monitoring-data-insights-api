@@ -97,7 +97,7 @@ object PersonSearchHtml {
       """.trimIndent()
     }
     // Replace placeholders in one pass so values containing placeholder text remain untouched.
-    val sections = mapOf("DELIUS" to deliusSection, "COUNT" to response.athenaPeople.size.toString(), "RESULTS" to results)
-    return Regex("\\{\\{(DELIUS|COUNT|RESULTS)}}").replace(template) { sections.getValue(it.groupValues[1]) }
+    val sections = mapOf("DELIUS" to deliusSection, "COUNT" to response.athenaPeople.size.toString(), "RESULTS" to results, "SEARCH_TYPE" to value(response.searchType), "SEARCH_DESCRIPTION" to value(response.searchDescription))
+    return Regex("\\{\\{(DELIUS|COUNT|RESULTS|SEARCH_TYPE|SEARCH_DESCRIPTION)}}").replace(template) { sections.getValue(it.groupValues[1]) }
   }
 }
