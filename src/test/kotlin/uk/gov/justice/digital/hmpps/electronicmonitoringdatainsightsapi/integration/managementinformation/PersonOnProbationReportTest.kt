@@ -45,7 +45,7 @@ class PersonOnProbationReportTest : IntegrationTestBase() {
       .jsonPath("$.results.length()").isEqualTo(3)
       .jsonPath("$.results[0].crn").isEqualTo("A123456")
       .jsonPath("$.results[0].region").isEqualTo("London")
-      .jsonPath("$.results[0].tier").isEqualTo("unknown")
+      .jsonPath("$.results[0].tier").isEqualTo("")
       .jsonPath("$.results[0].pdu").isEqualTo("")
       .jsonPath("$.results[0].searches").isEqualTo(3)
       .jsonPath("$.results[0].users").isEqualTo(2)
