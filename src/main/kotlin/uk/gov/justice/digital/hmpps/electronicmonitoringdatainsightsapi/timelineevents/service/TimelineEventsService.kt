@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.timelin
 import mu.KotlinLogging
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.client.probationintegration.ProbationIntegrationApiClient
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.client.probationsearch.ProbationSearchApiClient
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.config.ServiceProperties
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.timelineevents.EventType
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.timelineevents.entity.TimelineEventEntity
@@ -27,6 +28,7 @@ class TimelineEventsService(
   private val timelineEventsRepository: TimelineEventsRepository,
   private val serviceProperties: ServiceProperties,
   private val probationIntegrationApiClient: ProbationIntegrationApiClient? = null,
+  private val probationSearchApiClient: ProbationSearchApiClient? = null,
 ) {
 
   fun getMonthlyMetrics(month: YearMonth): TimelineEventsMonthlyMetricsResponse {
@@ -116,7 +118,6 @@ class TimelineEventsService(
     eventType: EventType,
     results: Int?,
     detail: Map<String, Any?> = emptyMap(),
-    crnProbationAreas: String? = null,
   ) {
     require(userName.isNotBlank()) {
       "userName must not be blank"
@@ -133,6 +134,13 @@ class TimelineEventsService(
       null
     }
 
+    val probationDetails = try {
+      crn?.let { probationSearchApiClient?.getProbationDetails(it) }
+    } catch (exception: Exception) {
+      log.warn(exception) { "Failed to retrieve probation details for timeline event crn=$crn" }
+      null
+    }
+
     val event = TimelineEventEntity(
       id = UUID.randomUUID(),
       occurredAt = Instant.now(),
@@ -142,9 +150,11 @@ class TimelineEventsService(
       results = results,
       durationMs = durationMs,
       detail = detail,
-      crnProbationAreas = crnProbationAreas,
+      crnProbationAreas = probationDetails?.probationAreas.orEmpty().joinToString(", "),
       userPdus = teams?.map { it.pdu.description }?.distinct(),
       userRegions = teams?.map { it.region.description }?.distinct(),
+      crnPdus = probationDetails?.pdus,
+      tier = probationDetails?.tier,
     )
     try {
       timelineEventsRepository.save(event)

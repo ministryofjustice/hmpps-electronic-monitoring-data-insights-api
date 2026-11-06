@@ -11,6 +11,8 @@ import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.client.p
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.client.probationintegration.Region
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.client.probationintegration.Team
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.client.probationintegration.TeamsResponse
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.client.probationsearch.ProbationSearchApiClient
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.client.probationsearch.ProbationSearchDetails
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.config.ServiceProperties
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.timelineevents.EventType
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.timelineevents.entity.TimelineEventEntity
@@ -26,6 +28,44 @@ class TimelineEventsServiceTest {
   private val repository = mockk<TimelineEventsRepository>()
   private val properties = ServiceProperties("https://api.test", "https://ui.test", listOf(" London ", "", "London"))
   private val service = TimelineEventsService(repository, properties)
+
+  @Test
+  fun `records probation areas PDUs and tier from a single combined lookup`() {
+    val client = mockk<ProbationSearchApiClient>()
+    val event = slot<TimelineEventEntity>()
+    every { repository.save(capture(event)) } answers { firstArg() }
+    every { client.getProbationDetails("X123456") } returns ProbationSearchDetails(listOf("London", "Wales"), listOf("Hertfordshire"), "SPG")
+
+    TimelineEventsService(repository, properties, probationSearchApiClient = client)
+      .record(System.nanoTime(), "USER", "X123456", EventType.SEARCH_PERSON_BY_ID, 1)
+
+    assertThat(event.captured.crnProbationAreas).isEqualTo("London, Wales")
+    assertThat(event.captured.crnPdus).containsExactly("Hertfordshire")
+    assertThat(event.captured.tier).isEqualTo("SPG")
+    verify(exactly = 1) { client.getProbationDetails("X123456") }
+  }
+
+  @Test
+  fun `records event when probation details are missing or fail and skips lookup without a CRN`() {
+    val client = mockk<ProbationSearchApiClient>()
+    val event = slot<TimelineEventEntity>()
+    every { repository.save(capture(event)) } answers { firstArg() }
+    val enrichedService = TimelineEventsService(repository, properties, probationSearchApiClient = client)
+    enrichedService.record(System.nanoTime(), "USER", null, EventType.SEARCH_PERSON_BY_ID, 1)
+    verify(exactly = 0) { client.getProbationDetails(any()) }
+    assertThat(event.captured.crnPdus).isNull()
+    assertThat(event.captured.tier).isNull()
+
+    every { client.getProbationDetails("X123456") } returns null
+    enrichedService.record(System.nanoTime(), "USER", "X123456", EventType.SEARCH_PERSON_BY_ID, 1)
+    assertThat(event.captured.crnPdus).isNull()
+    assertThat(event.captured.tier).isNull()
+
+    every { client.getProbationDetails("X123456") } throws IllegalStateException("Unavailable")
+    enrichedService.record(System.nanoTime(), "USER", "X123456", EventType.SEARCH_PERSON_BY_ID, 1)
+    assertThat(event.captured.crnPdus).isNull()
+    assertThat(event.captured.tier).isNull()
+  }
 
   @Test
   fun `records distinct user PDU and region names from all teams`() {

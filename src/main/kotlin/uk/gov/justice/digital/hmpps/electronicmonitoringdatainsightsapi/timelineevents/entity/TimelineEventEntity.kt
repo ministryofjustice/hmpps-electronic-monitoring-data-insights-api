@@ -41,4 +41,9 @@ class TimelineEventEntity(
 
   @JdbcTypeCode(SqlTypes.JSON)
   val userRegions: List<String>? = null,
+
+  @JdbcTypeCode(SqlTypes.JSON)
+  val crnPdus: List<String>? = null,
+
+  val tier: String? = null,
 )
