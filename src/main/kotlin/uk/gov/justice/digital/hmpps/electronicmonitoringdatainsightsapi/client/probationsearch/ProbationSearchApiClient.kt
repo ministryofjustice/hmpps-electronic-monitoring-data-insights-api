@@ -34,8 +34,10 @@ class ProbationSearchApiClient(
     }
     .block()!!
 
-  fun getProbationAreas(crn: String?): List<String> {
-    if (crn == null) return emptyList()
+  fun getProbationAreas(crn: String?): List<String> = getProbationDetails(crn)?.probationAreas.orEmpty()
+
+  fun getProbationDetails(crn: String?): ProbationSearchDetails? {
+    if (crn == null) return null
     try {
       val offenders = getOffendersByCrn(crn)
       val matchingOffenders = offenders.filter { it.otherIds?.crn == crn }
@@ -51,10 +53,16 @@ class ProbationSearchApiClient(
             "blankDescriptionCount=${probationAreas.count { it.isBlank() }}"
         }
       }
-      return probationAreas
+      return ProbationSearchDetails(
+        probationAreas = probationAreas,
+        tier = matchingOffenders.firstNotNullOfOrNull {
+          it.currentTier?.removePrefix("SP")
+        },
+        pdus = eligibleManagers.mapNotNull { it.team?.borough?.description?.takeIf(String::isNotBlank) }.distinct(),
+      )
     } catch (e: Exception) {
       log.error("Error getting probation areas for crn=$crn", e)
-      return emptyList()
+      return null
     }
   }
 }

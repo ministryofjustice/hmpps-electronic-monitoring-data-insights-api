@@ -13,7 +13,6 @@ import org.mockito.kotlin.eq
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import org.springframework.beans.factory.ObjectProvider
-import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.client.probationsearch.ProbationSearchApiClient
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.service.CurrentUserService
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.restrictionzone.model.CoordinateReferenceSystem
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.restrictionzone.model.CoordinateReferenceSystemProperties
@@ -44,9 +43,6 @@ class RestrictionZoneControllerTest {
   @Mock
   private lateinit var currentUserService: CurrentUserService
 
-  @Mock
-  private lateinit var probationSearchApiClient: ProbationSearchApiClient
-
   private lateinit var restrictionZoneController: RestrictionZoneController
 
   private val personId = "88888"
@@ -64,15 +60,11 @@ class RestrictionZoneControllerTest {
       devRestrictionZoneProvider = devExclusionZoneProvider,
       timelineEventsService = timelineEventsService,
       currentUserService = currentUserService,
-      probationSearchApiClient = probationSearchApiClient,
       devStubEnabled = false,
     )
 
     whenever(currentUserService.username())
       .thenReturn("TEST_USER")
-
-    whenever(probationSearchApiClient.getProbationAreas(crn))
-      .thenReturn(listOf("London"))
   }
 
   @Test
@@ -229,9 +221,6 @@ class RestrictionZoneControllerTest {
     whenever(currentUserService.username())
       .thenReturn("TEST_USER")
 
-    whenever(probationSearchApiClient.getProbationAreas(crn))
-      .thenReturn(listOf("London"))
-
     restrictionZoneController.getRestrictionsForPerson(
       personId = personId,
       inclusions = null,
@@ -250,7 +239,6 @@ class RestrictionZoneControllerTest {
           "restrictionFilter" to RestrictionFilter.ALL.name,
         ),
       ),
-      crnProbationAreas = eq("London"),
     )
   }
 

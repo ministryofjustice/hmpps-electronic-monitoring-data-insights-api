@@ -32,7 +32,7 @@ class ProbationSearchApiClientTest {
         "offenderManagers": [{
           "active": true,
           "softDeleted": false,
-          "team": {"code": "TEAM"},
+          "team": {"code": "TEAM", "borough": {"code": "N56HERT", "description": "Hertfordshire"}},
           "probationArea": {"code": "N01", "description": "Pilot area", "nps": true}
         }]
       }]
@@ -42,7 +42,7 @@ class ProbationSearchApiClientTest {
     assertThat(client.getOffendersByCrn("X123456")).containsExactly(
       ProbationSearchOffender(
         otherIds = OtherIds(crn = "X123456"),
-        offenderManagers = listOf(OffenderManager(ProbationArea("N01", "Pilot area"), active = true)),
+        offenderManagers = listOf(OffenderManager(ProbationArea("N01", "Pilot area"), active = true, team = ProbationSearchTeam(ProbationSearchBorough("N56HERT", "Hertfordshire")))),
       ),
     )
     api.verify(postRequestedFor(urlEqualTo("/search")).withRequestBody(equalToJson("""{"crn":"X123456"}""")))
