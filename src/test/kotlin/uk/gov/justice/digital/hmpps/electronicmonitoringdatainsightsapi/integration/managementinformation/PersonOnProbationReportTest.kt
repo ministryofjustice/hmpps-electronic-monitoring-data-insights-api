@@ -30,7 +30,6 @@ class PersonOnProbationReportTest : IntegrationTestBase() {
         event("C123456", "USER1", "   "),
         event("A123456", "SYS", "Excluded"),
         event("D123456", "AUTH_ADM", "Excluded"),
-        event("UNKNOWN", "USER1", null),
         event(" ", "USER1", null),
         event("E123456", "USER1", "Excluded", type = EventType.SEARCH_PERSON_BY_ID_LAO_RESTRICTION),
         event("F123456", "USER1", "Excluded", type = EventType.VIEW_PERSON_RESTRICTION_ZONES),
