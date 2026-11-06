@@ -76,6 +76,9 @@ kotlin {
 
 dependencyCheck {
   suppressionFiles.add("$rootDir/dependencyCheck/suppression.xml")
+  // Gatling is load-test tooling run from developer machines/CI against the dev environment.
+  // It is not on productionRuntimeClasspath and is not in the deployed image, so it is excluded from the scan.
+  skipConfigurations.addAll("gatling", "gatlingCompileClasspath", "gatlingRuntimeClasspath")
 }
 
 tasks {
