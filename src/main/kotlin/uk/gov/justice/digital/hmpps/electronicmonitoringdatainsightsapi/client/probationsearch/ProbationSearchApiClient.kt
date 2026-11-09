@@ -47,7 +47,7 @@ class ProbationSearchApiClient(
 
       if (probationAreas.all { it.isBlank() }) {
         log.warn {
-          "No non-blank probation areas for crn=$crn, " +
+          "No probation areas for crn=$crn, " +
             "returnedOffenderCount=${offenders.size}, exactMatchCount=${matchingOffenders.size}, " +
             "managerCount=${managers.size}, eligibleManagerCount=${eligibleManagers.size}, " +
             "blankDescriptionCount=${probationAreas.count { it.isBlank() }}"
