@@ -63,12 +63,130 @@ class ProbationSearchApiClientTest {
   }
 
   @Test
+  fun `probation details normalises SP tier and only uses exact CRN matches`() {
+    stubResponse(
+      """
+      [{
+        "otherIds": {"crn": "X123456"},
+        "currentTier": "SPA1",
+        "offenderManagers": [{
+          "active": true,
+          "softDeleted": false,
+          "team": {"borough": {"description": "Hertfordshire"}},
+          "probationArea": {"description": "Matching area"}
+        }]
+      }, {
+        "otherIds": {"crn": "X654321"},
+        "currentTier": "SPB2",
+        "offenderManagers": [{
+          "active": true,
+          "softDeleted": false,
+          "team": {"borough": {"description": "Should not be included"}},
+          "probationArea": {"description": "Non matching area"}
+        }]
+      }]
+      """.trimIndent(),
+    )
+
+    assertThat(client.getProbationDetails("X123456")).isEqualTo(
+      ProbationSearchDetails(
+        probationAreas = listOf("Matching area"),
+        pdus = listOf("Hertfordshire"),
+        tier = "A1",
+      ),
+    )
+  }
+
+  @Test
+  fun `probation details excludes inactive and soft deleted managers`() {
+    stubResponse(
+      """
+      [{
+        "otherIds": {"crn": "X123456"},
+        "currentTier": "B2",
+        "offenderManagers": [{
+          "active": true,
+          "softDeleted": false,
+          "team": {"borough": {"description": "Included PDU"}},
+          "probationArea": {"description": "Included area"}
+        }, {
+          "active": false,
+          "softDeleted": false,
+          "team": {"borough": {"description": "Inactive PDU"}},
+          "probationArea": {"description": "Inactive area"}
+        }, {
+          "active": true,
+          "softDeleted": true,
+          "team": {"borough": {"description": "Soft deleted PDU"}},
+          "probationArea": {"description": "Soft deleted area"}
+        }]
+      }]
+      """.trimIndent(),
+    )
+
+    assertThat(client.getProbationDetails("X123456")).isEqualTo(
+      ProbationSearchDetails(
+        probationAreas = listOf("Included area"),
+        pdus = listOf("Included PDU"),
+        tier = "B2",
+      ),
+    )
+  }
+
+  @Test
+  fun `probation details ignores blank and missing boroughs and deduplicates PDUs`() {
+    stubResponse(
+      """
+      [{
+        "otherIds": {"crn": "X123456"},
+        "currentTier": "SPC3",
+        "offenderManagers": [{
+          "active": true,
+          "softDeleted": false,
+          "team": {"borough": {"description": "North London"}},
+          "probationArea": {"description": "Area one"}
+        }, {
+          "active": true,
+          "softDeleted": false,
+          "team": {"borough": {"description": "North London"}},
+          "probationArea": {"description": "Area two"}
+        }, {
+          "active": true,
+          "softDeleted": false,
+          "team": {"borough": {"description": ""}},
+          "probationArea": {"description": "Area three"}
+        }, {
+          "active": true,
+          "softDeleted": false,
+          "team": {},
+          "probationArea": {"description": "Area four"}
+        }, {
+          "active": true,
+          "softDeleted": false,
+          "probationArea": {"description": "Area five"}
+        }]
+      }]
+      """.trimIndent(),
+    )
+
+    assertThat(client.getProbationDetails("X123456")).isEqualTo(
+      ProbationSearchDetails(
+        probationAreas = listOf("Area one", "Area two", "Area three", "Area four", "Area five"),
+        pdus = listOf("North London"),
+        tier = "C3",
+      ),
+    )
+  }
+
+  @Test
   fun `wraps upstream errors`() {
     api.stubFor(post(urlEqualTo("/search")).willReturn(aResponse().withStatus(500)))
     assertThatThrownBy { client.getOffendersByCrn("X123456") }
       .isInstanceOf(ProbationSearchApiException::class.java)
       .hasMessage("Error searching Probation Search API by CRN X123456")
   }
+
+// ... existing code ...
 
   private fun stubResponse(body: String) {
     api.stubFor(
