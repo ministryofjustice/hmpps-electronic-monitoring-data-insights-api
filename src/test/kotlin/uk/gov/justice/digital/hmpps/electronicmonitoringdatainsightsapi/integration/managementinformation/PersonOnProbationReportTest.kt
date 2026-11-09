@@ -20,14 +20,16 @@ class PersonOnProbationReportTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `aggregates activity per CRN using latest known region and stable last viewed order`() {
+  fun `aggregates activity per CRN using region tier and PDUs from the latest event and stable last viewed order`() {
     repository.saveAll(
       listOf(
-        event("A123456", "USER1", "Wales", "2026-08-01T12:00:00Z"),
-        event("A123456", "USER1", " London "),
-        event("A123456", "USER2", null, type = EventType.VIEW_PERSON_LOCATIONS),
+        event("A123456", "USER1", "Wales", "2026-08-01T12:00:00Z", tier = "B2", pdus = listOf("Old PDU")),
+        event("A123456", "USER1", " London ", "2026-08-02T11:00:00Z", tier = " A1 ", pdus = listOf(" PDU One ", "", "PDU Two")),
+        event("A123456", "USER2", " London ", type = EventType.VIEW_PERSON_LOCATIONS, tier = " A1 ", pdus = listOf(" PDU One ", "", "PDU Two")),
+        event("B123456", "USER1", "Old region", "2026-08-01T12:00:00Z", tier = "B2", pdus = listOf("Old PDU")),
         event("B123456", "USER1", null),
-        event("C123456", "USER1", "   "),
+        event("C123456", "USER1", "Old region", "2026-08-01T12:00:00Z", tier = "B2", pdus = listOf("Old PDU")),
+        event("C123456", "USER1", "   ", tier = " ", pdus = emptyList()),
         event("A123456", "SYS", "Excluded"),
         event("D123456", "AUTH_ADM", "Excluded"),
         event(" ", "USER1", null),
@@ -44,15 +46,19 @@ class PersonOnProbationReportTest : IntegrationTestBase() {
       .jsonPath("$.results.length()").isEqualTo(3)
       .jsonPath("$.results[0].crn").isEqualTo("A123456")
       .jsonPath("$.results[0].region").isEqualTo("London")
-      .jsonPath("$.results[0].tier").isEqualTo("")
-      .jsonPath("$.results[0].pdu").isEqualTo("")
+      .jsonPath("$.results[0].tier").isEqualTo("A1")
+      .jsonPath("$.results[0].pdu").isEqualTo("PDU One, PDU Two")
       .jsonPath("$.results[0].searches").isEqualTo(3)
       .jsonPath("$.results[0].users").isEqualTo(2)
       .jsonPath("$.results[0].lastViewed").isEqualTo("2026-08-02T12:00:00Z")
       .jsonPath("$.results[1].crn").isEqualTo("B123456")
       .jsonPath("$.results[1].region").isEmpty
+      .jsonPath("$.results[1].tier").isEmpty
+      .jsonPath("$.results[1].pdu").isEmpty
       .jsonPath("$.results[2].crn").isEqualTo("C123456")
       .jsonPath("$.results[2].region").isEmpty
+      .jsonPath("$.results[2].tier").isEmpty
+      .jsonPath("$.results[2].pdu").isEmpty
   }
 
   @Test
@@ -85,6 +91,8 @@ class PersonOnProbationReportTest : IntegrationTestBase() {
     region: String?,
     occurredAt: String = "2026-08-02T12:00:00Z",
     type: EventType = EventType.SEARCH_PERSON_BY_ID,
+    tier: String? = null,
+    pdus: List<String>? = null,
   ) = TimelineEventEntity(
     id = UUID.randomUUID(),
     occurredAt = Instant.parse(occurredAt),
@@ -94,5 +102,7 @@ class PersonOnProbationReportTest : IntegrationTestBase() {
     results = 1,
     durationMs = 1000,
     crnProbationAreas = region,
+    tier = tier,
+    crnPdus = pdus,
   )
 }

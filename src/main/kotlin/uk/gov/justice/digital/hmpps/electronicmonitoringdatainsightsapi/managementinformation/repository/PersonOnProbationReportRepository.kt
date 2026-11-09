@@ -10,7 +10,10 @@ interface PersonOnProbationReportRepository : Repository<TimelineEventEntity, UU
   @Query(
     """
        WITH report_events AS (
-            SELECT *
+            SELECT *,
+                   (SELECT STRING_AGG(TRIM(value), ', ' ORDER BY position)
+                    FROM jsonb_array_elements_text(crn_pdus) WITH ORDINALITY AS pdus(value, position)
+                    WHERE NULLIF(TRIM(value), '') IS NOT NULL) AS pdu
             FROM timeline_events
             WHERE user_name NOT IN ('AUTH_ADM', 'SYS')
               AND event_type IN ('SEARCH_PERSON_BY_ID', 'VIEW_PERSON_LOCATIONS')
@@ -18,9 +21,9 @@ interface PersonOnProbationReportRepository : Repository<TimelineEventEntity, UU
               AND TRIM(crn) !~ '^[0-9]+$'
         )
         SELECT crn,
-               (ARRAY_AGG(TRIM(crn_probation_areas)
-                          ORDER BY occurred_at DESC, id DESC)
-                FILTER (WHERE NULLIF(TRIM(crn_probation_areas), '') IS NOT NULL))[1] AS region,
+               (ARRAY_AGG(NULLIF(TRIM(crn_probation_areas), '') ORDER BY occurred_at DESC, id DESC))[1] AS region,
+               (ARRAY_AGG(NULLIF(TRIM(tier), '') ORDER BY occurred_at DESC, id DESC))[1] AS tier,
+               (ARRAY_AGG(pdu ORDER BY occurred_at DESC, id DESC))[1] AS pdu,
                COUNT(*) AS searches,
                COUNT(DISTINCT user_name) AS users,
                MAX(occurred_at) AS "lastViewed"
@@ -39,4 +42,6 @@ interface PersonOnProbationReport {
   val searches: Long
   val users: Long
   val lastViewed: Instant
+  val tier: String?
+  val pdu: String?
 }
