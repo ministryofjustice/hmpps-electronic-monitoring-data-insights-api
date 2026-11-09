@@ -33,7 +33,6 @@ import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.r
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.repository.PersonRepository
 import java.time.Instant
 import java.time.LocalDate
-import java.time.ZoneOffset
 import java.time.temporal.ChronoUnit
 import java.util.Locale
 import java.util.UUID
@@ -244,12 +243,12 @@ class PersonService(
   }
 
   private fun List<Person>.updateOutsidePeriodFlag(): List<Person> {
-    val today = LocalDate.now()
+    val today = Instant.now().toKotlinInstant()
 
     for (person in this) {
-      val startDate = person.orderStartDate?.atZone(ZoneOffset.UTC)?.toLocalDate() ?: continue
-      val endDate = person.orderEndDate?.atZone(ZoneOffset.UTC)?.toLocalDate() ?: continue
-      person.outsideOrderPeriod = today.isBefore(startDate) || today.isAfter(endDate)
+      val startDate = person.orderStartDate?.toKotlinInstant() ?: continue
+      val endDate = person.orderEndDate?.toKotlinInstant() ?: continue
+      person.outsideOrderPeriod = today in startDate..endDate
     }
 
     return this
