@@ -107,6 +107,7 @@ springdoc:
     enabled: true
   swagger-ui:
     enabled: true
+    version: 5.34.1
 
 service:
   delius-responsible-organisations: ${DELIUS_RESPONSIBLE_ORGANISATIONS:}

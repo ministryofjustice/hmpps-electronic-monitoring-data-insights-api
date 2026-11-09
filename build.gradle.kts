@@ -24,6 +24,11 @@ dependencies {
   implementation("org.springframework.boot:spring-boot-starter-webclient")
   implementation("org.springframework.boot:spring-boot-starter-data-jpa")
   implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:$springdocOpenapiVersion")
+  constraints {
+    implementation("org.webjars:swagger-ui:5.34.1") {
+      because("5.34.0 bundles DOMPurify 3.4.16 (CVE-2026-116802/116803/116804). Remove once springdoc ships swagger-ui >= 5.34.1.")
+    }
+  }
   implementation("io.github.microutils:kotlin-logging:$kotlinLoggingVersion")
   implementation("org.apache.commons:commons-text:$commonsTextVersion")
   implementation("net.javacrumbs.shedlock:shedlock-spring:$shedlockVersion")
@@ -76,6 +81,9 @@ kotlin {
 
 dependencyCheck {
   suppressionFiles.add("$rootDir/dependencyCheck/suppression.xml")
+  // Gatling is load-test tooling run from developer machines/CI against the dev environment.
+  // It is not on productionRuntimeClasspath and is not in the deployed image, so it is excluded from the scan.
+  skipConfigurations.addAll("gatling", "gatlingCompileClasspath", "gatlingRuntimeClasspath")
 }
 
 tasks {
