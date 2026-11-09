@@ -33,11 +33,11 @@ import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.r
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.repository.PersonRepository
 import java.time.Instant
 import java.time.LocalDate
-import java.time.ZoneOffset
 import java.time.temporal.ChronoUnit
 import java.util.Locale
 import java.util.UUID
 import kotlin.math.round
+import kotlin.time.toKotlinInstant
 
 @Service
 class PersonService(
@@ -73,20 +73,20 @@ class PersonService(
       throw PersonWrongRegionException(regionsFound.joinToString(", "))
     }
 
-    // filter on no position data
-    val positionPeople = filterByHavingPositionData(responsibleOrgPeople)
-    if (positionPeople.isEmpty()) {
-      val isMonitored = responsibleOrgPeople.any { it.isMonitored }
-      throw PersonNoPositionsException(isMonitored)
-    }
-
     // filter on current order period
-    val currentOrderPeople = filterByCurrentOrderPeriod(positionPeople)
+    val currentOrderPeople = filterByCurrentOrderPeriod(responsibleOrgPeople)
     if (currentOrderPeople.isEmpty()) {
       throw PersonOutsideOrderPeriodException()
     }
 
-    return PagedPeople(persons = currentOrderPeople, nextToken = null)
+    // filter on no position data
+    val positionPeople = filterByHavingPositionData(currentOrderPeople)
+    if (positionPeople.isEmpty()) {
+      val isMonitored = currentOrderPeople.any { it.isMonitored }
+      throw PersonNoPositionsException(isMonitored)
+    }
+
+    return PagedPeople(persons = positionPeople, nextToken = null)
   }
 
   private fun fetchAllPeople(criteria: PeopleQueryCriteria, nextToken: String?): List<Person> {
@@ -118,11 +118,14 @@ class PersonService(
   private fun filterByHavingPositionData(people: List<Person>): List<Person> = people.filter { it.positionData?.hasPositionData ?: false }
 
   private fun filterByCurrentOrderPeriod(people: List<Person>): List<Person> {
-    val today = LocalDate.now(ZoneOffset.UTC)
+    val now = Instant.now().toKotlinInstant()
+
     return people.filter { person ->
-      val startDate = person.orderStartDate?.atZone(ZoneOffset.UTC)?.toLocalDate()
-      val endDate = person.orderEndDate?.atZone(ZoneOffset.UTC)?.toLocalDate()
-      startDate != null && endDate != null && !today.isBefore(startDate) && !today.isAfter(endDate)
+      person.orderStartDate?.toKotlinInstant()?.let { start ->
+        person.orderEndDate?.toKotlinInstant()?.let { end ->
+          now in start..end
+        }
+      } ?: false
     }
   }
 
@@ -240,12 +243,12 @@ class PersonService(
   }
 
   private fun List<Person>.updateOutsidePeriodFlag(): List<Person> {
-    val today = LocalDate.now()
+    val today = Instant.now().toKotlinInstant()
 
     for (person in this) {
-      val startDate = person.orderStartDate?.atZone(ZoneOffset.UTC)?.toLocalDate() ?: continue
-      val endDate = person.orderEndDate?.atZone(ZoneOffset.UTC)?.toLocalDate() ?: continue
-      person.outsideOrderPeriod = today.isBefore(startDate) || today.isAfter(endDate)
+      val startDate = person.orderStartDate?.toKotlinInstant() ?: continue
+      val endDate = person.orderEndDate?.toKotlinInstant() ?: continue
+      person.outsideOrderPeriod = today in startDate..endDate
     }
 
     return this
