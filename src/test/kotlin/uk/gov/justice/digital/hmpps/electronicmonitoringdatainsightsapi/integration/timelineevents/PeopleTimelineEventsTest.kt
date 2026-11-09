@@ -37,12 +37,16 @@ class PeopleTimelineEventsTest : IntegrationTestBase() {
           durationMs = 0L,
           userPdus = areas,
           userRegions = areas,
+          crnPdus = areas,
+          tier = areas?.firstOrNull() ?: areas?.let { "" },
         ),
       )
 
       val stored = timelineEventsRepository.findById(event.id).orElseThrow()
       assertThat(stored.userPdus).isEqualTo(areas)
       assertThat(stored.userRegions).isEqualTo(areas)
+      assertThat(stored.crnPdus).isEqualTo(areas)
+      assertThat(stored.tier).isEqualTo(event.tier)
     }
   }
 

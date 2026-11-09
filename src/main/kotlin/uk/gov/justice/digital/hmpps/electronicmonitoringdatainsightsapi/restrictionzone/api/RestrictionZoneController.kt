@@ -13,7 +13,6 @@ import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
-import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.client.probationsearch.ProbationSearchApiClient
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.HAS_VIEW_ROLE
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.service.CurrentUserService
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.restrictionzone.service.RestrictionFilter
@@ -34,7 +33,6 @@ class RestrictionZoneController(
   private val devRestrictionZoneProvider: ObjectProvider<DevRestrictionZoneProvider>,
   private val timelineEventsService: TimelineEventsService,
   private val currentUserService: CurrentUserService,
-  private val probationSearchApiClient: ProbationSearchApiClient,
   @Value("\${dev.stub.enabled:false}")
   private val devStubEnabled: Boolean,
 ) {
@@ -95,7 +93,6 @@ class RestrictionZoneController(
       includeInclusions,
       includeExclusions,
     )
-    val probationAreas = probationSearchApiClient.getProbationAreas(crn)
 
     timelineEventsService.record(
       startedAt = startedAt,
@@ -106,7 +103,6 @@ class RestrictionZoneController(
       detail = mapOf(
         "restrictionFilter" to restrictionFilter.name,
       ),
-      crnProbationAreas = probationAreas.joinToString(", "),
     )
 
     log.debug(

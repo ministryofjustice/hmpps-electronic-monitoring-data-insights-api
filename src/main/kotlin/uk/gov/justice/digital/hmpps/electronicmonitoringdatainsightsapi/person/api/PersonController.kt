@@ -138,7 +138,6 @@ class PersonController(
   }
 
   private fun recordPersonSearch(startedAt: Long, username: String, crn: String?, people: List<Person>) {
-    val probationAreas = probationSearchApiClient.getProbationAreas(crn)
     timelineEventsService.record(
       startedAt = startedAt,
       userName = username,
@@ -149,7 +148,6 @@ class PersonController(
         people.takeUnless { it.isEmpty() }
           ?.let { people -> put("personIds", people.map(Person::personId)) }
       },
-      crnProbationAreas = probationAreas.joinToString(", "),
     )
   }
 

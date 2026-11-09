@@ -8,7 +8,6 @@ import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.Mock
 import org.mockito.junit.jupiter.MockitoExtension
 import org.mockito.kotlin.any
-import org.mockito.kotlin.anyOrNull
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.times
@@ -93,7 +92,6 @@ class PersonControllerTest {
     val exception = PersonNotFoundException()
     whenever(currentUserService.username()).thenReturn("test-user")
     whenever(personService.searchPeople(criteria)).thenThrow(exception)
-    whenever(probationSearchApiClient.getProbationAreas("X123456")).thenReturn(listOf("London"))
 
     assertThatThrownBy { controller.searchPeople(criteria, null) }.isSameAs(exception)
 
@@ -104,7 +102,6 @@ class PersonControllerTest {
       eventType = eq(EventType.SEARCH_PERSON_BY_ID),
       results = eq(0),
       detail = eq(emptyMap()),
-      crnProbationAreas = eq("London"),
     )
     verify(personService, times(0)).personMatchScore(any(), any())
   }
@@ -115,7 +112,6 @@ class PersonControllerTest {
     val exception = PersonWrongEnforceableConditionException("curfew")
     whenever(currentUserService.username()).thenReturn("test-user")
     whenever(personService.searchPeople(criteria)).thenThrow(exception)
-    whenever(probationSearchApiClient.getProbationAreas("X123456")).thenReturn(listOf("London"))
 
     assertThatThrownBy { controller.searchPeople(criteria, null) }.isSameAs(exception)
 
@@ -126,7 +122,6 @@ class PersonControllerTest {
       eventType = eq(EventType.SEARCH_PERSON_BY_ID),
       results = eq(0),
       detail = eq(emptyMap()),
-      crnProbationAreas = eq("London"),
     )
     verify(personService, times(0)).personMatchScore(any(), any())
   }
@@ -137,7 +132,6 @@ class PersonControllerTest {
     val exception = PersonWrongRegionException("Other region")
     whenever(currentUserService.username()).thenReturn("test-user")
     whenever(personService.searchPeople(criteria)).thenThrow(exception)
-    whenever(probationSearchApiClient.getProbationAreas("X123456")).thenReturn(listOf("London"))
 
     assertThatThrownBy { controller.searchPeople(criteria, null) }.isSameAs(exception)
 
@@ -148,7 +142,6 @@ class PersonControllerTest {
       eventType = eq(EventType.SEARCH_PERSON_BY_ID),
       results = eq(0),
       detail = eq(emptyMap()),
-      crnProbationAreas = eq("London"),
     )
     verify(personService, times(0)).personMatchScore(any(), any())
   }
@@ -284,7 +277,6 @@ class PersonControllerTest {
       detail = eq(
         mapOf("personIds" to listOf("123456")),
       ),
-      crnProbationAreas = anyOrNull(),
     )
   }
 
