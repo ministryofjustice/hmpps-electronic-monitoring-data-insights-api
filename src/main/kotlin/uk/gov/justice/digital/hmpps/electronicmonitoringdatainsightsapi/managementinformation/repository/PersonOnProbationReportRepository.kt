@@ -21,9 +21,12 @@ interface PersonOnProbationReportRepository : Repository<TimelineEventEntity, UU
               AND TRIM(crn) !~ '^[0-9]+$'
         )
         SELECT crn,
-               (ARRAY_AGG(NULLIF(TRIM(crn_probation_areas), '') ORDER BY occurred_at DESC, id DESC))[1] AS region,
-               (ARRAY_AGG(NULLIF(TRIM(tier), '') ORDER BY occurred_at DESC, id DESC))[1] AS tier,
-               (ARRAY_AGG(pdu ORDER BY occurred_at DESC, id DESC))[1] AS pdu,
+               (ARRAY_AGG(TRIM(crn_probation_areas) ORDER BY occurred_at DESC, id DESC)
+                FILTER (WHERE NULLIF(TRIM(crn_probation_areas), '') IS NOT NULL))[1] AS region,
+               (ARRAY_AGG(TRIM(tier) ORDER BY occurred_at DESC, id DESC)
+                FILTER (WHERE NULLIF(TRIM(tier), '') IS NOT NULL))[1] AS tier,
+               (ARRAY_AGG(pdu ORDER BY occurred_at DESC, id DESC)
+                FILTER (WHERE pdu IS NOT NULL))[1] AS pdu,
                COUNT(*) AS searches,
                COUNT(DISTINCT user_name) AS users,
                MAX(occurred_at) AS "lastViewed"
