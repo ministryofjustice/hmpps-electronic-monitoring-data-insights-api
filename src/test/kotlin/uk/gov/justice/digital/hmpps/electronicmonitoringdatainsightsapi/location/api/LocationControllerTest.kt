@@ -106,6 +106,35 @@ class LocationControllerTest {
   }
 
   @Test
+  fun `getPaginatedLocations returns two pages of sample points with gaps`() {
+    val from = Instant.parse("2026-11-10T14:30:15Z")
+    fun getPage(page: Int, size: Int = 10) = locationController.getPaginatedLocations(
+      personId = "123456",
+      from = from,
+      to = from.plusSeconds(86400),
+      crn = "X12345",
+      page = page,
+      pageSize = size,
+    ).also { assertThat(it.statusCode.value()).isEqualTo(200) }.body!!
+
+    val first = getPage(0)
+    val second = getPage(1)
+
+    assertThat(first.locations.first().gpsDate).isEqualTo(from.plusSeconds(60))
+    assertThat(first.page).isZero()
+    assertThat(first.size).isEqualTo(10)
+    assertThat(first.totalElements).isEqualTo(20)
+    assertThat(first.totalPages).isEqualTo(2)
+    assertThat(first.locations.map { it.point }).containsExactlyElementsOf(1..10)
+    assertThat(second.locations.map { it.point }).containsExactlyElementsOf(11..20)
+    assertThat(second.locations.first().gpsDate).isEqualTo(from.plusSeconds(56 * 60))
+    assertThat(second.locations.single { it.point == 17 }.gapBeforeMinutes).isEqualTo(6L)
+    assertThat(second.locations.single { it.point == 19 }.gapBeforeMinutes).isEqualTo(6L)
+    assertThat(getPage(2).locations).isEmpty()
+    assertThat(getPage(0, 20).locations).hasSize(20)
+  }
+
+  @Test
   fun `getLocationForPerson should return 200 and single location list`() {
     // Arrange
     val personId = "123456"
