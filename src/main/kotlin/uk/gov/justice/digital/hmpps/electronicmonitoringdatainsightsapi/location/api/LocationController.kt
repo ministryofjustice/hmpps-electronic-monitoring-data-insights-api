@@ -2,8 +2,6 @@ package uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.locatio
 
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
-import jakarta.validation.constraints.Max
-import jakarta.validation.constraints.Min
 import jakarta.validation.constraints.NotNull
 import mu.KotlinLogging
 import org.springframework.beans.factory.ObjectProvider
@@ -119,8 +117,8 @@ class LocationController(
     @RequestParam @NotNull from: Instant,
     @RequestParam @NotNull to: Instant,
     @RequestParam @NotNull crn: String,
-    @RequestParam(defaultValue = "0") @Min(0) page: Int,
-    @RequestParam(defaultValue = "10") @Min(1) @Max(100) pageSize: Int,
+    @RequestParam(defaultValue = "0") page: Int,
+    @RequestParam(defaultValue = "10") pageSize: Int,
   ): ResponseEntity<PaginatedLocationResponse> {
     // TODO this is sample data, remove when real data is available
     val locations = SamplePaginatedLocations.getLocations(from)
