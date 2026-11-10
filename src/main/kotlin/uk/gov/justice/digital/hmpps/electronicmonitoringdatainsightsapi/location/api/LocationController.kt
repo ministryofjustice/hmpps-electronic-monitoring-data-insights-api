@@ -106,6 +106,35 @@ class LocationController(
   }
 
   @Operation(
+    summary = "Get paginated location history",
+    description = "Returns a paginated list of position data for a personId within a specific timespan.",
+  )
+  @GetMapping("/paginated")
+  @PreAuthorize(HAS_VIEW_ROLE)
+  @Validated
+  fun getPaginatedLocations(
+    @PathVariable personId: String,
+    @RequestParam @NotNull from: Instant,
+    @RequestParam @NotNull to: Instant,
+    @RequestParam @NotNull crn: String,
+    @RequestParam(defaultValue = "0") page: Int,
+    @RequestParam(defaultValue = "10") pageSize: Int,
+  ): ResponseEntity<PaginatedLocationResponse> {
+    // TODO this is sample data, remove when real data is available
+    val locations = SamplePaginatedLocations.getLocations(from)
+    val offset = page * pageSize
+    return ResponseEntity.ok(
+      PaginatedLocationResponse(
+        locations = locations.drop(offset).take(pageSize),
+        page = page,
+        size = pageSize,
+        totalElements = locations.size,
+        totalPages = (locations.size + pageSize - 1) / pageSize,
+      ),
+    )
+  }
+
+  @Operation(
     summary = "Get single location",
     description = "Returns a specific position for a personId and a positionId.",
   )
