@@ -27,7 +27,7 @@ private val log = KotlinLogging.logger {}
 
 @RestController
 @RequestMapping("/people/{personId}/locations")
-@Tag(name = "Locations", description = "Endpoint to retrieve gsp coordinates for a person by personId")
+@Tag(name = "Locations", description = "Endpoint to retrieve GPS coordinates for a person by personId")
 class LocationController(
   private val locationService: LocationService,
   private val timelineEventsService: TimelineEventsService,
@@ -44,7 +44,7 @@ class LocationController(
   @OptIn(ExperimentalTime::class)
   @Operation(
     summary = "Get location history",
-    description = "Returns a paginated list of GPS coordinates for a personId within a specific timespan.",
+    description = "Returns all GPS coordinates for a personId within the specified timespan and the latest order period, ordered by GPS date.",
   )
   @GetMapping
   @PreAuthorize(HAS_VIEW_ROLE)
@@ -54,7 +54,6 @@ class LocationController(
     @RequestParam @NotNull from: Instant,
     @RequestParam @NotNull to: Instant,
     @RequestParam @NotNull crn: String,
-    @RequestParam(required = false) nextToken: String?,
   ): ResponseEntity<LocationResponse> {
     val provider = devLocationProvider.ifAvailable
 
@@ -82,7 +81,7 @@ class LocationController(
     log.debug("Getting locations for personId: {}, crn {}, from: {}, to: {}", personId, crn, from, to)
     val startedAt = System.nanoTime()
 
-    val pagedLocations = locationService.getLocationsForPerson(personId, from, to, nextToken)
+    val pagedLocations = locationService.getLocationsForPerson(personId, from, to)
 
     timelineEventsService.record(
       startedAt = startedAt,

@@ -48,12 +48,11 @@ class LocationControllerTest {
   }
 
   @Test
-  fun `getLocationsForPerson should return 200 and paginated locations`() {
+  fun `getLocationsForPerson should return 200 and all locations`() {
     // Arrange
     val personId = "123456"
     val from = Instant.parse("2026-10-01T10:00:00Z")
     val to = Instant.parse("2026-10-01T11:00:00Z")
-    val nextToken = "token123"
     val crn = "X12345"
 
     val mockLocations = listOf(
@@ -63,11 +62,11 @@ class LocationControllerTest {
 
     val pagedResult = PagedLocations(
       locations = mockLocations,
-      nextToken = "next-token-456",
+      nextToken = null,
     )
 
     whenever(
-      locationService.getLocationsForPerson(personId, from, to, nextToken),
+      locationService.getLocationsForPerson(personId, from, to),
     ).thenReturn(pagedResult)
 
     whenever(currentUserService.username()).thenReturn("TEST_USER")
@@ -78,16 +77,15 @@ class LocationControllerTest {
       from = from,
       to = to,
       crn = crn,
-      nextToken = nextToken,
     )
 
     // Assert
     assertThat(result.statusCode.value()).isEqualTo(200)
     assertThat(result.body?.locations).hasSize(2)
     assertThat(result.body?.locations?.get(0)?.positionId).isEqualTo(101)
-    assertThat(result.body?.nextToken).isEqualTo("next-token-456")
+    assertThat(result.body?.nextToken).isNull()
 
-    verify(locationService).getLocationsForPerson(personId, from, to, nextToken)
+    verify(locationService).getLocationsForPerson(personId, from, to)
 
     verify(currentUserService).username()
 

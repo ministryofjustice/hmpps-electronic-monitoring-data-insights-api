@@ -22,22 +22,21 @@ class LocationServiceTest {
     val personId = "X123456"
     val from = Instant.parse("2023-10-01T10:00:00Z")
     val to = Instant.parse("2023-10-01T11:00:00Z")
-    val nextToken = "some-token"
 
     val mockPagedResult = PagedLocations(
       listOf(Location(positionId = 101, deviceId = 98765, latitude = 51.5074, longitude = -0.1278)),
-      nextToken = "next-token",
+      nextToken = null,
     )
 
     // Act
     every {
-      locationRepository.findByPersonIdAndGpsDateBetweenOrderByGpsDateAsc(personId, from, to, nextToken)
+      locationRepository.findByPersonIdAndGpsDateBetweenOrderByGpsDateAsc(personId, from, to)
     } returns mockPagedResult
-    val result = locationService.getLocationsForPerson(personId, from, to, nextToken)
+    val result = locationService.getLocationsForPerson(personId, from, to)
 
     // Assert
     assertThat(result).isEqualTo(mockPagedResult)
-    verify(exactly = 1) { locationRepository.findByPersonIdAndGpsDateBetweenOrderByGpsDateAsc(personId, from, to, nextToken) }
+    verify(exactly = 1) { locationRepository.findByPersonIdAndGpsDateBetweenOrderByGpsDateAsc(personId, from, to) }
   }
 
   @Test
@@ -49,12 +48,12 @@ class LocationServiceTest {
 
     // Act
     val exception = assertThrows<IllegalArgumentException> {
-      locationService.getLocationsForPerson(personId, from, to, null)
+      locationService.getLocationsForPerson(personId, from, to)
     }
 
     // Assert
     assertThat(exception.message).contains("must be before or equal to")
-    verify(exactly = 0) { locationRepository.findByPersonIdAndGpsDateBetweenOrderByGpsDateAsc(any(), any(), any(), any()) }
+    verify(exactly = 0) { locationRepository.findByPersonIdAndGpsDateBetweenOrderByGpsDateAsc(any(), any(), any()) }
   }
 
   @Test

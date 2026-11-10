@@ -8,9 +8,9 @@ import java.time.Instant
 
 @Service
 class LocationService(private val locationRepository: LocationRepository) {
-  fun getLocationsForPerson(personId: String, from: Instant, to: Instant, nextToken: String?): PagedLocations {
+  fun getLocationsForPerson(personId: String, from: Instant, to: Instant): PagedLocations {
     validateDates(from, to)
-    return locationRepository.findByPersonIdAndGpsDateBetweenOrderByGpsDateAsc(personId, from, to, nextToken)
+    return locationRepository.findByPersonIdAndGpsDateBetweenOrderByGpsDateAsc(personId, from, to)
   }
 
   fun getLocationForPerson(personId: String, positionId: String): List<Location> = locationRepository.findByPersonIdAndPositionId(personId, positionId)

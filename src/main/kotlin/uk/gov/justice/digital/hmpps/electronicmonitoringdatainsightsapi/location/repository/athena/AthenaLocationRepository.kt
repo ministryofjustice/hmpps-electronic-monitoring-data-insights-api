@@ -28,7 +28,6 @@ class AthenaLocationRepository(
     personId: String,
     from: Instant,
     to: Instant,
-    nextToken: String?,
   ): PagedLocations {
     log.debug("using Athena properties: {}", properties)
     log.debug("Finding locations for personId={}, from={}, to={}", personId, from, to)
@@ -37,7 +36,7 @@ class AthenaLocationRepository(
     val sql = buildTimeSpanSql()
 
     val allLocations = mutableListOf<Location>()
-    var cursor = nextToken
+    var cursor: String? = null
     var callCount = 0
 
     val totalStart = System.nanoTime()
