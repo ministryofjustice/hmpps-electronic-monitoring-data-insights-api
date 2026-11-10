@@ -83,7 +83,6 @@ class LocationControllerTest {
     assertThat(result.statusCode.value()).isEqualTo(200)
     assertThat(result.body?.locations).hasSize(2)
     assertThat(result.body?.locations?.get(0)?.positionId).isEqualTo(101)
-    assertThat(result.body?.nextToken).isNull()
 
     verify(locationService).getLocationsForPerson(personId, from, to)
 

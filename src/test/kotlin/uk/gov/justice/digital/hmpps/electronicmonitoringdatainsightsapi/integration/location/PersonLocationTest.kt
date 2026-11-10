@@ -29,7 +29,6 @@ class PersonLocationTest : IntegrationTestBase() {
       .responseBody!!
 
     assertThat(response.locations).hasSize(4)
-    assertThat(response.nextToken).isNull()
 
     assertThat(response.locations[0].positionId).isEqualTo(1)
     assertThat(response.locations[0].deviceId).isEqualTo(1001)

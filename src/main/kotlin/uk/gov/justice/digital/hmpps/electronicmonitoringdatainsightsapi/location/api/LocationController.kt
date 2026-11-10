@@ -73,7 +73,6 @@ class LocationController(
       return ResponseEntity.ok(
         LocationResponse(
           locations = filteredLocations,
-          nextToken = null,
         ),
       )
     }
@@ -99,7 +98,6 @@ class LocationController(
     return ResponseEntity.ok(
       LocationResponse(
         locations = pagedLocations.locations,
-        nextToken = pagedLocations.nextToken,
       ),
     )
   }
