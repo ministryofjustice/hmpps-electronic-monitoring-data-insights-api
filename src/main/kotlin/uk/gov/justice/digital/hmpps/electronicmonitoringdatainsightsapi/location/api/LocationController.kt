@@ -2,6 +2,8 @@ package uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.locatio
 
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
+import jakarta.validation.constraints.Max
+import jakarta.validation.constraints.Min
 import jakarta.validation.constraints.NotNull
 import mu.KotlinLogging
 import org.springframework.beans.factory.ObjectProvider
@@ -101,6 +103,35 @@ class LocationController(
       LocationResponse(
         locations = pagedLocations.locations,
         nextToken = pagedLocations.nextToken,
+      ),
+    )
+  }
+
+  @Operation(
+    summary = "Get paginated location history",
+    description = "Returns a paginated list of position data for a personId within a specific timespan.",
+  )
+  @GetMapping("/paginated")
+  @PreAuthorize(HAS_VIEW_ROLE)
+  @Validated
+  fun getPaginatedLocations(
+    @PathVariable personId: String,
+    @RequestParam @NotNull from: Instant,
+    @RequestParam @NotNull to: Instant,
+    @RequestParam @NotNull crn: String,
+    @RequestParam(defaultValue = "0") @Min(0) page: Int,
+    @RequestParam(defaultValue = "10") @Min(1) @Max(100) pageSize: Int,
+  ): ResponseEntity<PaginatedLocationResponse> {
+    // TODO this is sample data, remove when real data is available
+    val locations = SamplePaginatedLocations.getLocations(from)
+    val offset = page * pageSize
+    return ResponseEntity.ok(
+      PaginatedLocationResponse(
+        locations = locations.drop(offset).take(pageSize),
+        page = page,
+        size = pageSize,
+        totalElements = locations.size,
+        totalPages = (locations.size + pageSize - 1) / pageSize,
       ),
     )
   }
