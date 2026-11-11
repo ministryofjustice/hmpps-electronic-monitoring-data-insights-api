@@ -5,7 +5,7 @@ import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.location
 import java.time.Instant
 
 interface LocationRepository {
-  fun findByPersonIdAndGpsDateBetweenOrderByGpsDateAsc(personId: String, from: Instant, to: Instant, nextToken: String?): PagedLocations
+  fun findByPersonIdAndGpsDateBetweenOrderByGpsDateAsc(personId: String, from: Instant, to: Instant): PagedLocations
   fun findByPersonIdAndPositionId(personId: String, positionId: String): List<Location>
   fun findRecordsSince(lastWatermark: String): List<Location>
 }
