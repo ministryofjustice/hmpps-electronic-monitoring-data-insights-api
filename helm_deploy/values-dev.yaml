@@ -10,6 +10,7 @@ generic-service:
     host: electronic-monitoring-data-insights-api-dev.hmpps.service.justice.gov.uk
 
   env:
+    OS_PLACES_BASE_URL: "https://api.os.uk"
     # Set to "true" to return HTTP 500 from /people/exists/{crn}.
     SERVICE_OFFLINE: "false"
     APPLICATIONINSIGHTS_CONFIGURATION_FILE: "applicationinsights.dev.json"
@@ -38,6 +39,8 @@ generic-service:
     DELIUS_RESPONSIBLE_ORGANISATIONS: "West Midlands Region,London,East of England"
 
   namespace_secrets:
+    hmpps-electronic-monitoring-data-insights-ui-os-maps:
+      OS_MAPS_API_KEY: "OS_MAPS_API_KEY"
     hmpps-electronic-monitoring-data-insights-api-client-creds:
       PROBATION_INT_API_CLIENT_ID: "PROBATION_INT_API_CLIENT_ID"
       PROBATION_INT_API_CLIENT_SECRET: "PROBATION_INT_API_CLIENT_SECRET"

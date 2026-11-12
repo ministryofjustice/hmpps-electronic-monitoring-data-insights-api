@@ -160,3 +160,8 @@ apis:
     url: ${PROBATION_SEARCH_API_URL}
   probation-integration-api:
     url: ${PROBATION_INTEGRATION_API_URL}
+
+os:
+  places:
+    base-url: ${OS_PLACES_BASE_URL:https://api.os.uk}
+    api-key: ${OS_MAPS_API_KEY:}
