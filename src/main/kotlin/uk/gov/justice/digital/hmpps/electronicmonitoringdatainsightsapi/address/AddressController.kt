@@ -9,6 +9,8 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.server.ResponseStatusException
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.client.os.AddressMatch
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.client.os.OsPlacesClient
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.HAS_VIEW_ROLE
 
 @RestController
@@ -17,7 +19,7 @@ import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.H
 class AddressController(private val osPlacesClient: OsPlacesClient) {
   @GetMapping("/find")
   @PreAuthorize(HAS_VIEW_ROLE)
-  @Operation(summary = "Find GPS coordinates for an address", description = "Returns the best OS Places address match with WGS84 longitude and latitude. A match may be approximate; inspect the returned address and match score.")
+  @Operation(summary = "Find GPS coordinates for an address", description = "Returns the best OS Places address match.")
   fun find(@RequestParam address: String): AddressMatch {
     val query = address.trim()
     if (query.isEmpty() || query.length > 1000) {

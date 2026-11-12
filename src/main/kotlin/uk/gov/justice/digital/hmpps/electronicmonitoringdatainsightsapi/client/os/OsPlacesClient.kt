@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.address
+package uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.client.os
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty

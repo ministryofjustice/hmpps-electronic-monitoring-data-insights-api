@@ -16,6 +16,8 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
 import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.server.ResponseStatusException
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.client.os.AddressMatch
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.client.os.OsPlacesClient
 
 class OsPlacesClientTest {
   private val api = WireMockServer(wireMockConfig().dynamicPort()).also { it.start() }
@@ -28,7 +30,15 @@ class OsPlacesClientTest {
   fun `looks up WGS84 coordinates with API key`() {
     stubPlaces("""{"results":[{"DPA":{"ADDRESS":"10 DOWNING STREET, LONDON","LNG":-0.1276,"LAT":51.5034,"UPRN":"100023336956","MATCH":0.98,"IGNORED":"value"}}]}""")
     val address = "10 Downing Street & Annex + 1, London?"
-    assertThat(client.find(address)).isEqualTo(AddressMatch("10 DOWNING STREET, LONDON", -0.1276, 51.5034, "100023336956", 0.98))
+    assertThat(client.find(address)).isEqualTo(
+        AddressMatch(
+            "10 DOWNING STREET, LONDON",
+            -0.1276,
+            51.5034,
+            "100023336956",
+            0.98
+        )
+    )
     client.find(address)
     api.verify(
       2,

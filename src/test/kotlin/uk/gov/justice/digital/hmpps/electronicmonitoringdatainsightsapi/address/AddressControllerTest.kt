@@ -7,6 +7,8 @@ import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.Test
 import org.springframework.web.server.ResponseStatusException
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.client.os.AddressMatch
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.client.os.OsPlacesClient
 
 class AddressControllerTest {
   private val client = mockk<OsPlacesClient>()
