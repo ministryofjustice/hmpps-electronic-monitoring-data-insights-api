@@ -62,7 +62,7 @@ class AthenaLocationRepositoryTest {
         params = any<List<String>>(),
       )
     } returns mockRunnerResult
-    val result = repository.findByPersonIdAndGpsDateBetweenOrderByGpsDateAsc(personId, from, to, null)
+    val result = repository.findByPersonIdAndGpsDateBetweenOrderByGpsDateAsc(personId, from, to)
 
     // Assert
     assertThat(result).isInstanceOf(PagedLocations::class.java)

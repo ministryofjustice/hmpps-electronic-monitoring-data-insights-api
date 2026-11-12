@@ -48,12 +48,11 @@ class LocationControllerTest {
   }
 
   @Test
-  fun `getLocationsForPerson should return 200 and paginated locations`() {
+  fun `getLocationsForPerson should return 200 and all locations`() {
     // Arrange
     val personId = "123456"
     val from = Instant.parse("2026-10-01T10:00:00Z")
     val to = Instant.parse("2026-10-01T11:00:00Z")
-    val nextToken = "token123"
     val crn = "X12345"
 
     val mockLocations = listOf(
@@ -63,11 +62,11 @@ class LocationControllerTest {
 
     val pagedResult = PagedLocations(
       locations = mockLocations,
-      nextToken = "next-token-456",
+      nextToken = null,
     )
 
     whenever(
-      locationService.getLocationsForPerson(personId, from, to, nextToken),
+      locationService.getLocationsForPerson(personId, from, to),
     ).thenReturn(pagedResult)
 
     whenever(currentUserService.username()).thenReturn("TEST_USER")
@@ -78,16 +77,14 @@ class LocationControllerTest {
       from = from,
       to = to,
       crn = crn,
-      nextToken = nextToken,
     )
 
     // Assert
     assertThat(result.statusCode.value()).isEqualTo(200)
     assertThat(result.body?.locations).hasSize(2)
     assertThat(result.body?.locations?.get(0)?.positionId).isEqualTo(101)
-    assertThat(result.body?.nextToken).isEqualTo("next-token-456")
 
-    verify(locationService).getLocationsForPerson(personId, from, to, nextToken)
+    verify(locationService).getLocationsForPerson(personId, from, to)
 
     verify(currentUserService).username()
 
@@ -105,6 +102,35 @@ class LocationControllerTest {
         ),
       ),
     )
+  }
+
+  @Test
+  fun `getPaginatedLocations returns two pages of sample points with gaps`() {
+    val from = Instant.parse("2026-11-10T14:30:15Z")
+    fun getPage(page: Int, size: Int = 10) = locationController.getPaginatedLocations(
+      personId = "123456",
+      from = from,
+      to = from.plusSeconds(86400),
+      crn = "X12345",
+      page = page,
+      pageSize = size,
+    ).also { assertThat(it.statusCode.value()).isEqualTo(200) }.body!!
+
+    val first = getPage(0)
+    val second = getPage(1)
+
+    assertThat(first.locations.first().gpsDate).isEqualTo(from.plusSeconds(60))
+    assertThat(first.page).isZero()
+    assertThat(first.size).isEqualTo(10)
+    assertThat(first.totalElements).isEqualTo(20)
+    assertThat(first.totalPages).isEqualTo(2)
+    assertThat(first.locations.map { it.point }).containsExactlyElementsOf(1..10)
+    assertThat(second.locations.map { it.point }).containsExactlyElementsOf(11..20)
+    assertThat(second.locations.first().gpsDate).isEqualTo(from.plusSeconds(56 * 60))
+    assertThat(second.locations.single { it.point == 17 }.gapBeforeMinutes).isEqualTo(6L)
+    assertThat(second.locations.single { it.point == 19 }.gapBeforeMinutes).isEqualTo(6L)
+    assertThat(getPage(2).locations).isEmpty()
+    assertThat(getPage(0, 20).locations).hasSize(20)
   }
 
   @Test
