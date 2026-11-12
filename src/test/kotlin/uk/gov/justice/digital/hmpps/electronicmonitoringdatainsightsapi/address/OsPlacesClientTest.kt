@@ -31,13 +31,13 @@ class OsPlacesClientTest {
     stubPlaces("""{"results":[{"DPA":{"ADDRESS":"10 DOWNING STREET, LONDON","LNG":-0.1276,"LAT":51.5034,"UPRN":"100023336956","MATCH":0.98,"IGNORED":"value"}}]}""")
     val address = "10 Downing Street & Annex + 1, London?"
     assertThat(client.find(address)).isEqualTo(
-        AddressMatch(
-            "10 DOWNING STREET, LONDON",
-            -0.1276,
-            51.5034,
-            "100023336956",
-            0.98
-        )
+      AddressMatch(
+        "10 DOWNING STREET, LONDON",
+        -0.1276,
+        51.5034,
+        "100023336956",
+        0.98,
+      ),
     )
     client.find(address)
     api.verify(
