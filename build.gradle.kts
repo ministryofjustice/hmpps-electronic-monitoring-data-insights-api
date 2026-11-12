@@ -15,7 +15,7 @@ val springdocOpenapiVersion = "3.2.0"
 val hmppsKotlinSpringBootStarterVersion = "3.1.0"
 val kotlinLoggingVersion = "3.0.5"
 val commonsTextVersion = "1.15.0"
-val athenaVersion = "2.57.13"
+val athenaVersion = "2.58.0"
 val shedlockVersion = "7.11.0"
 
 dependencies {
@@ -36,7 +36,7 @@ dependencies {
 
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core")
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor")
-  implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.12.0")
+  implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.13.0")
   implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.8.0-0.6.x-compat")
 
   implementation(platform("software.amazon.awssdk:bom:$athenaVersion"))
