@@ -39,7 +39,7 @@ class ActivityService(
     val now = Instant.now()
     val zone = ZoneId.of("Europe/London")
     val today = LocalDate.ofInstant(now, zone)
-    //get the current address from delius
+    // get the current address from delius
     val address = probationSearchApiClient.getOffendersByCrn(crn)
       .filter { it.otherIds?.crn == crn }
       .flatMap { it.contactDetails?.addresses.orEmpty() }
@@ -48,15 +48,15 @@ class ActivityService(
       ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "No address found in Delius for crn=$crn")
     val query = address.formatted()
 
-    //if the address is no fixed abode, then we cannot find the home address
+    // if the address is no fixed abode, then we cannot find the home address
     if (address.noFixedAbode || query.isBlank()) {
       throw ResponseStatusException(HttpStatus.NOT_FOUND, "No fixed abode address found for crn=$crn")
     }
 
-    //Use the OS Places API to find the home address coordinates
+    // Use the OS Places API to find the home address coordinates
     val home = osPlacesClient.find(query)
 
-    //Use Athena to get the locations for the person
+    // Use Athena to get the locations for the person
     return locationService.getLocationsForPerson(personId, now.minus(numberOfDays.toLong(), ChronoUnit.DAYS), now)
       .locations
       .filter(::hasValidPositionData)
@@ -78,10 +78,11 @@ class ActivityService(
     val latitude = location.latitude ?: return false
     val longitude = location.longitude ?: return false
     return location.gpsDate != null &&
-      latitude.isFinite() && latitude in -90.0..90.0 &&
-      longitude.isFinite() && longitude in -180.0..180.0
+      latitude.isFinite() &&
+      latitude in -90.0..90.0 &&
+      longitude.isFinite() &&
+      longitude in -180.0..180.0
   }
-
 
   /**
    * Calculates the great-circle distance between a home position and another position on the Earth's surface.
