@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.client.probationsearch
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import java.time.LocalDate
 
 data class ProbationSearchRequest(
   val crn: String,
@@ -11,6 +12,7 @@ data class ProbationSearchOffender(
   val otherIds: OtherIds? = null,
   val offenderManagers: List<OffenderManager> = emptyList(),
   val currentTier: String? = null,
+  val contactDetails: ProbationSearchContactDetails? = null,
 )
 
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -55,3 +57,27 @@ data class ProbationSearchDetails(
   val pdus: List<String> = emptyList(),
   val tier: String? = null,
 )
+
+@JsonIgnoreProperties(ignoreUnknown = true)
+data class ProbationSearchContactDetails(
+  val addresses: List<ProbationSearchAddress> = emptyList(),
+)
+
+@JsonIgnoreProperties(ignoreUnknown = true)
+data class ProbationSearchAddress(
+  val addressNumber: String? = null,
+  val buildingName: String? = null,
+  val streetName: String? = null,
+  val district: String? = null,
+  val town: String? = null,
+  val county: String? = null,
+  val postcode: String? = null,
+  val from: LocalDate? = null,
+  val to: LocalDate? = null,
+  val noFixedAbode: Boolean = false,
+) {
+  fun formatted(): String = listOfNotNull(addressNumber, buildingName, streetName, district, town, county, postcode)
+    .map(String::trim)
+    .filter(String::isNotBlank)
+    .joinToString(", ")
+}
