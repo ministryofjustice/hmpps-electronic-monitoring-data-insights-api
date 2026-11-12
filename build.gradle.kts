@@ -15,7 +15,7 @@ val springdocOpenapiVersion = "3.2.0"
 val hmppsKotlinSpringBootStarterVersion = "3.1.0"
 val kotlinLoggingVersion = "3.0.5"
 val commonsTextVersion = "1.15.0"
-val athenaVersion = "2.58.0"
+val athenaVersion = "2.59.0"
 val shedlockVersion = "7.11.0"
 
 dependencies {
