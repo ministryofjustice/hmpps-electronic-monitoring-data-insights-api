@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.HAS_VIEW_MI_DATA
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.managementinformation.model.PduReportResponse
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.managementinformation.model.PersonOnProbationReportResponse
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.managementinformation.service.ManagementInformationService
 
@@ -15,6 +16,20 @@ import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.manageme
 @RequestMapping("/management-information")
 @Tag(name = "Management Information", description = "Management information reporting")
 class ManagementInformationController(private val service: ManagementInformationService) {
+
+  @GetMapping("/pdus", produces = [MediaType.APPLICATION_JSON_VALUE])
+  @PreAuthorize(HAS_VIEW_MI_DATA)
+  @Operation(
+    summary = "Retrieve activity by PDU.",
+    description = "Returns one row per recorded CRN PDU and region without pagination or request sorting/filtering. " +
+      "Searches counts SEARCH_PERSON_BY_ID and VIEW_PERSON_LOCATIONS events; POPs counts distinct CRNs. " +
+      "Each event contributes once to each distinct non-blank CRN PDU. " +
+      "Events with null, empty or blank-only CRN PDUs are grouped under Unknown. " +
+      "Region is the trimmed CRN probation areas value; null or blank regions are Unknown. " +
+      "Last viewed is the latest qualifying event. " +
+      "PDUs without qualifying recorded activity are omitted.",
+  )
+  fun getPdus(): PduReportResponse = service.getPdus()
 
   @GetMapping("/people-on-probation", produces = [MediaType.APPLICATION_JSON_VALUE])
   @PreAuthorize(HAS_VIEW_MI_DATA)
