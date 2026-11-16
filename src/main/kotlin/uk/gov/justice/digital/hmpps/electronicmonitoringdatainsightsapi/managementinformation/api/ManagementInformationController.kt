@@ -21,13 +21,10 @@ class ManagementInformationController(private val service: ManagementInformation
   @PreAuthorize(HAS_VIEW_MI_DATA)
   @Operation(
     summary = "Retrieve activity by PDU.",
-    description = "Returns one row per recorded CRN PDU and region without pagination or request sorting/filtering. " +
+    description = "Returns one row per recorded CRN PDU and region. " +
       "Searches counts SEARCH_PERSON_BY_ID and VIEW_PERSON_LOCATIONS events; POPs counts distinct CRNs. " +
       "Each event contributes once to each distinct non-blank CRN PDU. " +
-      "Events with null, empty or blank-only CRN PDUs are grouped under Unknown. " +
-      "Region is the trimmed CRN probation areas value; null or blank regions are Unknown. " +
-      "Last viewed is the latest qualifying event. " +
-      "PDUs without qualifying recorded activity are omitted.",
+      "Events with null, empty or blank-only CRN PDUs are grouped under Unknown. ",
   )
   fun getPdus(): PduReportResponse = service.getPdus()
 
