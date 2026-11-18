@@ -44,6 +44,10 @@ class PduReportTest : IntegrationTestBase() {
       .exchange()
       .expectStatus().isOk
       .expectBody()
+      .jsonPath("$.page").isEqualTo(0)
+      .jsonPath("$.size").isEqualTo(50)
+      .jsonPath("$.totalElements").isEqualTo(4)
+      .jsonPath("$.totalPages").isEqualTo(1)
       .jsonPath("$.results.length()").isEqualTo(4)
       .jsonPath("$.results[0].pdu").isEqualTo("PDU One")
       .jsonPath("$.results[0].region").isEqualTo("New region")
@@ -63,6 +67,18 @@ class PduReportTest : IntegrationTestBase() {
       .jsonPath("$.results[3].region").isEqualTo("New region")
       .jsonPath("$.results[3].searches").isEqualTo(1)
       .jsonPath("$.results[3].pops").isEqualTo(1)
+
+    webTestClient.get().uri("/management-information/pdus?page=1&pageSize=3")
+      .headers(setAuthorisation())
+      .exchange()
+      .expectStatus().isOk
+      .expectBody()
+      .jsonPath("$.page").isEqualTo(1)
+      .jsonPath("$.size").isEqualTo(3)
+      .jsonPath("$.totalElements").isEqualTo(4)
+      .jsonPath("$.totalPages").isEqualTo(2)
+      .jsonPath("$.results.length()").isEqualTo(1)
+      .jsonPath("$.results[0].pdu").isEqualTo("PDU Two")
   }
 
   @Test
@@ -114,7 +130,7 @@ class PduReportTest : IntegrationTestBase() {
       .headers(setAuthorisation())
       .exchange()
       .expectStatus().isOk
-      .expectBody().json("""{"results": []}""")
+      .expectBody().json("""{"results": [], "page": 0, "size": 50, "totalElements": 0, "totalPages": 0}""")
   }
 
   @Test

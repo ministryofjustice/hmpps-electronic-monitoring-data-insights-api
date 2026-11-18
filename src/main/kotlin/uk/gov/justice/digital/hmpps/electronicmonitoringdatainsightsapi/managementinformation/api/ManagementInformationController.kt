@@ -6,6 +6,7 @@ import org.springframework.http.MediaType
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.HAS_VIEW_MI_DATA
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.managementinformation.model.PduReportResponse
@@ -26,7 +27,10 @@ class ManagementInformationController(private val service: ManagementInformation
       "Each event contributes once to each distinct non-blank CRN PDU. " +
       "Events with null, empty or blank-only CRN PDUs are grouped under Unknown. ",
   )
-  fun getPdus(): PduReportResponse = service.getPdus()
+  fun getPdus(
+    @RequestParam(defaultValue = "0") page: Int,
+    @RequestParam(defaultValue = "50") pageSize: Int,
+  ): PduReportResponse = service.getPdus(page, pageSize)
 
   @GetMapping("/people-on-probation", produces = [MediaType.APPLICATION_JSON_VALUE])
   @PreAuthorize(HAS_VIEW_MI_DATA)
@@ -37,5 +41,8 @@ class ManagementInformationController(private val service: ManagementInformation
       "Users counts distinct usernames across those events. Last viewed is their latest timestamp. " +
       "Region is the latest non-blank CRN probation areas value; it may contain multiple areas. ",
   )
-  fun getPeopleOnProbation(): PersonOnProbationReportResponse = service.getPeopleOnProbation()
+  fun getPeopleOnProbation(
+    @RequestParam(defaultValue = "0") page: Int,
+    @RequestParam(defaultValue = "50") pageSize: Int,
+  ): PersonOnProbationReportResponse = service.getPeopleOnProbation(page, pageSize)
 }
