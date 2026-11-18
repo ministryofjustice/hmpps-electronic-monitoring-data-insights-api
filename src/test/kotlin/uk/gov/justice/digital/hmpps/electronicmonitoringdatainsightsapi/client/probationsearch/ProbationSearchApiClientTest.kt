@@ -186,7 +186,75 @@ class ProbationSearchApiClientTest {
       .hasMessage("Error searching Probation Search API by CRN X123456")
   }
 
-// ... existing code ...
+  @Test
+  fun `enrichment retries a temporary service failure and recovers metadata`() {
+    stubTransientThenSuccess(503)
+
+    assertThat(client.getProbationDetails("X123456")?.probationAreas).containsExactly("Recovered area")
+    api.verify(2, postRequestedFor(urlEqualTo("/search")))
+  }
+
+  @Test
+  fun `enrichment retries a timed out request and recovers metadata`() {
+    stubTransientThenSuccess(200, delayMs = 3500)
+
+    assertThat(client.getProbationDetails("X123456")?.probationAreas).containsExactly("Recovered area")
+    api.verify(2, postRequestedFor(urlEqualTo("/search")))
+  }
+
+  @Test
+  fun `enrichment stops after one retry and preserves best effort behaviour`() {
+    api.stubFor(post(urlEqualTo("/search")).willReturn(aResponse().withStatus(503)))
+
+    assertThat(client.getProbationDetails("X123456")).isNull()
+    api.verify(2, postRequestedFor(urlEqualTo("/search")))
+  }
+
+  @Test
+  fun `enrichment does not retry permanent HTTP or malformed response failures`() {
+    listOf(
+      aResponse().withStatus(400),
+      aResponse().withStatus(401),
+      aResponse().withStatus(403),
+      aResponse().withStatus(404),
+      aResponse().withHeader("Content-Type", "application/json").withBody("invalid json"),
+    ).forEach { response ->
+      api.resetAll()
+      api.stubFor(post(urlEqualTo("/search")).willReturn(response))
+
+      assertThat(client.getProbationDetails("X123456")).isNull()
+      api.verify(1, postRequestedFor(urlEqualTo("/search")))
+    }
+  }
+
+  @Test
+  fun `identifier search does not inherit enrichment retries`() {
+    api.stubFor(post(urlEqualTo("/search")).willReturn(aResponse().withStatus(503)))
+
+    assertThatThrownBy { client.getOffendersByCrn("X123456") }
+      .isInstanceOf(ProbationSearchApiException::class.java)
+    api.verify(1, postRequestedFor(urlEqualTo("/search")))
+  }
+
+  private fun stubTransientThenSuccess(status: Int, delayMs: Int = 0) {
+    api.stubFor(
+      post(urlEqualTo("/search"))
+        .inScenario("recovery")
+        .whenScenarioStateIs("Started")
+        .willSetStateTo("recovered")
+        .willReturn(aResponse().withStatus(status).withFixedDelay(delayMs)),
+    )
+    api.stubFor(
+      post(urlEqualTo("/search"))
+        .inScenario("recovery")
+        .whenScenarioStateIs("recovered")
+        .willReturn(
+          aResponse().withHeader("Content-Type", "application/json").withBody(
+            """[{"otherIds":{"crn":"X123456"},"offenderManagers":[{"active":true,"probationArea":{"description":"Recovered area"}}]}]""",
+          ),
+        ),
+    )
+  }
 
   private fun stubResponse(body: String) {
     api.stubFor(
