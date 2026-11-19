@@ -1,7 +1,7 @@
 plugins {
   val kotlinVersion = "2.4.21"
   id("uk.gov.justice.hmpps.gradle-spring-boot") version "11.0.15"
-  id("io.gatling.gradle") version "3.16.0"
+  id("io.gatling.gradle") version "3.16.1"
   kotlin("plugin.spring") version kotlinVersion
   kotlin("plugin.serialization") version kotlinVersion
   kotlin("plugin.jpa") version kotlinVersion
@@ -15,7 +15,7 @@ val springdocOpenapiVersion = "3.2.0"
 val hmppsKotlinSpringBootStarterVersion = "3.1.0"
 val kotlinLoggingVersion = "3.0.5"
 val commonsTextVersion = "1.15.0"
-val athenaVersion = "2.59.0"
+val athenaVersion = "2.59.3"
 val shedlockVersion = "7.11.0"
 
 dependencies {
@@ -67,7 +67,7 @@ dependencies {
   testImplementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter-test:3.1.0")
   testImplementation("org.wiremock:wiremock-standalone:3.13.2")
   testImplementation("com.ninja-squad:springmockk:5.0.1")
-  testImplementation("io.swagger.parser.v3:swagger-parser:2.1.48") {
+  testImplementation("io.swagger.parser.v3:swagger-parser:2.1.49") {
     exclude(group = "io.swagger.core.v3")
   }
   testImplementation("com.h2database:h2:2.5.252")
