@@ -2,6 +2,8 @@ package uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.integra
 
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.beans.factory.annotation.Autowired
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.timelineevents.EventType
@@ -45,6 +47,10 @@ class PersonOnProbationReportTest : IntegrationTestBase() {
       .exchange()
       .expectStatus().isOk
       .expectBody()
+      .jsonPath("$.page").isEqualTo(0)
+      .jsonPath("$.size").isEqualTo(50)
+      .jsonPath("$.totalElements").isEqualTo(5)
+      .jsonPath("$.totalPages").isEqualTo(1)
       .jsonPath("$.results.length()").isEqualTo(5)
       .jsonPath("$.results[0].crn").isEqualTo("A123456")
       .jsonPath("$.results[0].region").isEqualTo("London")
@@ -67,6 +73,18 @@ class PersonOnProbationReportTest : IntegrationTestBase() {
       .jsonPath("$.results[4].region").isEmpty
       .jsonPath("$.results[4].tier").isEmpty
       .jsonPath("$.results[4].pdu").isEmpty
+
+    webTestClient.get().uri("/management-information/people-on-probation?page=1&pageSize=1")
+      .headers(setAuthorisation())
+      .exchange()
+      .expectStatus().isOk
+      .expectBody()
+      .jsonPath("$.page").isEqualTo(1)
+      .jsonPath("$.size").isEqualTo(1)
+      .jsonPath("$.totalElements").isEqualTo(5)
+      .jsonPath("$.totalPages").isEqualTo(5)
+      .jsonPath("$.results.length()").isEqualTo(1)
+      .jsonPath("$.results[0].crn").isEqualTo("B123456")
   }
 
   @Test
@@ -75,7 +93,16 @@ class PersonOnProbationReportTest : IntegrationTestBase() {
       .headers(setAuthorisation())
       .exchange()
       .expectStatus().isOk
-      .expectBody().json("""{"results": []}""")
+      .expectBody().json("""{"results": [], "page": 0, "size": 50, "totalElements": 0, "totalPages": 0}""")
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = ["page=-1", "pageSize=0", "pageSize=-1"])
+  fun `rejects invalid pagination parameters`(query: String) {
+    webTestClient.get().uri("/management-information/people-on-probation?$query")
+      .headers(setAuthorisation())
+      .exchange()
+      .expectStatus().isBadRequest
   }
 
   @Test

@@ -6,9 +6,7 @@ import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.timeline
 import java.time.Instant
 import java.util.UUID
 
-interface PduReportRepository : Repository<TimelineEventEntity, UUID> {
-  @Query(
-    """
+private const val REPORT_EVENTS = """
         WITH report_events AS (
             SELECT e.*, COALESCE(pdus.pdu, 'Unknown') AS pdu,
                    COALESCE(NULLIF(TRIM(crn_probation_areas), ''), 'Unknown') AS region
@@ -23,6 +21,11 @@ interface PduReportRepository : Repository<TimelineEventEntity, UUID> {
               AND NULLIF(TRIM(crn), '') IS NOT NULL
               AND TRIM(crn) !~ '^[0-9]+$'
         )
+"""
+
+interface PduReportRepository : Repository<TimelineEventEntity, UUID> {
+  @Query(
+    REPORT_EVENTS + """
         SELECT pdu,
                region,
                COUNT(*) AS searches,
@@ -31,10 +34,24 @@ interface PduReportRepository : Repository<TimelineEventEntity, UUID> {
         FROM report_events
         GROUP BY pdu, region
         ORDER BY MAX(occurred_at) DESC, pdu, region
+        LIMIT :pageSize OFFSET :offset
     """,
     nativeQuery = true,
   )
-  fun getPdus(): List<PduReport>
+  fun getPdus(pageSize: Int, offset: Long): List<PduReport>
+
+  @Query(
+    REPORT_EVENTS + """
+        SELECT COUNT(*)
+        FROM (
+            SELECT pdu, region
+            FROM report_events
+            GROUP BY pdu, region
+        ) AS report_rows
+    """,
+    nativeQuery = true,
+  )
+  fun countReportRows(): Int
 }
 
 interface PduReport {
