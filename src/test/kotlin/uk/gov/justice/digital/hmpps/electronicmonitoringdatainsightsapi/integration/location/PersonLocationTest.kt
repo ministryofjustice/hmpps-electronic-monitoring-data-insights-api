@@ -10,7 +10,7 @@ import java.time.Instant
 class PersonLocationTest : IntegrationTestBase() {
 
   @Test
-  fun `Get person locations returns mapped locations`() {
+  fun `Get person locations returns mapped history and the latest ping outside the window`() {
     stubProbationSearch("X123456")
     stubQueryExecution(
       "123",
@@ -20,7 +20,7 @@ class PersonLocationTest : IntegrationTestBase() {
     )
 
     val response = webTestClient.get()
-      .uri("/people/123456/locations?from=2024-01-01T00:00:00Z&to=2024-01-31T23:59:59Z&crn=X123456")
+      .uri("/people/123456/locations?from=2025-09-08T00:00:00Z&to=2025-09-08T23:59:59Z&crn=X123456")
       .headers(setAuthorisation())
       .exchange()
       .expectStatus().isOk
@@ -29,6 +29,7 @@ class PersonLocationTest : IntegrationTestBase() {
       .responseBody!!
 
     assertThat(response.locations).hasSize(4)
+    assertThat(response.latestPositionGpsDate).isEqualTo(Instant.parse("2025-09-09T17:30:09Z"))
 
     assertThat(response.locations[0].positionId).isEqualTo(1)
     assertThat(response.locations[0].deviceId).isEqualTo(1001)
@@ -53,6 +54,8 @@ class PersonLocationTest : IntegrationTestBase() {
       .expectBody()
       .jsonPath("$.locations").isArray
       .jsonPath("$.locations.length()").isEqualTo(0)
+      .jsonPath("$.latestPositionGpsDate").hasJsonPath()
+      .jsonPath("$.latestPositionGpsDate").isEmpty
       .jsonPath("$.nextToken").doesNotExist()
   }
 }

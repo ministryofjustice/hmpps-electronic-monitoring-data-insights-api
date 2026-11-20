@@ -60,9 +60,11 @@ class LocationControllerTest {
       Location(positionId = 101, deviceId = 98765, latitude = 51.5075, longitude = -0.1279),
     )
 
+    val latestPositionGpsDate = to.plusSeconds(60)
     val pagedResult = PagedLocations(
       locations = mockLocations,
       nextToken = null,
+      latestPositionGpsDate = latestPositionGpsDate,
     )
 
     whenever(
@@ -82,6 +84,7 @@ class LocationControllerTest {
     // Assert
     assertThat(result.statusCode.value()).isEqualTo(200)
     assertThat(result.body?.locations).hasSize(2)
+    assertThat(result.body?.latestPositionGpsDate).isEqualTo(latestPositionGpsDate)
     assertThat(result.body?.locations?.get(0)?.positionId).isEqualTo(101)
 
     verify(locationService).getLocationsForPerson(personId, from, to)
