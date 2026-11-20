@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.managementinformation.service
 
+import org.springframework.data.domain.Sort
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Isolation
 import org.springframework.transaction.annotation.Transactional
@@ -16,11 +17,12 @@ class ManagementInformationService(
   private val pduRepository: PduReportRepository,
 ) {
   @Transactional(readOnly = true, isolation = Isolation.REPEATABLE_READ)
-  fun getPdus(page: Int, pageSize: Int): PduReportResponse {
+  fun getPdus(page: Int, pageSize: Int, sortField: String, sortDirection: String): PduReportResponse {
     val offset = pageOffset(page, pageSize)
+    val ascending = sortAscending(sortField, sortDirection)
     val totalElements = pduRepository.countReportRows()
     return PduReportResponse(
-      results = pduRepository.getPdus(pageSize, offset).map {
+      results = pduRepository.getPdus(pageSize, offset, ascending).map {
         PduReportRow(
           pdu = it.pdu,
           region = it.region,
@@ -37,11 +39,12 @@ class ManagementInformationService(
   }
 
   @Transactional(readOnly = true, isolation = Isolation.REPEATABLE_READ)
-  fun getPeopleOnProbation(page: Int, pageSize: Int): PersonOnProbationReportResponse {
+  fun getPeopleOnProbation(page: Int, pageSize: Int, sortField: String, sortDirection: String): PersonOnProbationReportResponse {
     val offset = pageOffset(page, pageSize)
+    val ascending = sortAscending(sortField, sortDirection)
     val totalElements = repository.countReportRows()
     return PersonOnProbationReportResponse(
-      results = repository.getPeopleOnProbation(pageSize, offset).map {
+      results = repository.getPeopleOnProbation(pageSize, offset, ascending).map {
         PersonOnProbationReportRow(
           crn = it.crn,
           region = it.region,
@@ -57,6 +60,11 @@ class ManagementInformationService(
       totalElements = totalElements,
       totalPages = totalPages(totalElements, pageSize),
     )
+  }
+
+  private fun sortAscending(sortField: String, sortDirection: String): Boolean {
+    require(sortField == "lastUpdated") { "sortField must be lastUpdated" }
+    return Sort.Direction.fromString(sortDirection).isAscending
   }
 
   private fun pageOffset(page: Int, pageSize: Int): Long {

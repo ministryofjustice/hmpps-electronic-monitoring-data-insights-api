@@ -30,7 +30,9 @@ class ManagementInformationController(private val service: ManagementInformation
   fun getPdus(
     @RequestParam(defaultValue = "0") page: Int,
     @RequestParam(defaultValue = "50") pageSize: Int,
-  ): PduReportResponse = service.getPdus(page, pageSize)
+    @RequestParam(defaultValue = "lastUpdated") sortField: String,
+    @RequestParam(defaultValue = "desc") sortDirection: String,
+  ): PduReportResponse = service.getPdus(page, pageSize, sortField, sortDirection)
 
   @GetMapping("/people-on-probation", produces = [MediaType.APPLICATION_JSON_VALUE])
   @PreAuthorize(HAS_VIEW_MI_DATA)
@@ -44,5 +46,7 @@ class ManagementInformationController(private val service: ManagementInformation
   fun getPeopleOnProbation(
     @RequestParam(defaultValue = "0") page: Int,
     @RequestParam(defaultValue = "50") pageSize: Int,
-  ): PersonOnProbationReportResponse = service.getPeopleOnProbation(page, pageSize)
+    @RequestParam(defaultValue = "lastUpdated") sortField: String,
+    @RequestParam(defaultValue = "desc") sortDirection: String,
+  ): PersonOnProbationReportResponse = service.getPeopleOnProbation(page, pageSize, sortField, sortDirection)
 }
