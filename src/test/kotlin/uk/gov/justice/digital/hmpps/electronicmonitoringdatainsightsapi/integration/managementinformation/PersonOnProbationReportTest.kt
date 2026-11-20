@@ -96,9 +96,39 @@ class PersonOnProbationReportTest : IntegrationTestBase() {
       .expectBody().json("""{"results": [], "page": 0, "size": 50, "totalElements": 0, "totalPages": 0}""")
   }
 
+  @Test
+  fun `sorts by last viewed oldest first before paginating`() {
+    repository.saveAll(
+      listOf(
+        event("A123456", "USER1", "London", "2026-08-01T12:00:00Z"),
+        event("B123456", "USER1", "London", "2026-08-02T12:00:00Z"),
+        event("C123456", "USER1", "London", "2026-08-03T12:00:00Z"),
+        event("D123456", "USER1", "London", "2026-08-04T12:00:00Z"),
+      ),
+    )
+
+    webTestClient.get().uri { builder ->
+      builder.path("/management-information/people-on-probation")
+        .queryParam("sortField", "lastUpdated")
+        .queryParam("sortDirection", "asc")
+        .queryParam("pageSize", 1)
+        .queryParam("page", 1)
+        .build()
+    }
+      .headers(setAuthorisation())
+      .exchange()
+      .expectStatus().isOk
+      .expectBody()
+      .jsonPath("$.totalElements").isEqualTo(4)
+      .jsonPath("$.totalPages").isEqualTo(4)
+      .jsonPath("$.results.length()").isEqualTo(1)
+      .jsonPath("$.results[0].crn").isEqualTo("B123456")
+      .jsonPath("$.results[0].searches").isEqualTo(1)
+  }
+
   @ParameterizedTest
-  @ValueSource(strings = ["page=-1", "pageSize=0", "pageSize=-1"])
-  fun `rejects invalid pagination parameters`(query: String) {
+  @ValueSource(strings = ["page=-1", "pageSize=0", "pageSize=-1", "sortField=searches", "sortDirection=invalid"])
+  fun `rejects invalid pagination and sorting parameters`(query: String) {
     webTestClient.get().uri("/management-information/people-on-probation?$query")
       .headers(setAuthorisation())
       .exchange()

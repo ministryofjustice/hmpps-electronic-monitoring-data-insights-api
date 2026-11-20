@@ -33,12 +33,14 @@ interface PduReportRepository : Repository<TimelineEventEntity, UUID> {
                MAX(occurred_at) AS "lastViewed"
         FROM report_events
         GROUP BY pdu, region
-        ORDER BY MAX(occurred_at) DESC, pdu, region
+        ORDER BY CASE WHEN :ascending THEN MAX(occurred_at) END ASC,
+                 CASE WHEN NOT :ascending THEN MAX(occurred_at) END DESC,
+                 pdu, region
         LIMIT :pageSize OFFSET :offset
     """,
     nativeQuery = true,
   )
-  fun getPdus(pageSize: Int, offset: Long): List<PduReport>
+  fun getPdus(pageSize: Int, offset: Long, ascending: Boolean): List<PduReport>
 
   @Query(
     REPORT_EVENTS + """

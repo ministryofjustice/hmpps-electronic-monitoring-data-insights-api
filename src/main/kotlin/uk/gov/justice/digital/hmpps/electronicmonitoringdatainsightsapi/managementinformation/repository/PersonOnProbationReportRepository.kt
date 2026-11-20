@@ -39,12 +39,14 @@ interface PersonOnProbationReportRepository : Repository<TimelineEventEntity, UU
                MAX(occurred_at) AS "lastViewed"
         FROM report_events
         GROUP BY crn
-        ORDER BY MAX(occurred_at) DESC, crn
+        ORDER BY CASE WHEN :ascending THEN MAX(occurred_at) END ASC,
+                 CASE WHEN NOT :ascending THEN MAX(occurred_at) END DESC,
+                 crn
         LIMIT :pageSize OFFSET :offset
     """,
     nativeQuery = true,
   )
-  fun getPeopleOnProbation(pageSize: Int, offset: Long): List<PersonOnProbationReport>
+  fun getPeopleOnProbation(pageSize: Int, offset: Long, ascending: Boolean): List<PersonOnProbationReport>
 
   @Query(
     "SELECT COUNT(DISTINCT crn) FROM timeline_events" + REPORT_FILTERS,
