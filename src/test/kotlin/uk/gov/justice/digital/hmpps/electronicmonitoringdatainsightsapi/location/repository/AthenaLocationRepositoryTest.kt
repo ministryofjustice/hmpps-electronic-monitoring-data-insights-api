@@ -6,6 +6,8 @@ import io.mockk.slot
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.ValueSource
 import software.amazon.awssdk.regions.Region
 import software.amazon.awssdk.services.athena.model.Datum
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.athena.AthenaProperties
@@ -38,38 +40,49 @@ class AthenaLocationRepositoryTest {
 
   private val repository = AthenaLocationRepository(runner, properties)
 
-  @Test
-  fun `findByPersonIdAndGpsDateBetweenOrderByGpsDateAsc should build SQL and map PaginatedResult to PagedLocations`() {
+  @ParameterizedTest
+  @ValueSource(booleans = [true, false])
+  fun `location search returns the latest date with or without history`(hasHistory: Boolean) {
     // Arrange
     val personId = "123456"
     val from = Instant.parse("2026-10-01T10:00:00Z")
     val to = Instant.parse("2026-10-01T11:00:00Z")
     val sqlSlot = slot<String>()
 
-    val mockRunnerResult = PaginatedResult(
-      items = listOf(mockk<Location>()),
-      nextToken = null,
-    )
+    val latestGpsDate = Instant.parse("2026-10-02T10:00:00Z")
 
-    // Act
     every {
-      runner.fetchPaged(
+      runner.fetchPaged<Any>(
         sql = capture(sqlSlot),
         database = eq(properties.athena.mdssDatabase),
         cursor = null,
         pageSize = 1000,
-        mapper = any<(List<Datum>) -> Location>(),
-        params = any<List<String>>(),
+        mapper = any(),
+        params = eq(listOf(personId, from.toString(), to.toString())),
       )
-    } returns mockRunnerResult
+    } answers {
+      val mapper = lastArg<(List<Datum>) -> Any>()
+      val history = if (hasHistory) {
+        listOf(datum("100"), datum("555"), datum("2026-10-01 10:30:00.000000")) + List(9) { datum(null) }
+      } else {
+        List(12) { datum(null) }
+      }
+      PaginatedResult(
+        items = listOf(mapper(history + datum("2026-10-02 10:00:00.000000"))),
+        nextToken = null,
+      )
+    }
     val result = repository.findByPersonIdAndGpsDateBetweenOrderByGpsDateAsc(personId, from, to)
 
     // Assert
     assertThat(result).isInstanceOf(PagedLocations::class.java)
-    assertThat(result.locations).hasSize(1)
+    assertThat(result.locations.map { it.positionId }).isEqualTo(if (hasHistory) listOf(100L) else emptyList<Long>())
+    assertThat(result.latestPositionGpsDate).isEqualTo(latestGpsDate)
     assertThat(result.nextToken).isEqualTo(null)
     assertThat(sqlSlot.captured).contains("CAST(? AS BIGINT) AS person_id")
     assertThat(sqlSlot.captured).contains("from_iso8601_timestamp(?) AS start_window")
+    assertThat(sqlSlot.captured).contains("max(pos.position_gps_date) AS latest_position_gps_date")
+    assertThat(sqlSlot.captured).contains("LEFT JOIN positions pos ON TRUE")
   }
 
   @Test

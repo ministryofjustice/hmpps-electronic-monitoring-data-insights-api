@@ -44,7 +44,7 @@ class LocationController(
   @OptIn(ExperimentalTime::class)
   @Operation(
     summary = "Get location history",
-    description = "Returns all GPS coordinates for a personId within the specified timespan and the latest order period, ordered by GPS date.",
+    description = "Returns all GPS coordinates for a personId within the specified timespan and the latest order period, ordered by GPS date. Also returns the latest GPS timestamp across all dates, or null if unavailable.",
   )
   @GetMapping
   @PreAuthorize(HAS_VIEW_ROLE)
@@ -64,7 +64,8 @@ class LocationController(
     ) {
       log.info("Using hardcoded dev locations")
 
-      val filteredLocations = provider.getLocations().locations.filter { location ->
+      val locations = provider.getLocations().locations
+      val filteredLocations = locations.filter { location ->
         location.gpsDate?.let { gps ->
           !gps.isBefore(from) && !gps.isAfter(to)
         } ?: false
@@ -73,6 +74,7 @@ class LocationController(
       return ResponseEntity.ok(
         LocationResponse(
           locations = filteredLocations,
+          latestPositionGpsDate = locations.mapNotNull { it.gpsDate }.maxOrNull(),
         ),
       )
     }
@@ -98,6 +100,7 @@ class LocationController(
     return ResponseEntity.ok(
       LocationResponse(
         locations = pagedLocations.locations,
+        latestPositionGpsDate = pagedLocations.latestPositionGpsDate,
       ),
     )
   }

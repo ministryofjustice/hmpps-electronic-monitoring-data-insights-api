@@ -145,6 +145,18 @@
           "SchemaName": "",
           "TableName": "",
           "Type": "double"
+        },
+        {
+          "CaseSensitive": false,
+          "CatalogName": "hive",
+          "Label": "latest_position_gps_date",
+          "Name": "latest_position_gps_date",
+          "Nullable": "UNKNOWN",
+          "Precision": 0,
+          "Scale": 0,
+          "SchemaName": "",
+          "TableName": "",
+          "Type": "timestamp"
         }
       ]
     },
@@ -162,7 +174,8 @@
           { "VarCharValue": "position_hdop" },
           { "VarCharValue": "position_geometry" },
           { "VarCharValue": "position_latitude" },
-          { "VarCharValue": "position_longitude" }
+          { "VarCharValue": "position_longitude" },
+          { "VarCharValue": "latest_position_gps_date" }
         ]
       },
       {
@@ -178,7 +191,8 @@
           { "VarCharValue": "0.9" },
           { "VarCharValue": "POINT(0.060977 51.574865)" },
           { "VarCharValue": "51.574865" },
-          { "VarCharValue": "0.060977" }
+          { "VarCharValue": "0.060977" },
+          { "VarCharValue": "2025-09-09 17:30:09.000000" }
         ]
       },
       {
@@ -194,7 +208,8 @@
           { "VarCharValue": "1.2" },
           { "VarCharValue": "POINT(0.058536 51.574153)" },
           { "VarCharValue": "51.574153" },
-          { "VarCharValue": "0.058536" }
+          { "VarCharValue": "0.058536" },
+          { "VarCharValue": "2025-09-09 17:30:09.000000" }
         ]
       },
       {
@@ -210,7 +225,8 @@
           { "VarCharValue": "1.1" },
           { "VarCharValue": "POINT(0.05111371418603764 51.573248244162706)" },
           { "VarCharValue": "51.573248244162706" },
-          { "VarCharValue": "0.05111371418603764" }
+          { "VarCharValue": "0.05111371418603764" },
+          { "VarCharValue": "2025-09-09 17:30:09.000000" }
         ]
       },
       {
@@ -226,7 +242,8 @@
           { "VarCharValue": "1.0" },
           { "VarCharValue": "POINT(0.048643 51.574622)" },
           { "VarCharValue": "51.574622" },
-          { "VarCharValue": "0.048643" }
+          { "VarCharValue": "0.048643" },
+          { "VarCharValue": "2025-09-09 17:30:09.000000" }
         ]
       }
     ]

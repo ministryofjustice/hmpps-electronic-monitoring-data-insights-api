@@ -36,6 +36,7 @@ class AthenaLocationRepository(
     val sql = buildTimeSpanSql()
 
     val allLocations = mutableListOf<Location>()
+    var latestPositionGpsDate: Instant? = null
     var cursor: String? = null
     var callCount = 0
 
@@ -49,7 +50,12 @@ class AthenaLocationRepository(
         database = properties.athena.mdssDatabase,
         cursor = cursor,
         pageSize = properties.athena.rowLimit,
-        mapper = ::mapRow,
+        mapper = { cols ->
+          SearchRow(
+            location = if (cols[COL_GPS_DATE].varCharValue() == null) null else mapRow(cols),
+            latestPositionGpsDate = parseTimestamp(cols[COL_LATEST_POSITION_GPS_DATE].varCharValue()),
+          )
+        },
         params = listOf(person.toString(), from.toString(), to.toString()),
       )
 
@@ -57,7 +63,10 @@ class AthenaLocationRepository(
 
       callCount++
 
-      allLocations += result.items
+      for (row in result.items) {
+        row.location?.let(allLocations::add)
+        latestPositionGpsDate = row.latestPositionGpsDate
+      }
       cursor = result.nextToken
 
       log.debug(
@@ -82,6 +91,7 @@ class AthenaLocationRepository(
     return PagedLocations(
       locations = allLocations,
       nextToken = null,
+      latestPositionGpsDate = latestPositionGpsDate,
     )
   }
   override fun findByPersonIdAndPositionId(personId: String, positionId: String): List<Location> {
@@ -119,15 +129,25 @@ class AthenaLocationRepository(
       WHERE c.enforceable_condition IN (${Constants.ENFORCEABLE_CONDITIONS_SQL})
       ORDER BY c.grouped_date DESC
       LIMIT 1
+    ),
+    latest_position AS (
+      SELECT max(pos.position_gps_date) AS latest_position_gps_date
+      FROM position pos
+      JOIN params p ON pos.person_id = p.person_id
+    ),
+    positions AS (
+      SELECT pos.position_id, pos.device_id, pos.position_gps_date,
+             pos.position_speed, pos.position_satellite, pos.position_direction, pos.position_precision, pos.position_lbs, pos.position_hdop,
+             pos.position_geometry, pos.position_latitude, pos.position_longitude
+      FROM position pos
+      JOIN params p ON pos.person_id = p.person_id
+      CROSS JOIN latest_order lo
+      WHERE pos.position_gps_date BETWEEN lo.order_start_date AND lo.order_end_date
+        AND pos.position_gps_date BETWEEN p.start_window AND p.end_window
     )
-    SELECT pos.position_id, pos.device_id, pos.position_gps_date,
-           pos.position_speed, pos.position_satellite, pos.position_direction, pos.position_precision, pos.position_lbs, pos.position_hdop,
-           pos.position_geometry, pos.position_latitude, pos.position_longitude
-    FROM position pos
-    JOIN params p ON pos.person_id = p.person_id
-    CROSS JOIN latest_order lo
-    WHERE pos.position_gps_date BETWEEN lo.order_start_date AND lo.order_end_date
-      AND pos.position_gps_date BETWEEN p.start_window AND p.end_window
+    SELECT pos.*, lp.latest_position_gps_date
+    FROM latest_position lp
+    LEFT JOIN positions pos ON TRUE
     ORDER BY pos.position_gps_date
     """.trimIndent()
 
@@ -151,14 +171,10 @@ class AthenaLocationRepository(
     fun requiredLong(i: Int, fieldName: String): Long = v(i)?.toLongOrNull()
       ?: throw DataIntegrityException("$fieldName is missing or invalid at index $i")
 
-    fun ts(i: Int): Instant? = v(i)
-      ?.takeIf { it.isNotBlank() }
-      ?.let { LocalDateTime.parse(it, DateTimeConstants.ATHENA_TIMESTAMP).toInstant(ZoneOffset.UTC) }
-
     return Location(
       positionId = requiredLong(COL_POSITION_ID, "position_id"),
       deviceId = requiredInt(COL_DEVICE_ID, "device_id"),
-      gpsDate = ts(COL_GPS_DATE),
+      gpsDate = parseTimestamp(v(COL_GPS_DATE)),
       speed = v(COL_POSITION_SPEED)?.toIntOrNull(),
       satellite = v(COL_POSITION_SATELLITE)?.toIntOrNull(),
       direction = v(COL_POSITION_DIRECTION)?.toIntOrNull(),
@@ -170,6 +186,12 @@ class AthenaLocationRepository(
       longitude = v(COL_POSITION_LONGITUDE)?.toDoubleOrNull(),
     )
   }
+
+  private fun parseTimestamp(value: String?): Instant? = value
+    ?.takeIf { it.isNotBlank() }
+    ?.let { LocalDateTime.parse(it, DateTimeConstants.ATHENA_TIMESTAMP).toInstant(ZoneOffset.UTC) }
+
+  private data class SearchRow(val location: Location?, val latestPositionGpsDate: Instant?)
 
   companion object {
     private const val COL_POSITION_ID = 0
@@ -184,5 +206,6 @@ class AthenaLocationRepository(
     private const val COL_POSITION_GEOMETRY = 9
     private const val COL_POSITION_LATITUDE = 10
     private const val COL_POSITION_LONGITUDE = 11
+    private const val COL_LATEST_POSITION_GPS_DATE = 12
   }
 }
