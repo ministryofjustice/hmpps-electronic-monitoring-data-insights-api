@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.integra
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.CsvSource
 import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.beans.factory.annotation.Autowired
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.integration.IntegrationTestBase
@@ -10,6 +11,7 @@ import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.timeline
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.timelineevents.entity.TimelineEventEntity
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.timelineevents.repository.TimelineEventsRepository
 import java.time.Instant
+import java.time.temporal.ChronoUnit
 import java.util.UUID
 
 class PersonOnProbationReportTest : IntegrationTestBase() {
@@ -124,6 +126,52 @@ class PersonOnProbationReportTest : IntegrationTestBase() {
       .jsonPath("$.results.length()").isEqualTo(1)
       .jsonPath("$.results[0].crn").isEqualTo("B123456")
       .jsonPath("$.results[0].searches").isEqualTo(1)
+  }
+
+  @ParameterizedTest
+  @CsvSource(
+    "CRN=a123456, A123456",
+    "PDU=second, A123456",
+    "Region=london, A123456",
+    "lookBackDayRange=0-7, A123456",
+    "lookBackDayRange=8-14, B123456",
+    "lookBackDayRange=90-100000, C123456",
+    "CRN=a123456&PDU=second&Region=london&lookBackDayRange=0-7, A123456",
+  )
+  fun `filters aggregated rows before pagination`(query: String, expectedCrn: String) {
+    val now = Instant.now()
+    val recent = now.minus(7, ChronoUnit.DAYS).minus(1, ChronoUnit.HOURS).toString()
+    val middle = now.minus(8, ChronoUnit.DAYS).minus(1, ChronoUnit.HOURS).toString()
+    val old = now.minus(91, ChronoUnit.DAYS).toString()
+    repository.saveAll(
+      listOf(
+        event("A123456", "USER1", "London", recent, pdus = listOf("First", "Second")),
+        event("A123456", "USER2", "Wales", old, pdus = listOf("Former")),
+        event("B123456", "USER1", "Wales", middle, pdus = listOf("Second Extra")),
+        event("C123456", "USER1", "Wales", old, pdus = listOf("Former")),
+      ),
+    )
+
+    val searches = if (expectedCrn == "A123456") 2 else 1
+    webTestClient.get().uri("/management-information/people-on-probation?pageSize=1&$query")
+      .headers(setAuthorisation())
+      .exchange()
+      .expectStatus().isOk
+      .expectBody()
+      .jsonPath("$.totalElements").isEqualTo(1)
+      .jsonPath("$.totalPages").isEqualTo(1)
+      .jsonPath("$.results.length()").isEqualTo(1)
+      .jsonPath("$.results[0].crn").isEqualTo(expectedCrn)
+      .jsonPath("$.results[0].searches").isEqualTo(searches)
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = ["7", "-7", "14-8", "0-2147483648", "90+"])
+  fun `rejects invalid look back ranges`(range: String) {
+    webTestClient.get().uri("/management-information/people-on-probation?lookBackDayRange={range}", range)
+      .headers(setAuthorisation())
+      .exchange()
+      .expectStatus().isBadRequest
   }
 
   @ParameterizedTest

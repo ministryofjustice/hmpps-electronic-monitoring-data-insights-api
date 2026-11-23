@@ -10,6 +10,7 @@ import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.timeline
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.timelineevents.entity.TimelineEventEntity
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.timelineevents.repository.TimelineEventsRepository
 import java.time.Instant
+import java.time.temporal.ChronoUnit
 import java.util.UUID
 
 class PduReportTest : IntegrationTestBase() {
@@ -166,8 +167,44 @@ class PduReportTest : IntegrationTestBase() {
   }
 
   @ParameterizedTest
-  @ValueSource(strings = ["page=-1", "pageSize=0", "pageSize=-1", "sortField=searches", "sortDirection=invalid"])
-  fun `rejects invalid pagination and sorting parameters`(query: String) {
+  @ValueSource(
+    strings = [
+      "PDU=shared",
+      "Region=london",
+      "POPCount=2",
+      "lookBackDays=2",
+      "PDU=shared&Region=london&POPCount=2&lookBackDays=2",
+    ],
+  )
+  fun `filters report rows before pagination and retains historical counts`(query: String) {
+    val now = Instant.now()
+    val recent = now.minus(1, ChronoUnit.DAYS).toString()
+    val old = now.minus(10, ChronoUnit.DAYS).toString()
+    repository.saveAll(
+      listOf(
+        event("A123456", "USER1", "London", recent, pdus = listOf("Shared")),
+        event("B123456", "USER1", "London", old, pdus = listOf("Shared")),
+        event("C123456", "USER1", "Wales", old, pdus = listOf("Shared Extra")),
+      ),
+    )
+
+    webTestClient.get().uri("/management-information/pdus?pageSize=1&$query")
+      .headers(setAuthorisation())
+      .exchange()
+      .expectStatus().isOk
+      .expectBody()
+      .jsonPath("$.totalElements").isEqualTo(1)
+      .jsonPath("$.totalPages").isEqualTo(1)
+      .jsonPath("$.results.length()").isEqualTo(1)
+      .jsonPath("$.results[0].pdu").isEqualTo("Shared")
+      .jsonPath("$.results[0].region").isEqualTo("London")
+      .jsonPath("$.results[0].pops").isEqualTo(2)
+      .jsonPath("$.results[0].searches").isEqualTo(2)
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = ["page=-1", "pageSize=0", "pageSize=-1", "sortField=searches", "sortDirection=invalid", "POPCount=-1", "lookBackDays=-1"])
+  fun `rejects invalid pagination sorting and filtering parameters`(query: String) {
     webTestClient.get().uri("/management-information/pdus?$query")
       .headers(setAuthorisation())
       .exchange()

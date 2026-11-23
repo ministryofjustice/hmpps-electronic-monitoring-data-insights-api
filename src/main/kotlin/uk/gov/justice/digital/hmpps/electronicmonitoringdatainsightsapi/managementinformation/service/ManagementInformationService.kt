@@ -17,12 +17,23 @@ class ManagementInformationService(
   private val pduRepository: PduReportRepository,
 ) {
   @Transactional(readOnly = true, isolation = Isolation.REPEATABLE_READ)
-  fun getPdus(page: Int, pageSize: Int, sortField: String, sortDirection: String): PduReportResponse {
+  fun getPdus(
+    page: Int,
+    pageSize: Int,
+    sortField: String,
+    sortDirection: String,
+    pdu: String?,
+    region: String?,
+    popCount: Long?,
+    lookBackDays: Int?,
+  ): PduReportResponse {
+    require(popCount == null || popCount >= 0) { "POPCount must be greater than or equal to 0" }
+    require(lookBackDays == null || lookBackDays >= 0) { "lookBackDays must be greater than or equal to 0" }
     val offset = pageOffset(page, pageSize)
     val ascending = sortAscending(sortField, sortDirection)
-    val totalElements = pduRepository.countReportRows()
+    val totalElements = pduRepository.countReportRows(pdu, region, popCount, lookBackDays)
     return PduReportResponse(
-      results = pduRepository.getPdus(pageSize, offset, ascending).map {
+      results = pduRepository.getPdus(pageSize, offset, ascending, pdu, region, popCount, lookBackDays).map {
         PduReportRow(
           pdu = it.pdu,
           region = it.region,
@@ -39,12 +50,22 @@ class ManagementInformationService(
   }
 
   @Transactional(readOnly = true, isolation = Isolation.REPEATABLE_READ)
-  fun getPeopleOnProbation(page: Int, pageSize: Int, sortField: String, sortDirection: String): PersonOnProbationReportResponse {
+  fun getPeopleOnProbation(
+    page: Int,
+    pageSize: Int,
+    sortField: String,
+    sortDirection: String,
+    crn: String?,
+    pdu: String?,
+    region: String?,
+    lookBackDayRange: String?,
+  ): PersonOnProbationReportResponse {
     val offset = pageOffset(page, pageSize)
     val ascending = sortAscending(sortField, sortDirection)
-    val totalElements = repository.countReportRows()
+    val (minDays, maxDays) = parseLookBackDayRange(lookBackDayRange)
+    val totalElements = repository.countReportRows(crn, pdu, region, minDays, maxDays)
     return PersonOnProbationReportResponse(
-      results = repository.getPeopleOnProbation(pageSize, offset, ascending).map {
+      results = repository.getPeopleOnProbation(pageSize, offset, ascending, crn, pdu, region, minDays, maxDays).map {
         PersonOnProbationReportRow(
           crn = it.crn,
           region = it.region,
@@ -62,6 +83,17 @@ class ManagementInformationService(
     )
   }
 
+  private fun parseLookBackDayRange(value: String?): Pair<Int?, Int?> {
+    if (value == null) return null to null
+
+    val message = "lookBackDayRange must be a range like 0-7 or 90-100000"
+    val match = requireNotNull(LOOK_BACK_DAY_RANGE.matchEntire(value)) { message }
+    val minDays = requireNotNull(match.groupValues[1].toIntOrNull()) { message }
+    val maxDays = requireNotNull(match.groupValues[2].toIntOrNull()) { message }
+    require(minDays <= maxDays) { message }
+    return minDays to maxDays
+  }
+
   private fun sortAscending(sortField: String, sortDirection: String): Boolean {
     require(sortField == "lastUpdated") { "sortField must be lastUpdated" }
     return Sort.Direction.fromString(sortDirection).isAscending
@@ -75,3 +107,5 @@ class ManagementInformationService(
 
   private fun totalPages(totalElements: Int, pageSize: Int): Int = ((totalElements.toLong() + pageSize - 1) / pageSize).toInt()
 }
+
+private val LOOK_BACK_DAY_RANGE = Regex("""([0-9]+)-([0-9]+)""")
