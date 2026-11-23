@@ -27,17 +27,36 @@ class ActivityService(
   fun getNotHome(
     personId: String,
     crn: String,
-    numberOfDays: Int,
+    numberOfDays: Int?,
     startTime: LocalTime,
     endTime: LocalTime,
     distanceInMeters: Double,
+    startDate: LocalDate? = null,
+    endDate: LocalDate? = null,
   ): List<Location> {
     personId.toPersonId()
-    if (crn.isBlank() || numberOfDays <= 0 || !distanceInMeters.isFinite() || distanceInMeters < 0) {
-      throw ResponseStatusException(HttpStatus.BAD_REQUEST, "CRN must not be blank, numberOfDays must be positive and distanceInMeters must be finite and non-negative")
+    if (crn.isBlank() || !distanceInMeters.isFinite() || distanceInMeters < 0) {
+      throw ResponseStatusException(HttpStatus.BAD_REQUEST, "CRN must not be blank and distanceInMeters must be finite and non-negative")
     }
     val now = Instant.now()
     val zone = ZoneId.of("Europe/London")
+    val (from, to) = if (numberOfDays != null) {
+      if (startDate != null || endDate != null) {
+        throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Provide either numberOfDays or both startDate and endDate")
+      }
+      if (numberOfDays <= 0) {
+        throw ResponseStatusException(HttpStatus.BAD_REQUEST, "numberOfDays must be positive")
+      }
+      now.minus(numberOfDays.toLong(), ChronoUnit.DAYS) to now
+    } else {
+      if (startDate == null || endDate == null) {
+        throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Provide either numberOfDays or both startDate and endDate")
+      }
+      if (startDate.isAfter(endDate)) {
+        throw ResponseStatusException(HttpStatus.BAD_REQUEST, "startDate must be on or before endDate")
+      }
+      startDate.atStartOfDay(zone).toInstant() to endDate.plusDays(1).atStartOfDay(zone).toInstant()
+    }
     val today = LocalDate.ofInstant(now, zone)
     // get the current address from delius
     val address = probationSearchApiClient.getOffendersByCrn(crn)
@@ -57,11 +76,12 @@ class ActivityService(
     val home = osPlacesClient.find(query)
 
     // Use Athena to get the locations for the person
-    return locationService.getLocationsForPerson(personId, now.minus(numberOfDays.toLong(), ChronoUnit.DAYS), now)
+    return locationService.getLocationsForPerson(personId, from, to)
       .locations
       .filter(::hasValidPositionData)
       .filter { location ->
         val timestamp = requireNotNull(location.gpsDate)
+        if (endDate != null && !timestamp.isBefore(to)) return@filter false
         val latitude = requireNotNull(location.latitude)
         val longitude = requireNotNull(location.longitude)
         val time = timestamp.atZone(zone).toLocalTime()
