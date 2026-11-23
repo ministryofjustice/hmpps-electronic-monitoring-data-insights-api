@@ -40,6 +40,7 @@ class ActivityService(
     distanceInMeters: Double,
     startDate: LocalDate? = null,
     endDate: LocalDate? = null,
+    minimumAccuracy: Int,
   ): NotHomeResponse {
     personId.toPersonId()
     if (crn.isBlank() || !distanceInMeters.isFinite() || distanceInMeters < 0) {
@@ -85,7 +86,7 @@ class ActivityService(
     // Use Athena to get the locations for the person
     val locations = locationService.getLocationsForPerson(personId, from, to)
       .locations
-      .filter(::hasValidPositionData)
+    locations.filter { hasValidPositionData(it, minimumAccuracy) }
       .filter { location ->
         val timestamp = requireNotNull(location.gpsDate)
         if (endDate != null && !timestamp.isBefore(to)) return@filter false
@@ -119,9 +120,10 @@ class ActivityService(
     return periods
   }
 
-  private fun hasValidPositionData(location: Location): Boolean {
+  private fun hasValidPositionData(location: Location, minimumAccuracy: Int): Boolean {
     val latitude = location.latitude ?: return false
     val longitude = location.longitude ?: return false
+    if (location.precision != null && location.precision < minimumAccuracy) return false
     return location.gpsDate != null &&
       latitude.isFinite() &&
       latitude in -90.0..90.0 &&
