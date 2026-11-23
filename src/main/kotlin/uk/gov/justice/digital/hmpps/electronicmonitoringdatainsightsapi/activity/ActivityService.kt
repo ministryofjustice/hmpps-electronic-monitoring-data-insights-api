@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.activity
 
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.web.server.ResponseStatusException
@@ -8,6 +9,7 @@ import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.client.p
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.validation.toPersonId
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.location.model.Location
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.location.service.LocationService
+import java.time.Duration
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalTime
@@ -23,7 +25,12 @@ class ActivityService(
   private val probationSearchApiClient: ProbationSearchApiClient,
   private val osPlacesClient: OsPlacesClient,
   private val locationService: LocationService,
+  @Value("\${activity.not-home.gap-minutes}") gapMinutes: Long,
 ) {
+  private val periodGap = Duration.ofMinutes(gapMinutes).also {
+    require(it > Duration.ZERO) { "activity.not-home.gap-minutes must be positive" }
+  }
+
   fun getNotHome(
     personId: String,
     crn: String,
@@ -33,7 +40,7 @@ class ActivityService(
     distanceInMeters: Double,
     startDate: LocalDate? = null,
     endDate: LocalDate? = null,
-  ): List<Location> {
+  ): NotHomeResponse {
     personId.toPersonId()
     if (crn.isBlank() || !distanceInMeters.isFinite() || distanceInMeters < 0) {
       throw ResponseStatusException(HttpStatus.BAD_REQUEST, "CRN must not be blank and distanceInMeters must be finite and non-negative")
@@ -76,7 +83,7 @@ class ActivityService(
     val home = osPlacesClient.find(query)
 
     // Use Athena to get the locations for the person
-    return locationService.getLocationsForPerson(personId, from, to)
+    val locations = locationService.getLocationsForPerson(personId, from, to)
       .locations
       .filter(::hasValidPositionData)
       .filter { location ->
@@ -92,6 +99,24 @@ class ActivityService(
         }
         inWindow && distanceInMeters(home.latitude, home.longitude, latitude, longitude) > distanceInMeters
       }
+    return NotHomeResponse(locations = locations, notHomePeriods = groupPeriods(locations))
+  }
+
+  private fun groupPeriods(locations: List<Location>): List<NotHomePeriod> {
+    // The location query returns pings in ascending GPS timestamp order.
+    var from = locations.firstOrNull()?.gpsDate ?: return emptyList()
+    var previous = from
+    val periods = mutableListOf<NotHomePeriod>()
+    for (index in 1..locations.lastIndex) {
+      val timestamp = requireNotNull(locations[index].gpsDate)
+      if (Duration.between(previous, timestamp) >= periodGap) {
+        periods.add(NotHomePeriod(from, previous))
+        from = timestamp
+      }
+      previous = timestamp
+    }
+    periods.add(NotHomePeriod(from, previous))
+    return periods
   }
 
   private fun hasValidPositionData(location: Location): Boolean {

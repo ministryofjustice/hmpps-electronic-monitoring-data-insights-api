@@ -10,7 +10,6 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.HAS_VIEW_ROLE
-import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.location.api.LocationResponse
 import java.time.LocalDate
 import java.time.LocalTime
 import kotlin.time.ExperimentalTime
@@ -25,10 +24,11 @@ class ActivityController(
   @GetMapping("/not-home")
   @PreAuthorize(HAS_VIEW_ROLE)
   @Operation(
-    summary = "Get positions away from home",
+    summary = "Get positions and periods away from home",
     description = "Returns positions strictly outside the requested distance from the latest current home address during the requested period. " +
       "Provide either a positive numberOfDays for a rolling lookback or both startDate and endDate (yyyy-MM-dd, inclusive in Europe/London). " +
-      "startTime and endTime define an inclusive daily Europe/London window (HH:mm or HH:mm:ss). Overnight windows are supported; equal times mean the whole day.",
+      "startTime and endTime define an inclusive daily Europe/London window (HH:mm or HH:mm:ss). Overnight windows are supported; equal times mean the whole day. " +
+      "A new period starts when the gap between consecutive returned positions reaches the configured threshold (10 minutes by default).",
   )
   fun getNotHome(
     @PathVariable personId: String,
@@ -43,7 +43,5 @@ class ActivityController(
     @RequestParam(required = false)
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
     endDate: LocalDate?,
-  ): LocationResponse = LocationResponse(
-    locations = activityService.getNotHome(personId, crn, numberOfDays, startTime, endTime, distanceInMeters, startDate, endDate),
-  )
+  ): NotHomeResponse = activityService.getNotHome(personId, crn, numberOfDays, startTime, endTime, distanceInMeters, startDate, endDate)
 }
