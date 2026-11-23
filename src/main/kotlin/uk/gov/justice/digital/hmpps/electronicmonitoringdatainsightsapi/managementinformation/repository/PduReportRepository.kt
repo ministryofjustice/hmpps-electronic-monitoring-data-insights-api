@@ -6,7 +6,7 @@ import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.timeline
 import java.time.Instant
 import java.util.UUID
 
-private const val REPORT_EVENTS = """
+private const val FILTERED_REPORT_ROWS = """
         WITH report_events AS (
             SELECT e.*, COALESCE(pdus.pdu, 'Unknown') AS pdu,
                    COALESCE(NULLIF(TRIM(crn_probation_areas), ''), 'Unknown') AS region
@@ -20,40 +20,46 @@ private const val REPORT_EVENTS = """
               AND event_type IN ('SEARCH_PERSON_BY_ID', 'VIEW_PERSON_LOCATIONS')
               AND NULLIF(TRIM(crn), '') IS NOT NULL
               AND TRIM(crn) !~ '^[0-9]+$'
+        ), report_rows AS (
+            SELECT pdu,
+                   region,
+                   COUNT(*) AS searches,
+                   COUNT(DISTINCT crn) AS pops,
+                   MAX(occurred_at) AS "lastViewed"
+            FROM report_events
+            WHERE (CAST(:pdu AS text) IS NULL OR LOWER(pdu) = LOWER(TRIM(CAST(:pdu AS text))))
+              AND (CAST(:region AS text) IS NULL OR LOWER(region) = LOWER(TRIM(CAST(:region AS text))))
+            GROUP BY pdu, region
+            HAVING (CAST(:popCount AS bigint) IS NULL OR COUNT(DISTINCT crn) = CAST(:popCount AS bigint))
+               AND (CAST(:lookBackDays AS integer) IS NULL OR MAX(occurred_at) BETWEEN
+                    CURRENT_TIMESTAMP - CAST(:lookBackDays AS integer) * INTERVAL '24 hours' AND CURRENT_TIMESTAMP)
         )
 """
 
 interface PduReportRepository : Repository<TimelineEventEntity, UUID> {
   @Query(
-    REPORT_EVENTS + """
-        SELECT pdu,
-               region,
-               COUNT(*) AS searches,
-               COUNT(DISTINCT crn) AS pops,
-               MAX(occurred_at) AS "lastViewed"
-        FROM report_events
-        GROUP BY pdu, region
-        ORDER BY CASE WHEN :ascending THEN MAX(occurred_at) END ASC,
-                 CASE WHEN NOT :ascending THEN MAX(occurred_at) END DESC,
+    FILTERED_REPORT_ROWS + """
+        SELECT pdu, region, searches, pops, "lastViewed"
+        FROM report_rows
+        ORDER BY CASE WHEN :ascending THEN "lastViewed" END ASC,
+                 CASE WHEN NOT :ascending THEN "lastViewed" END DESC,
                  pdu, region
         LIMIT :pageSize OFFSET :offset
     """,
     nativeQuery = true,
   )
-  fun getPdus(pageSize: Int, offset: Long, ascending: Boolean): List<PduReport>
+  fun getPdus(
+    pageSize: Int,
+    offset: Long,
+    ascending: Boolean,
+    pdu: String?,
+    region: String?,
+    popCount: Long?,
+    lookBackDays: Int?,
+  ): List<PduReport>
 
-  @Query(
-    REPORT_EVENTS + """
-        SELECT COUNT(*)
-        FROM (
-            SELECT pdu, region
-            FROM report_events
-            GROUP BY pdu, region
-        ) AS report_rows
-    """,
-    nativeQuery = true,
-  )
-  fun countReportRows(): Int
+  @Query(FILTERED_REPORT_ROWS + "SELECT COUNT(*) FROM report_rows", nativeQuery = true)
+  fun countReportRows(pdu: String?, region: String?, popCount: Long?, lookBackDays: Int?): Int
 }
 
 interface PduReport {
