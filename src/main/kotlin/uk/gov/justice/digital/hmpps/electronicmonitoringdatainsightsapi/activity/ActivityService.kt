@@ -85,8 +85,7 @@ class ActivityService(
 
     // Use Athena to get the locations for the person
     val locations = locationService.getLocationsForPerson(personId, from, to)
-      .locations
-    locations.filter { hasValidPositionData(it, minimumAccuracy) }
+      .locations.filter { includePositionData(it, minimumAccuracy) }
       .filter { location ->
         val timestamp = requireNotNull(location.gpsDate)
         if (endDate != null && !timestamp.isBefore(to)) return@filter false
@@ -120,10 +119,10 @@ class ActivityService(
     return periods
   }
 
-  private fun hasValidPositionData(location: Location, minimumAccuracy: Int): Boolean {
+  private fun includePositionData(location: Location, minimumAccuracy: Int): Boolean {
     val latitude = location.latitude ?: return false
     val longitude = location.longitude ?: return false
-    if (location.precision != null && location.precision < minimumAccuracy) return false
+    if (location.precision != null && location.precision > minimumAccuracy) return false
     return location.gpsDate != null &&
       latitude.isFinite() &&
       latitude in -90.0..90.0 &&
