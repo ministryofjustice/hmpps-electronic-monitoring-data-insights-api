@@ -18,6 +18,16 @@ import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.manageme
 @Tag(name = "Management Information", description = "Management information reporting")
 class ManagementInformationController(private val service: ManagementInformationService) {
 
+  @GetMapping("/reference-data/pdu-list", produces = [MediaType.APPLICATION_JSON_VALUE])
+  @PreAuthorize(HAS_VIEW_MI_DATA)
+  @Operation(summary = "Retrieve distinct recorded CRN PDUs in alphabetical order.")
+  fun getPduList(): List<String> = service.getPduList()
+
+  @GetMapping("/reference-data/region-list", produces = [MediaType.APPLICATION_JSON_VALUE])
+  @PreAuthorize(HAS_VIEW_MI_DATA)
+  @Operation(summary = "Retrieve distinct recorded CRN probation areas in alphabetical order.")
+  fun getRegionList(): List<String> = service.getRegionList()
+
   @GetMapping("/pdus", produces = [MediaType.APPLICATION_JSON_VALUE])
   @PreAuthorize(HAS_VIEW_MI_DATA)
   @Operation(
