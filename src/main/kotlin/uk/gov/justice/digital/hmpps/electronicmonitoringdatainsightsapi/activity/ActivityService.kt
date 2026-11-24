@@ -27,17 +27,37 @@ class ActivityService(
   fun getNotHome(
     personId: String,
     crn: String,
-    numberOfDays: Int,
+    numberOfDays: Int?,
     startTime: LocalTime,
     endTime: LocalTime,
     distanceInMeters: Double,
-  ): List<Location> {
+    startDate: LocalDate? = null,
+    endDate: LocalDate? = null,
+    minimumAccuracy: Int,
+  ): NotHomeResponse {
     personId.toPersonId()
-    if (crn.isBlank() || numberOfDays <= 0 || !distanceInMeters.isFinite() || distanceInMeters < 0) {
-      throw ResponseStatusException(HttpStatus.BAD_REQUEST, "CRN must not be blank, numberOfDays must be positive and distanceInMeters must be finite and non-negative")
+    if (crn.isBlank() || !distanceInMeters.isFinite() || distanceInMeters < 0) {
+      throw ResponseStatusException(HttpStatus.BAD_REQUEST, "CRN must not be blank and distanceInMeters must be finite and non-negative")
     }
     val now = Instant.now()
     val zone = ZoneId.of("Europe/London")
+    val (from, to) = if (numberOfDays != null) {
+      if (startDate != null || endDate != null) {
+        throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Provide either numberOfDays or both startDate and endDate")
+      }
+      if (numberOfDays <= 0) {
+        throw ResponseStatusException(HttpStatus.BAD_REQUEST, "numberOfDays must be positive")
+      }
+      now.minus(numberOfDays.toLong(), ChronoUnit.DAYS) to now
+    } else {
+      if (startDate == null || endDate == null) {
+        throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Provide either numberOfDays or both startDate and endDate")
+      }
+      if (startDate.isAfter(endDate)) {
+        throw ResponseStatusException(HttpStatus.BAD_REQUEST, "startDate must be on or before endDate")
+      }
+      startDate.atStartOfDay(zone).toInstant() to endDate.plusDays(1).atStartOfDay(zone).toInstant()
+    }
     val today = LocalDate.ofInstant(now, zone)
     // get the current address from delius
     val address = probationSearchApiClient.getOffendersByCrn(crn)
@@ -56,27 +76,50 @@ class ActivityService(
     // Use the OS Places API to find the home address coordinates
     val home = osPlacesClient.find(query)
 
+    val locations = mutableListOf<Location>()
+    val periods = mutableListOf<NotHomePeriod>()
+    var awayFrom: Instant? = null
+    var hasMatchingPing = false
+
     // Use Athena to get the locations for the person
-    return locationService.getLocationsForPerson(personId, now.minus(numberOfDays.toLong(), ChronoUnit.DAYS), now)
-      .locations
-      .filter(::hasValidPositionData)
-      .filter { location ->
-        val timestamp = requireNotNull(location.gpsDate)
-        val latitude = requireNotNull(location.latitude)
-        val longitude = requireNotNull(location.longitude)
-        val time = timestamp.atZone(zone).toLocalTime()
-        val inWindow = when {
-          startTime == endTime -> true
-          startTime < endTime -> !time.isBefore(startTime) && !time.isAfter(endTime)
-          else -> !time.isBefore(startTime) || !time.isAfter(endTime)
+    for (location in locationService.getLocationsForPerson(personId, from, to).locations) {
+      if (!includePositionData(location, minimumAccuracy)) continue
+      val timestamp = requireNotNull(location.gpsDate)
+      if (endDate != null && !timestamp.isBefore(to)) break
+      val latitude = requireNotNull(location.latitude)
+      val longitude = requireNotNull(location.longitude)
+
+      if (distanceInMeters(home.latitude, home.longitude, latitude, longitude) <= distanceInMeters) {
+        if (awayFrom != null && hasMatchingPing) {
+          periods.add(NotHomePeriod(awayFrom, timestamp))
         }
-        inWindow && distanceInMeters(home.latitude, home.longitude, latitude, longitude) > distanceInMeters
+        awayFrom = null
+        hasMatchingPing = false
+        continue
       }
+
+      awayFrom = awayFrom ?: timestamp
+      val time = timestamp.atZone(zone).toLocalTime()
+      val inWindow = when {
+        startTime == endTime -> true
+        startTime < endTime -> !time.isBefore(startTime) && !time.isAfter(endTime)
+        else -> !time.isBefore(startTime) || !time.isAfter(endTime)
+      }
+      if (inWindow) {
+        locations.add(location)
+        hasMatchingPing = true
+      }
+    }
+    if (awayFrom != null && hasMatchingPing) {
+      periods.add(NotHomePeriod(awayFrom, null))
+    }
+    return NotHomeResponse(locations = locations, notHomePeriods = periods)
   }
 
-  private fun hasValidPositionData(location: Location): Boolean {
+  private fun includePositionData(location: Location, minimumAccuracy: Int): Boolean {
     val latitude = location.latitude ?: return false
     val longitude = location.longitude ?: return false
+    if (location.precision != null && location.precision > minimumAccuracy) return false
     return location.gpsDate != null &&
       latitude.isFinite() &&
       latitude in -90.0..90.0 &&

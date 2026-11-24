@@ -2,12 +2,15 @@ package uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.integra
 
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.beans.factory.annotation.Autowired
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.timelineevents.EventType
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.timelineevents.entity.TimelineEventEntity
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.timelineevents.repository.TimelineEventsRepository
 import java.time.Instant
+import java.time.temporal.ChronoUnit
 import java.util.UUID
 
 class PduReportTest : IntegrationTestBase() {
@@ -44,6 +47,10 @@ class PduReportTest : IntegrationTestBase() {
       .exchange()
       .expectStatus().isOk
       .expectBody()
+      .jsonPath("$.page").isEqualTo(0)
+      .jsonPath("$.size").isEqualTo(50)
+      .jsonPath("$.totalElements").isEqualTo(4)
+      .jsonPath("$.totalPages").isEqualTo(1)
       .jsonPath("$.results.length()").isEqualTo(4)
       .jsonPath("$.results[0].pdu").isEqualTo("PDU One")
       .jsonPath("$.results[0].region").isEqualTo("New region")
@@ -63,6 +70,18 @@ class PduReportTest : IntegrationTestBase() {
       .jsonPath("$.results[3].region").isEqualTo("New region")
       .jsonPath("$.results[3].searches").isEqualTo(1)
       .jsonPath("$.results[3].pops").isEqualTo(1)
+
+    webTestClient.get().uri("/management-information/pdus?page=1&pageSize=3")
+      .headers(setAuthorisation())
+      .exchange()
+      .expectStatus().isOk
+      .expectBody()
+      .jsonPath("$.page").isEqualTo(1)
+      .jsonPath("$.size").isEqualTo(3)
+      .jsonPath("$.totalElements").isEqualTo(4)
+      .jsonPath("$.totalPages").isEqualTo(2)
+      .jsonPath("$.results.length()").isEqualTo(1)
+      .jsonPath("$.results[0].pdu").isEqualTo("PDU Two")
   }
 
   @Test
@@ -114,7 +133,82 @@ class PduReportTest : IntegrationTestBase() {
       .headers(setAuthorisation())
       .exchange()
       .expectStatus().isOk
-      .expectBody().json("""{"results": []}""")
+      .expectBody().json("""{"results": [], "page": 0, "size": 50, "totalElements": 0, "totalPages": 0}""")
+  }
+
+  @Test
+  fun `sorts by last viewed oldest first before paginating`() {
+    repository.saveAll(
+      listOf(
+        event("A123456", "USER1", "London", "2026-08-01T12:00:00Z", pdus = listOf("PDU A")),
+        event("B123456", "USER1", "London", "2026-08-02T12:00:00Z", pdus = listOf("PDU B")),
+        event("C123456", "USER1", "London", "2026-08-03T12:00:00Z", pdus = listOf("PDU C")),
+        event("D123456", "USER1", "London", "2026-08-04T12:00:00Z", pdus = listOf("PDU D")),
+      ),
+    )
+
+    webTestClient.get().uri { builder ->
+      builder.path("/management-information/pdus")
+        .queryParam("sortField", "lastUpdated")
+        .queryParam("sortDirection", "asc")
+        .queryParam("pageSize", 1)
+        .queryParam("page", 1)
+        .build()
+    }
+      .headers(setAuthorisation())
+      .exchange()
+      .expectStatus().isOk
+      .expectBody()
+      .jsonPath("$.totalElements").isEqualTo(4)
+      .jsonPath("$.totalPages").isEqualTo(4)
+      .jsonPath("$.results.length()").isEqualTo(1)
+      .jsonPath("$.results[0].pdu").isEqualTo("PDU B")
+      .jsonPath("$.results[0].searches").isEqualTo(1)
+  }
+
+  @ParameterizedTest
+  @ValueSource(
+    strings = [
+      "PDU=shared",
+      "Region=london",
+      "POPCount=2",
+      "lookBackDays=2",
+      "PDU=shared&Region=london&POPCount=2&lookBackDays=2",
+    ],
+  )
+  fun `filters report rows before pagination and retains historical counts`(query: String) {
+    val now = Instant.now()
+    val recent = now.minus(1, ChronoUnit.DAYS).toString()
+    val old = now.minus(10, ChronoUnit.DAYS).toString()
+    repository.saveAll(
+      listOf(
+        event("A123456", "USER1", "London", recent, pdus = listOf("Shared")),
+        event("B123456", "USER1", "London", old, pdus = listOf("Shared")),
+        event("C123456", "USER1", "Wales", old, pdus = listOf("Shared Extra")),
+      ),
+    )
+
+    webTestClient.get().uri("/management-information/pdus?pageSize=1&$query")
+      .headers(setAuthorisation())
+      .exchange()
+      .expectStatus().isOk
+      .expectBody()
+      .jsonPath("$.totalElements").isEqualTo(1)
+      .jsonPath("$.totalPages").isEqualTo(1)
+      .jsonPath("$.results.length()").isEqualTo(1)
+      .jsonPath("$.results[0].pdu").isEqualTo("Shared")
+      .jsonPath("$.results[0].region").isEqualTo("London")
+      .jsonPath("$.results[0].pops").isEqualTo(2)
+      .jsonPath("$.results[0].searches").isEqualTo(2)
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = ["page=-1", "pageSize=0", "pageSize=-1", "sortField=searches", "sortDirection=invalid", "POPCount=-1", "lookBackDays=-1"])
+  fun `rejects invalid pagination sorting and filtering parameters`(query: String) {
+    webTestClient.get().uri("/management-information/pdus?$query")
+      .headers(setAuthorisation())
+      .exchange()
+      .expectStatus().isBadRequest
   }
 
   @Test
