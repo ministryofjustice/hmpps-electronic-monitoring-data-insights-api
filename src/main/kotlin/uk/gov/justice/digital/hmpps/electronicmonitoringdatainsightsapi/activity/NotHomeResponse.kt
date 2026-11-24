@@ -4,12 +4,11 @@ import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.location
 import java.time.Instant
 
 data class NotHomeResponse(
-  val locations: List<Location>,
   val notHomePeriods: List<NotHomePeriod>,
-  val latestPositionGpsDate: Instant? = null,
+  val locations: List<Location>,
 )
 
 data class NotHomePeriod(
   val from: Instant,
-  val to: Instant,
+  val to: Instant?,
 )
