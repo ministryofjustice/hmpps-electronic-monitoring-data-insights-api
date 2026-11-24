@@ -165,7 +165,3 @@ os:
   places:
     base-url: ${OS_PLACES_BASE_URL:https://api.os.uk}
     api-key: ${OS_MAPS_API_KEY:}
-
-activity:
-  not-home:
-    gap-minutes: ${NOT_HOME_GAP_MINUTES:10}

@@ -28,8 +28,9 @@ class ActivityController(
     description = "Returns positions strictly outside the requested distance from the latest current home address during the requested period. " +
       "Provide either a positive numberOfDays for a rolling lookback or both startDate and endDate (yyyy-MM-dd, inclusive in Europe/London). " +
       "startTime and endTime define an inclusive daily Europe/London window (HH:mm or HH:mm:ss). Overnight windows are supported; equal times mean the whole day. " +
-      "A new period starts when the gap between consecutive returned positions reaches the configured threshold (10 minutes by default)." +
-      "The request parameter MinimumAccuracy is the minimum accuracy in meters for a position to be considered. This defaults to 10 meters. So any points with a accuracy of greater than 10 meters are ignored.",
+      "Periods run from the first observed ping outside the radius to the first ping back inside it. " +
+      "Only periods with an away ping in the daily window are returned, and their boundaries can fall outside that window. " +
+      "The request parameter MinimumAccuracy is the minimum accuracy in meters for a position to be considered. This defaults to 30 meters. So any points with a accuracy of greater than 30 meters are ignored.",
   )
   fun getNotHome(
     @PathVariable personId: String,
@@ -45,6 +46,6 @@ class ActivityController(
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
     endDate: LocalDate?,
     @RequestParam(required = false)
-    minimumAccuracy: Int = 10,
+    minimumAccuracy: Int = 30,
   ): NotHomeResponse = activityService.getNotHome(personId, crn, numberOfDays, startTime, endTime, distanceInMeters, startDate, endDate, minimumAccuracy)
 }
