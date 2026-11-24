@@ -30,7 +30,7 @@ class ActivityController(
       "startTime and endTime define an inclusive daily Europe/London window (HH:mm or HH:mm:ss). Overnight windows are supported; equal times mean the whole day. " +
       "Periods run from the first observed ping outside the radius to the first ping back inside it. " +
       "Only periods with an away ping in the daily window are returned, and their boundaries can fall outside that window. " +
-      "The request parameter MinimumAccuracy is the minimum accuracy in meters for a position to be considered. This defaults to 10 meters. So any points with a accuracy of greater than 10 meters are ignored.",
+      "The request parameter MinimumAccuracy is the minimum accuracy in meters for a position to be considered. This defaults to 30 meters. So any points with a accuracy of greater than 30 meters are ignored.",
   )
   fun getNotHome(
     @PathVariable personId: String,
