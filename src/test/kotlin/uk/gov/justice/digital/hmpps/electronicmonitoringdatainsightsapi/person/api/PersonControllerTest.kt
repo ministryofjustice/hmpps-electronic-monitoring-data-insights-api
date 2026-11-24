@@ -33,6 +33,7 @@ import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.e
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.exception.PersonWrongRegionException
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.service.CurrentUserService
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.config.ServiceProperties
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.location.repository.LatestGpsPingRepository
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.model.PagedPeople
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.model.PeopleQueryCriteria
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.model.Person
@@ -68,6 +69,9 @@ class PersonControllerTest {
   @Mock
   private lateinit var timelineEventsService: TimelineEventsService
 
+  @Mock
+  private lateinit var latestGpsPingRepository: LatestGpsPingRepository
+
   private lateinit var controller: PersonController
 
   @BeforeEach
@@ -83,6 +87,7 @@ class PersonControllerTest {
       devStubEnabled = false,
       cprEnabled = false,
       timelineEventsService = timelineEventsService,
+      latestGpsPingRepository = latestGpsPingRepository,
     )
   }
 
@@ -228,6 +233,7 @@ class PersonControllerTest {
       devStubEnabled = false,
       cprEnabled = true,
       timelineEventsService = timelineEventsService,
+      latestGpsPingRepository = latestGpsPingRepository,
     )
     val pagedPeople = PagedPeople(listOf(Person(personId = "123456")), null)
 
@@ -392,6 +398,7 @@ class PersonControllerTest {
     cprEnabled = false,
     accessControlEnabled = true,
     timelineEventsService = timelineEventsService,
+    latestGpsPingRepository = latestGpsPingRepository,
   )
 
   @Test
@@ -408,6 +415,7 @@ class PersonControllerTest {
       cprEnabled = true,
       timelineEventsService = timelineEventsService,
       serviceOffline = true,
+      latestGpsPingRepository = latestGpsPingRepository,
     )
 
     listOf("X123456", "X777777").forEach { crn ->
@@ -492,6 +500,7 @@ class PersonControllerTest {
       timelineEventsService = timelineEventsService,
       devStubEnabled = true,
       cprEnabled = false,
+      latestGpsPingRepository = latestGpsPingRepository,
     )
     whenever(devPersonProvider.ifAvailable).thenReturn(mock<DevPersonProvider>())
     whenever(serviceProperties.uiBaseUrl).thenReturn("https://example.test")

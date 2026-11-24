@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RestController
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.HAS_VIEW_ROLE
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.service.CurrentUserService
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.location.model.Location
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.location.repository.LatestGpsPingRepository
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.location.service.LocationService
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.timelineevents.EventType
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.timelineevents.service.TimelineEventsService
@@ -33,6 +34,7 @@ class LocationController(
   private val timelineEventsService: TimelineEventsService,
   private val currentUserService: CurrentUserService,
   private val devLocationProvider: ObjectProvider<DevLocationProvider>,
+  private val latestGpsPingRepository: LatestGpsPingRepository,
   @Value("\${dev.stub.enabled:false}")
   private val devStubEnabled: Boolean,
 ) {
@@ -84,6 +86,11 @@ class LocationController(
 
     val pagedLocations = locationService.getLocationsForPerson(personId, from, to)
 
+    val gpsDate = pagedLocations.latestPositionGpsDate
+    if (crn.isNotBlank() && gpsDate != null) {
+      latestGpsPingRepository.upsert(crn.trim(), personId, gpsDate)
+    }
+
     timelineEventsService.record(
       startedAt = startedAt,
       userName = currentUserService.username(),
@@ -103,6 +110,21 @@ class LocationController(
         latestPositionGpsDate = pagedLocations.latestPositionGpsDate,
       ),
     )
+  }
+
+  @Operation(
+    summary = "Get the latest GPS timestamp",
+    description = "Returns the latest cached GPS timestamp for the supplied CRN, with an empty locations list. Returns 404 when no timestamp is cached.",
+  )
+  @GetMapping("/latest")
+  @PreAuthorize(HAS_VIEW_ROLE)
+  fun getLatestLocation(
+    @PathVariable personId: Long,
+    @RequestParam crn: String,
+  ): ResponseEntity<LocationResponse> {
+    require(crn.isNotBlank()) { "A CRN is required" }
+    val gpsDate = latestGpsPingRepository.findGpsDate(crn.trim()) ?: return ResponseEntity.notFound().build()
+    return ResponseEntity.ok(LocationResponse(locations = emptyList(), latestPositionGpsDate = gpsDate))
   }
 
   @Operation(
