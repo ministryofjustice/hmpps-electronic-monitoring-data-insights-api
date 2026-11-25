@@ -9,11 +9,13 @@ import org.mockito.junit.jupiter.MockitoExtension
 import org.mockito.kotlin.any
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.verify
+import org.mockito.kotlin.verifyNoInteractions
 import org.mockito.kotlin.whenever
 import org.springframework.beans.factory.ObjectProvider
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.service.CurrentUserService
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.location.model.Location
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.location.model.PagedLocations
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.location.repository.LatestGpsPingRepository
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.location.service.LocationService
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.timelineevents.EventType
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.timelineevents.service.TimelineEventsService
@@ -29,6 +31,9 @@ class LocationControllerTest {
   lateinit var devLocationProvider: ObjectProvider<DevLocationProvider>
 
   @Mock
+  private lateinit var latestGpsPingRepository: LatestGpsPingRepository
+
+  @Mock
   private lateinit var timelineEventsService: TimelineEventsService
 
   @Mock
@@ -41,10 +46,24 @@ class LocationControllerTest {
     locationController = LocationController(
       locationService = locationService,
       timelineEventsService = timelineEventsService,
+      latestGpsPingRepository = latestGpsPingRepository,
       currentUserService = currentUserService,
       devLocationProvider = devLocationProvider,
       devStubEnabled = false,
     )
+  }
+
+  @Test
+  fun `getLatestLocation reads the GPS timestamp by CRN`() {
+    val crn = "X123456"
+    val gpsDate = Instant.parse("2026-10-01T10:00:00Z")
+    whenever(latestGpsPingRepository.findGpsDate(crn)).thenReturn(gpsDate)
+
+    val response = locationController.getLatestLocation(123456L, crn)
+
+    assertThat(response.statusCode.value()).isEqualTo(200)
+    assertThat(response.body).isEqualTo(LocationResponse(emptyList(), gpsDate))
+    verifyNoInteractions(locationService)
   }
 
   @Test
@@ -88,6 +107,7 @@ class LocationControllerTest {
     assertThat(result.body?.locations?.get(0)?.positionId).isEqualTo(101)
 
     verify(locationService).getLocationsForPerson(personId, from, to)
+    verify(latestGpsPingRepository).upsert(crn, personId, latestPositionGpsDate)
 
     verify(currentUserService).username()
 

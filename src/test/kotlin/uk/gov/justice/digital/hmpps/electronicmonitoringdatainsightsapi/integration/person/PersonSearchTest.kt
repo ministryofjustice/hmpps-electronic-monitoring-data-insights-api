@@ -12,6 +12,7 @@ class PersonSearchTest : IntegrationTestBase() {
 
   @Test
   fun `Search people returns mapped people`() {
+    stubProbationSearch("X234567")
     stubQueryExecution(
       "123",
       1,
@@ -20,7 +21,7 @@ class PersonSearchTest : IntegrationTestBase() {
     )
 
     val response = webTestClient.get()
-      .uri("/people?nomisId=A1234BC")
+      .uri("/people?nomisId=A1234BC&deliusId=X234567&enrichIds=false")
       .headers(setAuthorisation())
       .exchange()
       .expectStatus().isOk
@@ -46,6 +47,16 @@ class PersonSearchTest : IntegrationTestBase() {
     assertThat(person.city).isEqualTo("London")
     assertThat(person.street).isEqualTo("1 Test Street")
     assertThat(person.orderId).isEqualTo("ORDER123")
+
+    verifyAthenaStartQueryExecutionCount(1)
+    webTestClient.get()
+      .uri("/people/123456/locations/latest?crn=X234567")
+      .headers(setAuthorisation())
+      .exchange()
+      .expectStatus().isOk
+      .expectBody()
+      .jsonPath("$.latestPositionGpsDate").isEqualTo("2026-10-27T12:00:00Z")
+    verifyAthenaStartQueryExecutionCount(1)
   }
 
   @Test
