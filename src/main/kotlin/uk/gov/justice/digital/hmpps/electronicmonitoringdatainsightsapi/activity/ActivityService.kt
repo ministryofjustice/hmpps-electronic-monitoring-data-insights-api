@@ -79,38 +79,43 @@ class ActivityService(
     val locations = mutableListOf<Location>()
     val periods = mutableListOf<NotHomePeriod>()
     var awayFrom: Instant? = null
-    var hasMatchingPing = false
+    var windowDate: LocalDate? = null
 
     // Use Athena to get the locations for the person
     for (location in locationService.getLocationsForPerson(personId, from, to).locations) {
       if (!includePositionData(location, minimumAccuracy)) continue
       val timestamp = requireNotNull(location.gpsDate)
       if (endDate != null && !timestamp.isBefore(to)) break
+      if (startTime != endTime) {
+        val localTimestamp = timestamp.atZone(zone)
+        val time = localTimestamp.toLocalTime()
+        val overnight = startTime > endTime
+        val inWindow = if (overnight) time >= startTime || time <= endTime else time in startTime..endTime
+        if (!inWindow) continue
+
+        val localDate = localTimestamp.toLocalDate()
+        val pingWindowDate = if (overnight && time <= endTime) localDate.minusDays(1) else localDate
+        if (pingWindowDate != windowDate) {
+          awayFrom?.let { periods.add(NotHomePeriod(it, null)) }
+          awayFrom = null
+          windowDate = pingWindowDate
+        }
+      }
       val latitude = requireNotNull(location.latitude)
       val longitude = requireNotNull(location.longitude)
 
       if (distanceInMeters(home.latitude, home.longitude, latitude, longitude) <= distanceInMeters) {
-        if (awayFrom != null && hasMatchingPing) {
+        if (awayFrom != null) {
           periods.add(NotHomePeriod(awayFrom, timestamp))
         }
         awayFrom = null
-        hasMatchingPing = false
         continue
       }
 
       awayFrom = awayFrom ?: timestamp
-      val time = timestamp.atZone(zone).toLocalTime()
-      val inWindow = when {
-        startTime == endTime -> true
-        startTime < endTime -> !time.isBefore(startTime) && !time.isAfter(endTime)
-        else -> !time.isBefore(startTime) || !time.isAfter(endTime)
-      }
-      if (inWindow) {
-        locations.add(location)
-        hasMatchingPing = true
-      }
+      locations.add(location)
     }
-    if (awayFrom != null && hasMatchingPing) {
+    if (awayFrom != null) {
       periods.add(NotHomePeriod(awayFrom, null))
     }
     return NotHomeResponse(locations = locations, notHomePeriods = periods)
