@@ -3,15 +3,18 @@ package uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.activit
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.web.server.ResponseStatusException
+import org.springframework.web.util.UriComponentsBuilder
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.client.os.OsPlacesClient
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.client.probationsearch.ProbationSearchApiClient
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.validation.toPersonId
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.config.ServiceProperties
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.location.model.Location
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.location.service.LocationService
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 import kotlin.math.atan2
 import kotlin.math.cos
@@ -23,6 +26,7 @@ class ActivityService(
   private val probationSearchApiClient: ProbationSearchApiClient,
   private val osPlacesClient: OsPlacesClient,
   private val locationService: LocationService,
+  private val serviceProperties: ServiceProperties,
 ) {
   fun getNotHome(
     personId: String,
@@ -79,41 +83,67 @@ class ActivityService(
     val locations = mutableListOf<Location>()
     val periods = mutableListOf<NotHomePeriod>()
     var awayFrom: Instant? = null
-    var hasMatchingPing = false
+    var windowDate: LocalDate? = null
+
+    fun addPeriod(periodStart: Instant, periodEnd: Instant?) {
+      val linkEnd = periodEnd ?: requireNotNull(locations.last().gpsDate)
+      periods.add(NotHomePeriod(periodStart, periodEnd, locationsUrl(crn, periodStart, linkEnd, zone)))
+    }
 
     // Use Athena to get the locations for the person
     for (location in locationService.getLocationsForPerson(personId, from, to).locations) {
       if (!includePositionData(location, minimumAccuracy)) continue
       val timestamp = requireNotNull(location.gpsDate)
       if (endDate != null && !timestamp.isBefore(to)) break
+      if (startTime != endTime) {
+        val localTimestamp = timestamp.atZone(zone)
+        val time = localTimestamp.toLocalTime()
+        val overnight = startTime > endTime
+        val inWindow = if (overnight) time >= startTime || time <= endTime else time in startTime..endTime
+        if (!inWindow) continue
+
+        val localDate = localTimestamp.toLocalDate()
+        val pingWindowDate = if (overnight && time <= endTime) localDate.minusDays(1) else localDate
+        if (pingWindowDate != windowDate) {
+          awayFrom?.let { addPeriod(it, null) }
+          awayFrom = null
+          windowDate = pingWindowDate
+        }
+      }
       val latitude = requireNotNull(location.latitude)
       val longitude = requireNotNull(location.longitude)
 
       if (distanceInMeters(home.latitude, home.longitude, latitude, longitude) <= distanceInMeters) {
-        if (awayFrom != null && hasMatchingPing) {
-          periods.add(NotHomePeriod(awayFrom, timestamp))
+        if (awayFrom != null) {
+          addPeriod(awayFrom, timestamp)
         }
         awayFrom = null
-        hasMatchingPing = false
         continue
       }
 
       awayFrom = awayFrom ?: timestamp
-      val time = timestamp.atZone(zone).toLocalTime()
-      val inWindow = when {
-        startTime == endTime -> true
-        startTime < endTime -> !time.isBefore(startTime) && !time.isAfter(endTime)
-        else -> !time.isBefore(startTime) || !time.isAfter(endTime)
-      }
-      if (inWindow) {
-        locations.add(location)
-        hasMatchingPing = true
-      }
+      locations.add(location)
     }
-    if (awayFrom != null && hasMatchingPing) {
-      periods.add(NotHomePeriod(awayFrom, null))
+    if (awayFrom != null) {
+      addPeriod(awayFrom, null)
     }
     return NotHomeResponse(locations = locations, notHomePeriods = periods)
+  }
+
+  private fun locationsUrl(crn: String, from: Instant, to: Instant, zone: ZoneId): String {
+    val start = from.atZone(zone)
+    val end = to.atZone(zone)
+    return UriComponentsBuilder.fromUriString(serviceProperties.uiBaseUrl)
+      .pathSegment("people", "{crn}", "locations")
+      .queryParam("start[date]", "{startDate}")
+      .queryParam("start[hour]", start.format(hourFormat))
+      .queryParam("start[minute]", start.format(minuteFormat))
+      .queryParam("end[date]", "{endDate}")
+      .queryParam("end[hour]", end.format(hourFormat))
+      .queryParam("end[minute]", end.format(minuteFormat))
+      .encode()
+      .buildAndExpand(crn, start.format(dateFormat), end.format(dateFormat))
+      .toUriString()
   }
 
   private fun includePositionData(location: Location, minimumAccuracy: Int): Boolean {
@@ -176,5 +206,11 @@ class ActivityService(
 
     // Distance along the Earth's surface = radius × angle in radians.
     return earthRadiusInMeters * angleBetweenPositions
+  }
+
+  private companion object {
+    val dateFormat: DateTimeFormatter = DateTimeFormatter.ofPattern("d/M/uuuu")
+    val hourFormat: DateTimeFormatter = DateTimeFormatter.ofPattern("HH")
+    val minuteFormat: DateTimeFormatter = DateTimeFormatter.ofPattern("mm")
   }
 }
