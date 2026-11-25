@@ -10,12 +10,18 @@ import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.manageme
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.managementinformation.model.PersonOnProbationReportRow
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.managementinformation.repository.PduReportRepository
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.managementinformation.repository.PersonOnProbationReportRepository
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.managementinformation.repository.ReferenceDataRepository
 
 @Service
 class ManagementInformationService(
   private val repository: PersonOnProbationReportRepository,
   private val pduRepository: PduReportRepository,
+  private val referenceDataRepository: ReferenceDataRepository,
 ) {
+  fun getPduList(): List<String> = referenceDataRepository.getPduList()
+
+  fun getRegionList(): List<String> = referenceDataRepository.getRegionList()
+
   @Transactional(readOnly = true, isolation = Isolation.REPEATABLE_READ)
   fun getPdus(
     page: Int,
