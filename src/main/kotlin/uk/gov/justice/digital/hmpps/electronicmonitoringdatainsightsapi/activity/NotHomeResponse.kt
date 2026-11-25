@@ -11,4 +11,5 @@ data class NotHomeResponse(
 data class NotHomePeriod(
   val from: Instant,
   val to: Instant?,
+  val url: String,
 )
