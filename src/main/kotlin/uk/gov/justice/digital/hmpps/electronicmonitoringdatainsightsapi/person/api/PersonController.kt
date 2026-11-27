@@ -30,6 +30,7 @@ import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.e
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.exception.PersonWrongRegionException
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.common.service.CurrentUserService
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.config.ServiceProperties
+import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.location.repository.LatestGpsPingRepository
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.model.PeopleQueryCriteria
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.model.Person
 import uk.gov.justice.digital.hmpps.electronicmonitoringdatainsightsapi.person.service.PersonService
@@ -52,6 +53,7 @@ class PersonController(
   private val cprApiClient: CprApiClient,
   private val accessControlApiClient: AccessControlApiClient,
   private val timelineEventsService: TimelineEventsService,
+  private val latestGpsPingRepository: LatestGpsPingRepository,
   @Value("\${dev.stub.enabled:false}")
   private val devStubEnabled: Boolean,
   @Value("\${cpr.enabled:false}")
@@ -128,10 +130,17 @@ class PersonController(
       personService.personMatchScore(enrichedPeopleQueryCriteria.person, pagedPeople.persons.first())
     }
 
-    recordPersonSearch(startedAt, username, crn, pagedPeople.persons.distinctBy(Person::personId))
+    // Cache the latest GPS ping for the first person in the list
+    val firstPerson = pagedPeople.persons.firstOrNull()
+    val gpsDate = firstPerson?.positionData?.latestPositionGpsDate
+    if (crn != null && firstPerson != null && gpsDate != null) {
+      latestGpsPingRepository.upsert(crn, firstPerson.personId, gpsDate)
+    }
+    val people = pagedPeople.persons.distinctBy(Person::personId)
+    recordPersonSearch(startedAt, username, crn, people)
     return ResponseEntity.ok(
       PersonResponse(
-        persons = pagedPeople.persons.distinctBy(Person::personId),
+        persons = people,
         nextToken = pagedPeople.nextToken,
       ),
     )
