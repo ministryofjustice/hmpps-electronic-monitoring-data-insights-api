@@ -1,6 +1,6 @@
 plugins {
   val kotlinVersion = "2.4.21"
-  id("uk.gov.justice.hmpps.gradle-spring-boot") version "11.0.15"
+  id("uk.gov.justice.hmpps.gradle-spring-boot") version "11.1.2"
   id("io.gatling.gradle") version "3.16.1"
   kotlin("plugin.spring") version kotlinVersion
   kotlin("plugin.serialization") version kotlinVersion
@@ -11,12 +11,12 @@ configurations {
   testImplementation { exclude(group = "org.junit.vintage") }
 }
 
-val springdocOpenapiVersion = "3.2.0"
+val springdocOpenapiVersion = "3.2.1"
 val hmppsKotlinSpringBootStarterVersion = "3.1.0"
 val kotlinLoggingVersion = "3.0.5"
 val commonsTextVersion = "1.15.0"
-val athenaVersion = "2.59.3"
-val shedlockVersion = "7.11.0"
+val athenaVersion = "2.59.8"
+val shedlockVersion = "7.12.0"
 
 dependencies {
   implementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter:$hmppsKotlinSpringBootStarterVersion")
@@ -25,7 +25,7 @@ dependencies {
   implementation("org.springframework.boot:spring-boot-starter-data-jpa")
   implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:$springdocOpenapiVersion")
   constraints {
-    implementation("org.webjars:swagger-ui:5.34.1") {
+    implementation("org.webjars:swagger-ui:5.36.0") {
       because("5.34.0 bundles DOMPurify 3.4.16 (CVE-2026-116802/116803/116804). Remove once springdoc ships swagger-ui >= 5.34.1.")
     }
   }
