@@ -85,9 +85,9 @@ class ActivityService(
     var awayFrom: Instant? = null
     var windowDate: LocalDate? = null
 
-    fun addPeriod(periodStart: Instant, periodEnd: Instant?) {
-      val linkEnd = periodEnd ?: requireNotNull(locations.last().gpsDate)
-      periods.add(NotHomePeriod(periodStart, periodEnd, locationsUrl(crn, periodStart, linkEnd, zone)))
+    fun addPeriod(periodStart: Instant) {
+      val periodEnd = requireNotNull(locations.last().gpsDate)
+      periods.add(NotHomePeriod(periodStart, periodEnd, locationsUrl(crn, periodStart, periodEnd, zone)))
     }
 
     // Use Athena to get the locations for the person
@@ -105,7 +105,7 @@ class ActivityService(
         val localDate = localTimestamp.toLocalDate()
         val pingWindowDate = if (overnight && time <= endTime) localDate.minusDays(1) else localDate
         if (pingWindowDate != windowDate) {
-          awayFrom?.let { addPeriod(it, null) }
+          awayFrom?.let { addPeriod(it) }
           awayFrom = null
           windowDate = pingWindowDate
         }
@@ -115,7 +115,7 @@ class ActivityService(
 
       if (distanceInMeters(home.latitude, home.longitude, latitude, longitude) <= distanceInMeters) {
         if (awayFrom != null) {
-          addPeriod(awayFrom, timestamp)
+          addPeriod(awayFrom)
         }
         awayFrom = null
         continue
@@ -125,7 +125,7 @@ class ActivityService(
       locations.add(location)
     }
     if (awayFrom != null) {
-      addPeriod(awayFrom, null)
+      addPeriod(awayFrom)
     }
     return NotHomeResponse(locations = locations, notHomePeriods = periods)
   }
